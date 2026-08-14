@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 商店界面 UI 蓝图 (720p 1280x720) — 四单元精简版 -->
+<!-- 结构: 左上返回键 / 商店面板(上距返回键20, 下距底栏20, 左右距边界20) / 底部信息栏 -->
+<!-- 单元: 每日卡牌 / 固定道具 / 卡包区 / 装饰(可购买各种装饰) — 无购买键, 文字描述 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F1923"/>
+      <stop offset="1" stop-color="#1F2A38"/>
+    </linearGradient>
+  </defs>
+
+  <g id="背景">
+    <rect x="0" y="0" width="1280" height="720" fill="url(#bgGrad)"/>
+  </g>
+
+  <!-- ========== 左上返回键 (y40~88) ========== -->
+  <g id="返回键">
+    <rect x="30" y="40" width="150" height="48" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="30" y="40" width="6" height="48" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="60" y="72" font-size="22" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">返回</text>
+  </g>
+
+  <!-- ========== 商店面板 (x30 y118 w1220 h492 → 下边610; 左边=返回键左边x30, 四周边距统一30: 上距返回键底88+30, 下距底栏640-30, 左右距边界30) ========== -->
+  <g id="商店面板">
+    <rect x="30" y="118" width="1220" height="492" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="30" y="118" width="1220" height="492" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5"/>
+    <rect x="30" y="118" width="1220" height="4" fill="#FF4655" fill-opacity="0.80"/>
+
+    <!-- ===== 单元1: 每日卡牌 ===== -->
+    <g id="单元1_每日卡牌">
+      <rect x="60" y="148" width="150" height="30" fill="#FF4655" fill-opacity="0.80" rx="6"/>
+      <text x="135" y="168" font-size="17" font-weight="bold" fill="#0F1923" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">每日卡牌</text>
+      <text x="240" y="168" font-size="20" fill="#FFFFFF" fill-opacity="0.85" font-family="Arial, 'Microsoft YaHei', sans-serif">每日刷新 3 个随机锦囊牌</text>
+    </g>
+
+    <!-- ===== 单元2: 固定道具 ===== -->
+    <g id="单元2_固定道具">
+      <rect x="60" y="261" width="150" height="30" fill="#FF4655" fill-opacity="0.80" rx="6"/>
+      <text x="135" y="281" font-size="17" font-weight="bold" fill="#0F1923" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">固定道具</text>
+      <text x="240" y="281" font-size="20" fill="#FFFFFF" fill-opacity="0.85" font-family="Arial, 'Microsoft YaHei', sans-serif">售卖 5 个固定卡牌</text>
+    </g>
+
+    <!-- ===== 单元3: 卡包区 ===== -->
+    <g id="单元3_卡包区">
+      <rect x="60" y="374" width="150" height="30" fill="#FF4655" fill-opacity="0.80" rx="6"/>
+      <text x="135" y="394" font-size="17" font-weight="bold" fill="#0F1923" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">卡包区</text>
+      <text x="240" y="394" font-size="20" fill="#FFFFFF" fill-opacity="0.85" font-family="Arial, 'Microsoft YaHei', sans-serif">普通款 / 进阶款 卡包</text>
+    </g>
+
+    <!-- ===== 单元4: 装饰 ===== -->
+    <g id="单元4_装饰">
+      <rect x="60" y="487" width="150" height="30" fill="#FF4655" fill-opacity="0.80" rx="6"/>
+      <text x="135" y="507" font-size="17" font-weight="bold" fill="#0F1923" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">装饰</text>
+      <text x="240" y="507" font-size="20" fill="#FFFFFF" fill-opacity="0.85" font-family="Arial, 'Microsoft YaHei', sans-serif">可购买各种装饰</text>
+    </g>
+  </g>
+
+  <!-- ========== 底部信息栏 (640~720) ========== -->
+  <g id="底部信息栏">
+    <rect x="0" y="640" width="1280" height="80" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="0" y="640" width="1280" height="2" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <text x="0" y="628" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">v0.1.0</text>
+
+    <rect x="0" y="642" width="170" height="78" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="49" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">玩家名称</text>
+    <rect x="168" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <rect x="170" y="642" width="170" height="39" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="241" y="666" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">等级</text>
+    <rect x="170" y="679" width="170" height="2" fill="#FFFFFF" fill-opacity="0.60"/>
+    <rect x="170" y="681" width="170" height="39" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="241" y="705" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">经验</text>
+    <rect x="339" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <text x="616" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+    <text x="726" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+    <text x="836" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+
+    <rect x="1200" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+    <rect x="1202" y="642" width="78" height="78" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="1229" y="683" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">设置</text>
+  </g>
+</svg>

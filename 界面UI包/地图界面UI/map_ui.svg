@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 地图界面 UI 蓝图 (720p 1280x720) — 矢量分层版 规整网格 v3 -->
+<!-- 网格: 左边距40 / 信息窗400 / 间隔40 / 地图区760 / 右边距40; 顶边距40; 底栏640~720 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F1923"/>
+      <stop offset="1" stop-color="#1F2A38"/>
+    </linearGradient>
+  </defs>
+
+  <g id="背景">
+    <rect x="0" y="0" width="1280" height="720" fill="url(#bgGrad)"/>
+  </g>
+
+  <!-- ========== 左上: 信息窗 (x40 y40 w400 h520 → 底560) ========== -->
+  <!-- 内部: 顶边距30 + 三块各140 + 间距20×2 + 底边距30 = 520 (上下对称) -->
+  <g id="信息窗">
+    <rect x="40" y="40" width="400" height="520" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="40" y="40" width="400" height="520" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5"/>
+    <rect x="40" y="40" width="400" height="4" fill="#FF4655" fill-opacity="0.80"/>
+
+    <!-- 图片元素 (x60 w360 左右边距20对称) -->
+    <rect x="60" y="70" width="360" height="140" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="60" y="70" width="360" height="140" fill="none" stroke="#FFFFFF" stroke-opacity="0.30" stroke-width="1.5"/>
+    <text x="240" y="145" font-size="20" fill="#FFFFFF" fill-opacity="0.55" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">图片占位</text>
+
+    <!-- 描述栏元素 -->
+    <rect x="60" y="230" width="360" height="140" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="60" y="230" width="360" height="140" fill="none" stroke="#FFFFFF" stroke-opacity="0.30" stroke-width="1.5"/>
+    <text x="240" y="305" font-size="20" fill="#FFFFFF" fill-opacity="0.55" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">描述占位</text>
+
+    <!-- 任务栏元素 -->
+    <rect x="60" y="390" width="360" height="140" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="60" y="390" width="360" height="140" fill="none" stroke="#FFFFFF" stroke-opacity="0.30" stroke-width="1.5"/>
+    <text x="240" y="465" font-size="20" fill="#FFFFFF" fill-opacity="0.55" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">任务占位</text>
+  </g>
+
+  <!-- ========== 四按钮 (紧贴信息窗底 y560, 总宽=400, 四等分各100) ========== -->
+  <g id="四按钮">
+    <rect x="40" y="560" width="100" height="44" fill="#FFFFFF" fill-opacity="0.10"/>
+    <rect x="40" y="560" width="4" height="44" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="90" y="589" font-size="18" font-weight="bold" fill="#FFFFFF" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">返回</text>
+
+    <rect x="140" y="560" width="100" height="44" fill="#FFFFFF" fill-opacity="0.10"/>
+    <rect x="140" y="560" width="4" height="44" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="190" y="589" font-size="18" font-weight="bold" fill="#FFFFFF" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">上一页</text>
+
+    <rect x="240" y="560" width="100" height="44" fill="#FFFFFF" fill-opacity="0.10"/>
+    <rect x="240" y="560" width="4" height="44" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="290" y="589" font-size="18" font-weight="bold" fill="#FFFFFF" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">下一页</text>
+
+    <rect x="340" y="560" width="100" height="44" fill="#FFFFFF" fill-opacity="0.10"/>
+    <rect x="340" y="560" width="4" height="44" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="390" y="589" font-size="18" font-weight="bold" fill="#FFFFFF" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">准备</text>
+  </g>
+
+  <!-- ========== 右侧: 地图区 (x480 w760 → 右缘1240; h564 对齐信息窗+按钮 y40~604) ========== -->
+  <g id="地图区">
+    <rect x="480" y="40" width="760" height="564" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="480" y="40" width="760" height="564" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5"/>
+    <rect x="480" y="40" width="760" height="4" fill="#FF4655" fill-opacity="0.80"/>
+
+    <!-- 地图占位说明块 (居中: x中心860, y40~604 中心322) -->
+    <rect x="590" y="242" width="540" height="160" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="590" y="242" width="540" height="160" fill="none" stroke="#FFFFFF" stroke-opacity="0.30" stroke-width="1.5"/>
+    <text x="860" y="302" font-size="24" fill="#FFFFFF" fill-opacity="0.75" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">地图占位</text>
+    <text x="860" y="342" font-size="18" fill="#FFFFFF" fill-opacity="0.55" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">关卡节点沿路径排布，与地图融为一体</text>
+    <text x="860" y="372" font-size="14" fill="#FFFFFF" fill-opacity="0.40" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">美术在此绘制地图底图与关卡节点连线</text>
+  </g>
+
+  <!-- ========== 底部信息栏 (640~720) ========== -->
+  <g id="底部信息栏">
+    <rect x="0" y="640" width="1280" height="80" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="0" y="640" width="1280" height="2" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <text x="0" y="628" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">v0.1.0</text>
+
+    <rect x="0" y="642" width="170" height="78" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="49" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">玩家名称</text>
+    <rect x="168" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <rect x="170" y="642" width="170" height="39" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="241" y="666" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">等级</text>
+    <rect x="170" y="679" width="170" height="2" fill="#FFFFFF" fill-opacity="0.60"/>
+    <rect x="170" y="681" width="170" height="39" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="241" y="705" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">经验</text>
+    <rect x="339" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <text x="626" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+    <text x="736" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+    <text x="846" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+
+    <rect x="1200" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+    <rect x="1202" y="642" width="78" height="78" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="1229" y="683" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">设置</text>
+  </g>
+</svg>

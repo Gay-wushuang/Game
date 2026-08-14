@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 主界面 UI 蓝图 (720p 1280x720) — 矢量分层版 -->
+<!-- 每个 <g> 为一个 UI 区块，半透明块仅圈定范围，供后期替换为真实素材 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <!-- 背景渐变 (瓦风格深色) -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F1923"/>
+      <stop offset="1" stop-color="#1F2A38"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ========== 背景层 ========== -->
+  <g id="背景">
+    <rect x="0" y="0" width="1280" height="720" fill="url(#bgGrad)"/>
+  </g>
+
+  <!-- ========== LOGO 层 ========== -->
+  <g id="LOGO">
+    <rect x="80" y="40" width="420" height="110" fill="#FFFFFF" fill-opacity="0.10"/>
+    <rect x="80" y="40" width="10" height="110" fill="#FF4655" fill-opacity="0.80"/>
+    <text x="110" y="112" font-size="42" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">GAME LOGO</text>
+  </g>
+
+  <!-- ========== 主菜单按钮层 (x5) ========== -->
+  <g id="主菜单按钮">
+    <!-- 开始游戏 -->
+    <rect x="80" y="220" width="340" height="54" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="80" y="220" width="6" height="54" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="110" y="258" font-size="24" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">开始游戏</text>
+    <!-- 招募大厅 -->
+    <rect x="80" y="290" width="340" height="54" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="80" y="290" width="6" height="54" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="110" y="328" font-size="24" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">招募大厅</text>
+    <!-- 研发基地 -->
+    <rect x="80" y="360" width="340" height="54" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="80" y="360" width="6" height="54" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="110" y="398" font-size="24" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">研发基地</text>
+    <!-- 备战中心 -->
+    <rect x="80" y="430" width="340" height="54" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="80" y="430" width="6" height="54" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="110" y="468" font-size="24" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">备战中心</text>
+    <!-- 退出游戏 (红色强调) -->
+    <rect x="80" y="500" width="340" height="54" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="80" y="500" width="6" height="54" fill="#FF4655" fill-opacity="0.70"/>
+    <text x="110" y="538" font-size="24" font-weight="bold" fill="#FF4655" font-family="Arial, 'Microsoft YaHei', sans-serif">退出游戏</text>
+  </g>
+
+  <!-- ========== 公告层 ========== -->
+  <g id="公告">
+    <rect x="700" y="90" width="500" height="230" fill="#FFFFFF" fill-opacity="0.08"/>
+    <rect x="700" y="90" width="500" height="36" fill="#FF4655" fill-opacity="0.25"/>
+    <text x="720" y="114" font-size="22" font-weight="bold" fill="#FF4655" font-family="Arial, 'Microsoft YaHei', sans-serif">公告</text>
+    <text x="720" y="174" font-size="18" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">公告内容占位区域</text>
+  </g>
+
+  <!-- ========== 社交账号 LOGO 层 (x5, 与公告同宽) ========== -->
+  <g id="社交账号LOGO">
+    <rect x="700" y="340" width="80" height="80" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="720" y="384" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">LOGO</text>
+    <rect x="805" y="340" width="80" height="80" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="825" y="384" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">LOGO</text>
+    <rect x="910" y="340" width="80" height="80" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="930" y="384" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">LOGO</text>
+    <rect x="1015" y="340" width="80" height="80" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="1035" y="384" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">LOGO</text>
+    <rect x="1120" y="340" width="80" height="80" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="1140" y="384" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">LOGO</text>
+  </g>
+
+  <!-- ========== 底部信息栏层 ========== -->
+  <g id="底部信息栏">
+    <!-- 底栏背景 + 顶线 -->
+    <rect x="0" y="640" width="1280" height="80" fill="#FFFFFF" fill-opacity="0.06"/>
+    <rect x="0" y="640" width="1280" height="2" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <!-- 版本号 (顶线上方, 左顶死) -->
+    <text x="0" y="628" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, sans-serif">v0.1.0</text>
+
+    <!-- 玩家信息区: 玩家名称块 (左顶死) -->
+    <rect x="0" y="642" width="170" height="78" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="49" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">玩家名称</text>
+    <!-- 分割线: 玩家 | 等级 -->
+    <rect x="168" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <!-- 等级 (上) -->
+    <rect x="170" y="642" width="170" height="39" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="241" y="666" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">等级</text>
+    <!-- 分割线: 等级 | 经验 -->
+    <rect x="170" y="679" width="170" height="2" fill="#FFFFFF" fill-opacity="0.60"/>
+    <!-- 经验 (下) -->
+    <rect x="170" y="681" width="170" height="39" fill="#FFFFFF" fill-opacity="0.08"/>
+    <text x="241" y="705" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">经验</text>
+    <!-- 分割线: 玩家信息区 | 货币区 -->
+    <rect x="339" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+
+    <!-- 货币区 (剩余空间中心 x=770, 3个条目无背景) -->
+    <text x="616" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+    <text x="726" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+    <text x="836" y="688" font-size="20" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">货币 XXX</text>
+
+    <!-- 分割线: 货币区 | 设置 -->
+    <rect x="1200" y="642" width="2" height="78" fill="#FFFFFF" fill-opacity="0.60"/>
+    <!-- 设置 (右顶死, 正方形 78x78) -->
+    <rect x="1202" y="642" width="78" height="78" fill="#FFFFFF" fill-opacity="0.10"/>
+    <text x="1229" y="683" font-size="14" font-weight="bold" fill="#FFFFFF" font-family="Arial, 'Microsoft YaHei', sans-serif">设置</text>
+  </g>
+</svg>

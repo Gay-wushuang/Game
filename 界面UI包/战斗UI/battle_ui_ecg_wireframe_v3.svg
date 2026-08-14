@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 28.3.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1280 720" style="enable-background:new 0 0 1280 720;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+	.st1{fill:#FFFFFF;stroke:#111111;stroke-width:2;}
+	.st2{fill:#111111;}
+	.st3{font-family:'MicrosoftYaHei-Bold';}
+	.st4{font-size:18px;}
+	.st5{font-family:'MicrosoftYaHei';}
+	.st6{font-size:14px;}
+	.st7{font-size:10px;}
+	.st8{font-size:12px;}
+	.st9{fill:#FFFFFF;stroke:#777777;stroke-width:1.5;stroke-dasharray:6,5;}
+	.st10{fill:none;stroke:#111111;stroke-width:2;}
+	.st11{display:none;}
+	.st12{display:inline;fill:#FFFFFF;stroke:#111111;stroke-width:3;}
+	.st13{display:inline;fill:#111111;}
+</style>
+<rect class="st0" width="1280" height="720"/>
+<path class="st1" d="M21,14h1238c2.8,0,5,2.2,5,5v38c0,2.8-2.2,5-5,5H21c-2.8,0-5-2.2-5-5V19C16,16.2,18.2,14,21,14z"/>
+<text transform="matrix(1 0 0 1 32 44)" class="st2 st3 st4">第N回合 · 行动</text>
+<text transform="matrix(1 0 0 1 422 43)" class="st2 st5 st6">我方存活 2/5</text>
+<text transform="matrix(1 0 0 1 570 43)" class="st2 st5 st6">敌方存活 2/5</text>
+<text transform="matrix(1 0 0 1 748 43)" class="st2 st5 st6">当前步骤：我方选择执行英雄</text>
+<text transform="matrix(1 0 0 1 1192 43)" class="st2 st5 st6">设置</text>
+<path class="st1" d="M21,76h1238c2.8,0,5,2.2,5,5v400c0,2.8-2.2,5-5,5H21c-2.8,0-5-2.2-5-5V81C16,78.2,18.2,76,21,76z"/>
+<text transform="matrix(1 0 0 1 32 104)" class="st2 st3 st4">英雄战场</text>
+<text transform="matrix(1 0 0 1 1125 194)" class="st2 st5 st6">敌方英雄</text>
+<text transform="matrix(1 0 0 1 95.5312 194)" class="st2 st5 st6">敌方角色立绘</text>
+<g id="enemy-row">
+	<path class="st1" d="M336,114h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H336c-2.2,0-4-1.8-4-4V118C332,115.8,333.8,114,336,114z"/>
+	<text transform="matrix(1 0 0 1 342 132)" class="st2 st5 st7">先锋 · ★★</text>
+	<rect x="344" y="140" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 366 174)" class="st2 st5 st7">英雄立绘</text>
+	<text transform="matrix(1 0 0 1 372 219)" class="st2 st5 st6">英雄</text>
+	<text transform="matrix(1 0 0 1 347.2754 238)" class="st2 st5 st8">HP X/N　攻X</text>
+	<text transform="matrix(1 0 0 1 367.4648 254)" class="st2 st5 st7">EXP X/N</text>
+	<path class="st1" d="M456,114h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H456c-2.2,0-4-1.8-4-4V118C452,115.8,453.8,114,456,114z"/>
+	<text transform="matrix(1 0 0 1 462 132)" class="st2 st5 st7">斥候 · ★</text>
+	<rect x="464" y="140" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 486 174)" class="st2 st5 st7">英雄立绘</text>
+	<text transform="matrix(1 0 0 1 492 219)" class="st2 st5 st6">英雄</text>
+	<text transform="matrix(1 0 0 1 470.7939 238)" class="st2 st5 st8">HP X/N　攻X</text>
+	<text transform="matrix(1 0 0 1 487.4648 254)" class="st2 st5 st7">EXP X/N</text>
+	<path class="st9" d="M576,114h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H576c-2.2,0-4-1.8-4-4V118C572,115.8,573.8,114,576,114z"/>
+	<text transform="matrix(1 0 0 1 612 185)" class="st2 st5 st6">空位</text>
+	<text transform="matrix(1 0 0 1 606 207)" class="st2 st5 st7">等待部署</text>
+	<path class="st9" d="M696,114h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H696c-2.2,0-4-1.8-4-4V118C692,115.8,693.8,114,696,114z"/>
+	<text transform="matrix(1 0 0 1 732 185)" class="st2 st5 st6">空位</text>
+	<text transform="matrix(1 0 0 1 726 207)" class="st2 st5 st7">等待部署</text>
+	<path class="st9" d="M816,114h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H816c-2.2,0-4-1.8-4-4V118C812,115.8,813.8,114,816,114z"/>
+	<text transform="matrix(1 0 0 1 852 185)" class="st2 st5 st6">空位</text>
+	<text transform="matrix(1 0 0 1 846 207)" class="st2 st5 st7">等待部署</text>
+</g>
+<path class="st10" d="M314,284h624"/>
+<text transform="matrix(1 0 0 1 455.8613 304)" class="st2 st5 st8">破势：艾可执行 → 裂甲　预计伤害 3　预计反伤 1　克制：中性</text>
+<text transform="matrix(1 0 0 1 94 390)" class="st2 st5 st6">己方英雄</text>
+<text transform="matrix(1 0 0 1 1125.3008 390)" class="st2 st5 st6">己方角色立绘</text>
+<g id="ally-row">
+	<path class="st1" d="M336.3,320h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4h-100c-2.2,0-4-1.8-4-4V324
+		C332.3,321.8,334.1,320,336.3,320z"/>
+	<text transform="matrix(1 0 0 1 342 338)" class="st2 st5 st7">先锋 · ★★</text>
+	<rect x="344" y="346" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 366 380)" class="st2 st5 st7">英雄立绘</text>
+	<text transform="matrix(1 0 0 1 372.1914 425)" class="st2 st5 st6">英雄</text>
+	<text transform="matrix(1 0 0 1 347.2754 444)" class="st2 st5 st8">HP X/N　攻3</text>
+	<text transform="matrix(1 0 0 1 351.8374 460)" class="st2 st5 st7">可行动 · 执行者</text>
+	<path class="st1" d="M456,320h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H456c-2.2,0-4-1.8-4-4V324C452,321.8,453.8,320,456,320z"/>
+	<text transform="matrix(1 0 0 1 462 338)" class="st2 st5 st7">刺客 · ★</text>
+	<rect x="464" y="346" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 486 380)" class="st2 st5 st7">英雄立绘</text>
+	<text transform="matrix(1 0 0 1 492.1913 425)" class="st2 st5 st6">英雄</text>
+	<text transform="matrix(1 0 0 1 470.7939 444)" class="st2 st5 st8">HP X/N　攻2</text>
+	<text transform="matrix(1 0 0 1 466.8374 460)" class="st2 st5 st7">新登场 · 不可行动</text>
+	<path class="st9" d="M576,320h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H576c-2.2,0-4-1.8-4-4V324C572,321.8,573.8,320,576,320z"/>
+	<text transform="matrix(1 0 0 1 612 391)" class="st2 st5 st6">空位</text>
+	<text transform="matrix(1 0 0 1 606 413)" class="st2 st5 st7">等待部署</text>
+	<path class="st9" d="M696,320h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H696c-2.2,0-4-1.8-4-4V324C692,321.8,693.8,320,696,320z"/>
+	<text transform="matrix(1 0 0 1 732 391)" class="st2 st5 st6">空位</text>
+	<text transform="matrix(1 0 0 1 726 413)" class="st2 st5 st7">等待部署</text>
+	<path class="st9" d="M816,320h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H816c-2.2,0-4-1.8-4-4V324C812,321.8,813.8,320,816,320z"/>
+	<text transform="matrix(1 0 0 1 852 391)" class="st2 st5 st6">空位</text>
+	<text transform="matrix(1 0 0 1 846 413)" class="st2 st5 st7">等待部署</text>
+</g>
+<path class="st1" d="M21,498h1238c2.8,0,5,2.2,5,5v194c0,2.8-2.2,5-5,5H21c-2.8,0-5-2.2-5-5V503C16,500.2,18.2,498,21,498z"/>
+<text transform="matrix(1 0 0 1 32 527)" class="st2 st3 st4">锦囊手牌 4</text>
+<path class="st1" d="M36,544h112c2.2,0,4,1.8,4,4v30c0,2.2-1.8,4-4,4H36c-2.2,0-4-1.8-4-4v-30C32,545.8,33.8,544,36,544z"/>
+<text transform="matrix(1 0 0 1 45.895 569)" class="st2 st5 st6">部署英雄（3）</text>
+<path class="st1" d="M36,594h112c2.2,0,4,1.8,4,4v30c0,2.2-1.8,4-4,4H36c-2.2,0-4-1.8-4-4v-30C32,595.8,33.8,594,36,594z"/>
+<text transform="matrix(1 0 0 1 59.5156 619)" class="st2 st5 st6">战斗日志 ›</text>
+<rect x="32" y="644" class="st1" width="54" height="42"/>
+<text transform="matrix(1 0 0 1 49 661)" class="st2 st5 st7">抽牌</text>
+<text transform="matrix(1 0 0 1 50.79 679)" class="st2 st5 st6">7</text>
+<rect x="1125" y="17" class="st1" width="54" height="42"/>
+<text transform="matrix(1 0 0 1 1142 34)" class="st2 st5 st7">牌池</text>
+<text transform="matrix(1 0 0 1 1143.79 52)" class="st2 st5 st6">15</text>
+<rect x="98" y="644" class="st1" width="54" height="42"/>
+<text transform="matrix(1 0 0 1 115 661)" class="st2 st5 st7">弃牌</text>
+<text transform="matrix(1 0 0 1 120.895 679)" class="st2 st5 st6">4</text>
+<g id="hand">
+	<path class="st1" d="M336,536h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H336c-2.2,0-4-1.8-4-4V540C332,537.8,333.8,536,336,536z"/>
+	<text transform="matrix(1 0 0 1 342 554)" class="st2 st5 st7">主动锦囊</text>
+	<rect x="344" y="562" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 366 596)" class="st2 st5 st7">卡面插画</text>
+	<text transform="matrix(1 0 0 1 358 641)" class="st2 st5 st6">精准打击</text>
+	<text transform="matrix(1 0 0 1 362.7061 661)" class="st2 st5 st8">行动点 1</text>
+	<text transform="matrix(1 0 0 1 366 677)" class="st2 st5 st7">单体伤害</text>
+	<path class="st1" d="M456,536h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H456c-2.2,0-4-1.8-4-4V540C452,537.8,453.8,536,456,536z"/>
+	<text transform="matrix(1 0 0 1 462 554)" class="st2 st5 st7">主动锦囊</text>
+	<rect x="464" y="562" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 486 596)" class="st2 st5 st7">卡面插画</text>
+	<text transform="matrix(1 0 0 1 478 641)" class="st2 st5 st6">战术转移</text>
+	<text transform="matrix(1 0 0 1 482.7061 661)" class="st2 st5 st8">行动点 1</text>
+	<text transform="matrix(1 0 0 1 486 677)" class="st2 st5 st7">交换状态</text>
+	<path class="st1" d="M576,536h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H576c-2.2,0-4-1.8-4-4V540C572,537.8,573.8,536,576,536z"/>
+	<path class="st1" d="M696,536h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H696c-2.2,0-4-1.8-4-4V540C692,537.8,693.8,536,696,536z"/>
+	<text transform="matrix(1 0 0 1 582 554)" class="st2 st5 st7">主动锦囊</text>
+	<rect x="584" y="562" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 606 596)" class="st2 st5 st7">卡面插画</text>
+	<text transform="matrix(1 0 0 1 612 641)" class="st2 st5 st6">破势</text>
+	<text transform="matrix(1 0 0 1 602.7061 661)" class="st2 st5 st8">行动点 2</text>
+	<text transform="matrix(1 0 0 1 596 677)" class="st2 st5 st7">指定英雄执行</text>
+	<path class="st1" d="M696,536h100c2.2,0,4,1.8,4,4v142c0,2.2-1.8,4-4,4H696c-2.2,0-4-1.8-4-4V540C692,537.8,693.8,536,696,536z"/>
+	<text transform="matrix(1 0 0 1 702 554)" class="st2 st5 st7">被动锦囊</text>
+	<rect x="704" y="562" class="st1" width="84" height="60"/>
+	<text transform="matrix(1 0 0 1 726 596)" class="st2 st5 st7">卡面插画</text>
+	<text transform="matrix(1 0 0 1 732 641)" class="st2 st5 st6">蓄势</text>
+	<text transform="matrix(1 0 0 1 722 661)" class="st2 st5 st8">触发条件</text>
+	<text transform="matrix(1 0 0 1 726 677)" class="st2 st5 st7">自动结算</text>
+</g>
+<path class="st1" d="M1114,544h130c2.2,0,4,1.8,4,4v88c0,2.2-1.8,4-4,4h-130c-2.2,0-4-1.8-4-4v-88C1110,545.8,1111.8,544,1114,544z"
+	/>
+<text transform="matrix(1 0 0 1 1143 586)" class="st2 st3 st4">结束回合</text>
+<text transform="matrix(1 0 0 1 1149.5884 611)" class="st2 st5 st7">剩余行动点 2</text>
+<g id="hero-detail-modal" class="st11">
+	<path class="st12" d="M398,130h484c4.4,0,8,3.6,8,8v444c0,4.4-3.6,8-8,8H398c-4.4,0-8-3.6-8-8V138C390,133.6,393.6,130,398,130z"/>
+	<text transform="matrix(1 0 0 1 420 168)" class="st13 st3 st4">英雄详情</text>
+	<text transform="matrix(1 0 0 1 840 168)" class="st13 st5 st6">关闭 ×</text>
+</g>
+</svg>

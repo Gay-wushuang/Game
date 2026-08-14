@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 加载界面 UI 蓝图 (720p 1280x720) — 矢量分层版 -->
+<!-- 结构: 屏幕正中=圆形进度条 / 下方靠下=提示气泡小贴士 -->
+<!-- 全屏简洁, 无底部信息栏 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F1923"/>
+      <stop offset="1" stop-color="#1F2A38"/>
+    </linearGradient>
+  </defs>
+
+  <g id="背景">
+    <rect x="0" y="0" width="1280" height="720" fill="url(#bgGrad)"/>
+  </g>
+
+  <!-- ========== 圆形进度条 (屏幕正中, 浅色环表示进度) ========== -->
+  <g id="圆形进度条">
+    <!-- 环形进度底 (白色半透明, 12描边, 浅色环体现进度感) -->
+    <circle cx="640" cy="330" r="110" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="12"/>
+    <!-- 中心文字 -->
+    <text x="640" y="320" font-size="44" font-weight="bold" fill="#FFFFFF" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">加载中</text>
+    <text x="640" y="358" font-size="24" fill="#FFFFFF" fill-opacity="0.55" text-anchor="middle" font-family="Arial, sans-serif">50%</text>
+  </g>
+
+  <!-- ========== 战术板提示条 (屏幕下方, 长条形) ========== -->
+  <g id="战术板提示条">
+    <!-- 长条形主体 (圆角矩形) -->
+    <rect x="390" y="570" width="500" height="64" fill="#FFFFFF" fill-opacity="0.10" rx="10"/>
+    <rect x="390" y="570" width="500" height="64" fill="none" stroke="#FFFFFF" stroke-opacity="0.30" stroke-width="1.5" rx="10"/>
+
+    <!-- 战术板标签 -->
+    <rect x="412" y="586" width="90" height="32" fill="#FF4655" fill-opacity="0.80" rx="6"/>
+    <text x="457" y="608" font-size="18" font-weight="bold" fill="#0F1923" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif">战术板</text>
+    <!-- 占位文字 -->
+    <text x="528" y="608" font-size="18" fill="#FFFFFF" fill-opacity="0.70" font-family="Arial, 'Microsoft YaHei', sans-serif">战术提示占位文字</text>
+  </g>
+</svg>

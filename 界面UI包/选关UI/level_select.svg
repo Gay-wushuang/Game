@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 28.3.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1280 720" style="enable-background:new 0 0 1280 720;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#SVGID_1_);}
+	.st1{fill:#FFFFFF;fill-opacity:8.000000e-02;}
+	.st2{fill:#FF4655;fill-opacity:0.7;}
+	.st3{fill:#FFFFFF;}
+	.st4{font-family:'AdobeSongStd-Light-GBpc-EUC-H';}
+	.st5{font-size:22px;}
+	.st6{fill:#FF4655;}
+	.st7{font-size:24px;}
+	.st8{font-size:20px;}
+	.st9{font-family:'Arial-BoldMT';}
+	.st10{fill:none;stroke:#FFFFFF;stroke-width:1.5;stroke-opacity:0.35;}
+	.st11{fill:#FF4655;fill-opacity:0.8;}
+	.st12{enable-background:new    ;}
+	.st13{font-size:28px;}
+	.st14{font-size:18px;}
+	.st15{font-size:14px;}
+	.st16{fill:none;}
+	.st17{fill:#FFFFFF;fill-opacity:6.000000e-02;}
+	.st18{fill:#FFFFFF;fill-opacity:0.6;}
+	.st19{fill:#FFFFFF;fill-opacity:0.1;}
+</style>
+<g id="背景">
+	
+		<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="1.324940e-06" y1="358" x2="1280" y2="1078" gradientTransform="matrix(1 0 0 1 0 -358)">
+		<stop  offset="0" style="stop-color:#0F1923"/>
+		<stop  offset="1" style="stop-color:#1F2A38"/>
+	</linearGradient>
+	<rect class="st0" width="1280" height="720"/>
+</g>
+<g id="返回键">
+	<rect x="30" y="40" class="st1" width="150" height="48"/>
+	<rect x="30" y="40" class="st2" width="6" height="48"/>
+	<text transform="matrix(1 0 0 1 60 72)" class="st3 st4 st5">返回</text>
+</g>
+<g id="大关列表">
+	<text transform="matrix(1 0 0 1 80 118)" class="st6 st4 st7">大关列表</text>
+	<rect x="80" y="134" class="st1" width="360" height="56"/>
+	<rect x="80" y="134" class="st2" width="6" height="56"/>
+	<text transform="matrix(1 0 0 1 110 170.8652)" class="st3 st4 st8">关卡占位</text>
+	<text transform="matrix(1 0 0 1 190 172)" class="st3 st9 st8"> 1</text>
+	<rect x="80" y="202" class="st1" width="360" height="56"/>
+	<rect x="80" y="202" class="st2" width="6" height="56"/>
+	<text transform="matrix(1 0 0 1 110 238.8652)" class="st3 st4 st8">关卡占位</text>
+	<text transform="matrix(1 0 0 1 190 240)" class="st3 st9 st8"> 2</text>
+	<rect x="80" y="270" class="st1" width="360" height="56"/>
+	<rect x="80" y="270" class="st2" width="6" height="56"/>
+	<text transform="matrix(1 0 0 1 110 306.8652)" class="st3 st4 st8">关卡占位</text>
+	<text transform="matrix(1 0 0 1 190 308)" class="st3 st9 st8"> 3</text>
+	<rect x="80" y="338" class="st1" width="360" height="56"/>
+	<rect x="80" y="338" class="st2" width="6" height="56"/>
+	<text transform="matrix(1 0 0 1 110 374.8652)" class="st3 st4 st8">关卡占位</text>
+	<text transform="matrix(1 0 0 1 190 376)" class="st3 st9 st8"> 4</text>
+	<rect x="80" y="406" class="st1" width="360" height="56"/>
+	<rect x="80" y="406" class="st2" width="6" height="56"/>
+	<text transform="matrix(1 0 0 1 110 442.8652)" class="st3 st4 st8">关卡占位</text>
+	<text transform="matrix(1 0 0 1 190 444)" class="st3 st9 st8"> 5</text>
+</g>
+<g id="关卡预览区">
+	<rect x="480" y="130" class="st1" width="730" height="330"/>
+	<rect x="480" y="130" class="st10" width="730" height="330"/>
+	<rect x="480" y="130" class="st11" width="730" height="4"/>
+	<g class="st12">
+		<text transform="matrix(1 0 0 1 803 290)" class="st3 st4 st13">图片占位</text>
+	</g>
+	<g class="st12">
+		<text transform="matrix(1 0 0 1 811.25 335)" class="st3 st4 st14">关卡预览区</text>
+	</g>
+</g>
+<g id="存档位">
+	<g id="存档_1">
+		<rect x="80" y="470" class="st1" width="260" height="112"/>
+		<rect x="80" y="470" class="st10" width="260" height="112"/>
+		<rect x="80" y="470" class="st11" width="260" height="4"/>
+		<text transform="matrix(0.8942 0 0 1 184.3262 518.582)" class="st3 st4 st5">存档</text>
+		<text transform="matrix(0.8942 0 0 1 223.6714 520)" class="st3 st9 st5"> 1</text>
+		<g class="st12">
+			<text transform="matrix(1 0 0 1 183.75 552)" class="st3 st4 st15">存档位占位</text>
+		</g>
+		<rect x="80" y="585" class="st1" width="130" height="44"/>
+		<rect x="80" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1366 0 0 1 128.1597 614.4727)" class="st3 st4 st8">保存</text>
+		<rect x="210" y="585" class="st1" width="129" height="44"/>
+		<rect x="210" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1708 0 0 1 253.2041 614)" class="st3 st4 st8">删除</text>
+	</g>
+</g>
+<g id="存档位_00000008135593272495529650000006961284695107711643_">
+	<g id="存档_1_00000093168876761302785600000015572282827606370446_">
+		<rect x="372.5" y="470" class="st1" width="260" height="112"/>
+		<rect x="372.5" y="470" class="st10" width="260" height="112"/>
+		<rect x="372.5" y="470" class="st11" width="260" height="4"/>
+		<rect x="476.8" y="499.2" class="st16" width="44" height="24.9"/>
+		<text transform="matrix(1 0 0 1 476.8262 518.5815)" class="st3 st4 st5">存档</text>
+		<text transform="matrix(1 0 0 1 520.8262 520)" class="st3 st9 st5"> 2</text>
+		<g class="st12">
+			<text transform="matrix(1 0 0 1 476.25 552)" class="st3 st4 st15">存档位占位</text>
+		</g>
+		<rect x="372.5" y="585" class="st1" width="130" height="44"/>
+		<rect x="372.5" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1366 0 0 1 420.6597 614.4727)" class="st3 st4 st8">保存</text>
+		<rect x="502.5" y="585" class="st1" width="129" height="44"/>
+		<rect x="502.5" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1708 0 0 1 545.7041 614)" class="st3 st4 st8">删除</text>
+	</g>
+</g>
+<g id="存档位_00000079473350226618689290000011368305692235973302_">
+	<g id="存档_1_00000013877374972490185440000004737552031363336069_">
+		<rect x="665" y="470" class="st1" width="260" height="112"/>
+		<rect x="665" y="470" class="st10" width="260" height="112"/>
+		<rect x="665" y="470" class="st11" width="260" height="4"/>
+		<text transform="matrix(1 0 0 1 769.3262 518.5815)" class="st3 st4 st5">存档</text>
+		<text transform="matrix(1 0 0 1 813.3262 520)" class="st3 st9 st5"> 3</text>
+		<g class="st12">
+			<text transform="matrix(1 0 0 1 768.75 552)" class="st3 st4 st15">存档位占位</text>
+		</g>
+		<rect x="665" y="585" class="st1" width="130" height="44"/>
+		<rect x="665" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1366 0 0 1 713.1597 614.4727)" class="st3 st4 st8">保存</text>
+		<rect x="795" y="585" class="st1" width="129" height="44"/>
+		<rect x="795" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1708 0 0 1 838.2041 614)" class="st3 st4 st8">删除</text>
+	</g>
+</g>
+<g id="存档位_00000095333178845235592370000007519032717558326192_">
+	<g id="存档_1_00000152263959405595527410000014893814169076146085_">
+		<rect x="950" y="470" class="st1" width="260" height="112"/>
+		<rect x="950" y="470" class="st10" width="260" height="112"/>
+		<rect x="950" y="470" class="st11" width="260" height="4"/>
+		<text transform="matrix(1 0 0 1 1054.3262 518.5815)" class="st3 st4 st5">存档</text>
+		<text transform="matrix(1 0 0 1 1098.3262 520)" class="st3 st9 st5"> 4</text>
+		<g class="st12">
+			<text transform="matrix(1 0 0 1 1053.75 552)" class="st3 st4 st15">存档位占位</text>
+		</g>
+		<rect x="950" y="585" class="st1" width="130" height="44"/>
+		<rect x="950" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1366 0 0 1 998.1597 614.4727)" class="st3 st4 st8">保存</text>
+		<rect x="1080" y="585" class="st1" width="129" height="44"/>
+		<rect x="1080" y="585" class="st2" width="4" height="44"/>
+		<text transform="matrix(1.1708 0 0 1 1123.2041 614)" class="st3 st4 st8">删除</text>
+	</g>
+</g>
+<g id="底部信息栏">
+	<rect y="640" class="st17" width="1280" height="80"/>
+	<rect y="640" class="st18" width="1280" height="2"/>
+	<text transform="matrix(1 0 0 1 0 628)" class="st3 st9 st15">v0.1.0</text>
+	<rect y="642" class="st1" width="170" height="78"/>
+	<text transform="matrix(1 0 0 1 49 688)" class="st3 st4 st8">玩家名称</text>
+	<rect x="168" y="642" class="st18" width="2" height="78"/>
+	<rect x="170" y="642" class="st1" width="170" height="39"/>
+	<text transform="matrix(1 0 0 1 241 666)" class="st3 st4 st15">等级</text>
+	<rect x="170" y="679" class="st18" width="170" height="2"/>
+	<rect x="170" y="681" class="st1" width="170" height="39"/>
+	<text transform="matrix(1 0 0 1 241 705)" class="st3 st4 st15">经验</text>
+	<rect x="339" y="642" class="st18" width="2" height="78"/>
+	<text transform="matrix(1 0 0 1 616 686.8652)" class="st3 st4 st8">货币</text>
+	<text transform="matrix(1 0 0 1 656 688)" class="st3 st9 st8"> XXX</text>
+	<text transform="matrix(1 0 0 1 726 686.8652)" class="st3 st4 st8">货币</text>
+	<text transform="matrix(1 0 0 1 766 688)" class="st3 st9 st8"> XXX</text>
+	<text transform="matrix(1 0 0 1 836 686.8652)" class="st3 st4 st8">货币</text>
+	<text transform="matrix(1 0 0 1 876 688)" class="st3 st9 st8"> XXX</text>
+	<rect x="1200" y="642" class="st18" width="2" height="78"/>
+	<rect x="1202" y="642" class="st19" width="78" height="78"/>
+	<text transform="matrix(1 0 0 1 1229 683)" class="st3 st4 st15">设置</text>
+</g>
+</svg>
