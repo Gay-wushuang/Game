@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/CardDefinition.cs" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"card_appropriation"
+display_name = "拿来主义"
+description = "随机抽取敌方手牌区一张手牌加入己方手牌区。"
+tags = PackedStringArray("抽卡", "偷取", "主动")
+card_kind = 0
+target_kind = 4
+action_cost = 1
+builtin_effect = 6
+effect_amount = 1
+rules_text = "随机获得敌方手牌区的一张手牌。"

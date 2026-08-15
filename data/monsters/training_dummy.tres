@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/MonsterDefinition.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"dummy_scout"
+display_name = "斥候稻草人"
+description = "斥候职业训练目标。"
+tags = PackedStringArray("训练", "静止")
+designer_notes = "可修改 unit_type 测试不同克制关系。"
+custom_fields = {"可破坏": true, "场景说明": "训练场中央"}
+unit_type = 2
+max_hp = 30
+attack = 4
+retaliation_ratio = 0.5
+behavior_id = &"stationary_dummy"

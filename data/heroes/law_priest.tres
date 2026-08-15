@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/HeroDefinition.cs" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"hero_role_4"
+display_name = "律祷"
+description = "削弱敌方并通过施法恢复生命的祭司。"
+tags = PackedStringArray("祭司", "削弱", "恢复")
+designer_notes = "依据 docs/角色4.md，祭司映射第四职业。"
+custom_fields = {"skill_heal_ratio": 0.05, "mark_attack_down": 2, "mark_duration": 3, "link_duration": 2, "leader_duration": 5}
+character_number = 4
+hero_type = 3
+initial_star = 0
+max_hp = 80
+attack = 5
+innate_ability = &"spell_recovery"
+skill_ids = PackedStringArray("weakening_mark", "equal_decline")
+passive_text = "使用技能后恢复当前生命值的5%。"
+skill_1_text = "标记：敌方攻击-2持续3回合，冷却5回合。"
+skill_2_text = "共衰：双方攻击持续降低至一方归0，持续2回合。"
+leader_bonus_text = "己方技能冷却-1，持续5回合。"
+star_attack_choices = PackedInt32Array(10, 0, 0, 10, 0, 45)
+star_hp_choices = PackedInt32Array(35, 0, 0, 40, 0, 95)
+star_progression_text = "2星冷却-1；3星克制伤害加成降至25%；5星施法恢复10%；6星无职业。"

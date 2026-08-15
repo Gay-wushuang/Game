@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/HeroDefinition.cs" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"hero_role_1"
+display_name = "铁卫"
+description = "分段减伤并替队友承担伤害的先锋。"
+tags = PackedStringArray("先锋", "坦克", "嘲讽")
+designer_notes = "依据 docs/角色1.md"
+custom_fields = {"taunt_duration": 2, "leader_hp": 50, "leader_duration": 6}
+character_number = 1
+hero_type = 0
+initial_star = 0
+max_hp = 150
+attack = 10
+innate_ability = &"segmented_guard"
+skill_ids = PackedStringArray("team_taunt")
+passive_text = "生命处于80%-60%/60%-40%/40%以下时，减伤50%/75%/90%。"
+skill_1_text = "嘲讽：替友方承担伤害2回合，冷却5回合。"
+leader_bonus_text = "友方生命上限+50，持续6回合。"
+star_attack_choices = PackedInt32Array(10, 0, 0, 15, 0, 40)
+star_hp_choices = PackedInt32Array(50, 0, 0, 50, 0, 100)
+star_progression_text = "2星队长加成常驻；3星逆克制反伤-25%；5星嘲讽3回合；6星无职业。"

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/HeroDefinition.cs" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"hero_role_2"
+display_name = "训练用木桩"
+description = "主动攻击与反击能力突出的刺客。"
+tags = PackedStringArray("刺客", "爆发", "反击")
+designer_notes = "依据 docs/角色2.md，采用修订HP 70。"
+custom_fields = {"active_attack_bonus": 5, "skill_attack_bonus": 10, "skill_damage_taken": 0.4, "skill_duration": 2, "leader_counter_attack": 5, "leader_duration": 6}
+character_number = 2
+hero_type = 1
+initial_star = 0
+max_hp = 70
+attack = 20
+innate_ability = &"active_assault"
+skill_ids = PackedStringArray("blood_price")
+passive_text = "本回合主动攻击时攻击+5。"
+skill_1_text = "血价：攻击+10持续2回合，受伤额外+40%，冷却5回合。"
+leader_bonus_text = "友方反击攻击+5，持续6回合。"
+star_attack_choices = PackedInt32Array(25, 0, 0, 25, 0, 80)
+star_hp_choices = PackedInt32Array(25, 0, 0, 25, 0, 80)
+star_progression_text = "2星对半血目标攻击+5；3星逆克制反伤-25%；5星代价降至20%；6星无职业。"

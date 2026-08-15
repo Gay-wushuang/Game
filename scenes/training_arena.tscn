@@ -1,0 +1,400 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/TrainingArena.cs" id="1"]
+[ext_resource type="Resource" path="res://data/training_content.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/HandFan.cs" id="3"]
+
+[node name="TrainingArena" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+content = ExtResource("2")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.035, 0.066, 0.11, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_stretch_ratio = 0.35
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.4
+theme_override_font_sizes/font_size = 22
+text = "训练场 · 第 1 回合"
+vertical_alignment = 1
+
+[node name="Status" type="Label" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.45, 0.84, 1, 1)
+text = "当前步骤：从英雄卡包选择英雄部署"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="EnemyHand" type="HBoxContainer" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.8
+theme_override_constants/separation = 2
+
+[node name="ActionPoints" type="Label" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.55
+text = "行动点 3/3"
+vertical_alignment = 1
+
+[node name="LogButton" type="Button" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "战斗日志"
+
+[node name="SettingsButton" type="Button" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "设置"
+
+[node name="Battlefield" type="PanelContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.15
+
+[node name="Rows" type="VBoxContainer" parent="Margin/Root/Battlefield"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="EnemyRow" type="HBoxContainer" parent="Margin/Root/Battlefield/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="AllyRow" type="HBoxContainer" parent="Margin/Root/Battlefield/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Announcement" type="Label" parent="Margin/Root/Battlefield"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -24.0
+offset_right = 240.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+text = "锦囊播报"
+horizontal_alignment = 1
+vertical_alignment = 1
+visible = false
+
+[node name="BottomArea" type="PanelContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Root/BottomArea"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Piles" type="VBoxContainer" parent="Margin/Root/BottomArea/Columns"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 0)
+theme_override_constants/separation = 5
+
+[node name="HeroBag" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "英雄卡包\n3"
+
+[node name="DrawPile" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "抽牌堆\n0"
+
+[node name="DiscardPile" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "弃牌堆\n0"
+
+[node name="CatalogButton" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "锦囊总卡包"
+
+[node name="HandSection" type="VBoxContainer" parent="Margin/Root/BottomArea/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_contents = true
+
+[node name="HandHeader" type="Label" parent="Margin/Root/BottomArea/Columns/HandSection"]
+layout_mode = 2
+text = "锦囊手牌 · 左键选择，右键查看详情"
+
+[node name="Hand" type="Control" parent="Margin/Root/BottomArea/Columns/HandSection"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+clip_contents = true
+script = ExtResource("3")
+
+[node name="Actions" type="VBoxContainer" parent="Margin/Root/BottomArea/Columns"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+theme_override_constants/separation = 5
+
+[node name="SkillButton" type="Button" parent="Margin/Root/BottomArea/Columns/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "使用英雄技能"
+disabled = true
+
+[node name="CancelButton" type="Button" parent="Margin/Root/BottomArea/Columns/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "取消选择"
+
+[node name="EndTurnButton" type="Button" parent="Margin/Root/BottomArea/Columns/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "结束回合"
+
+[node name="HeroBagDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "英雄卡包"
+[node name="HeroList" type="VBoxContainer" parent="HeroBagDialog"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PileDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "牌堆内容"
+[node name="PileScroll" type="ScrollContainer" parent="PileDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+[node name="PileCards" type="GridContainer" parent="PileDialog/PileScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 3
+
+[node name="CardDetailDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "卡牌详情"
+[node name="CardDetailText" type="RichTextLabel" parent="CardDetailDialog"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+
+[node name="LogDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "战斗日志"
+[node name="LogText" type="RichTextLabel" parent="LogDialog"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+
+[node name="SettingsDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "训练场设置"
+[node name="Settings" type="VBoxContainer" parent="SettingsDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+[node name="DummyMode" type="CheckButton" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+text = "稻草人模式：敌方停止部署、攻击和使用锦囊"
+[node name="TestMode" type="CheckButton" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+text = "测试模式：允许修改运行时数值"
+[node name="OpenTestEditor" type="Button" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+text = "打开测试数据编辑器"
+disabled = true
+[node name="AnimationLabel" type="Label" parent="SettingsDialog/Settings"]
+text = "动画速度（训练版占位）"
+[node name="AnimationSpeed" type="HSlider" parent="SettingsDialog/Settings"]
+min_value = 0.5
+max_value = 2.0
+step = 0.5
+value = 1.0
+[node name="ResetButton" type="Button" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+text = "重置训练"
+
+[node name="TestEditorDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "测试数据编辑器"
+[node name="Editor" type="VBoxContainer" parent="TestEditorDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+[node name="Warning" type="Label" parent="TestEditorDialog/Editor"]
+text = "仅修改本次运行数据；不会写回设计资源。"
+[node name="Category" type="OptionButton" parent="TestEditorDialog/Editor"]
+unique_name_in_owner = true
+[node name="Target" type="OptionButton" parent="TestEditorDialog/Editor"]
+unique_name_in_owner = true
+[node name="Grid" type="GridContainer" parent="TestEditorDialog/Editor"]
+columns = 2
+size_flags_vertical = 3
+[node name="HpLabel" type="Label" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+text = "当前 HP"
+[node name="TestHp" type="SpinBox" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+max_value = 99999.0
+[node name="MaxHpLabel" type="Label" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+text = "HP 上限"
+[node name="TestMaxHp" type="SpinBox" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+max_value = 99999.0
+[node name="AttackLabel" type="Label" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+text = "攻击"
+[node name="TestAttack" type="SpinBox" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+max_value = 9999.0
+[node name="ExpLabel" type="Label" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+text = "EXP"
+[node name="TestExp" type="SpinBox" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+max_value = 9999.0
+[node name="CostLabel" type="Label" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+text = "卡牌费用"
+[node name="TestCost" type="SpinBox" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+max_value = 20.0
+[node name="EffectLabel" type="Label" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+text = "卡牌效果数值"
+[node name="TestEffect" type="SpinBox" parent="TestEditorDialog/Editor/Grid"]
+unique_name_in_owner = true
+max_value = 9999.0
+[node name="ApplyTestValues" type="Button" parent="TestEditorDialog/Editor"]
+unique_name_in_owner = true
+text = "应用测试数值"
+
+[node name="SkillDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "选择英雄技能"
+[node name="SkillList" type="VBoxContainer" parent="SkillDialog"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StarChoiceDialog" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "升星路线"
+dialog_text = "选择本次升星加成：攻击路线或生命路线。"
+ok_button_text = "攻击路线"
+cancel_button_text = "生命路线"

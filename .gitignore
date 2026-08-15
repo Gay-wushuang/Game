@@ -1,0 +1,13 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+*.import
+/Godot/
+~$*
+/current*.png
+/current.wav
+/frame*.png
+/frame.wav
+/training_preview.avi
+/.codex_doc_review/
+*.log

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/CardDefinition.cs" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"card_star_up"
+display_name = "此乃英雄之证"
+description = "抽中后选择一名我方英雄，令其升一星。"
+tags = PackedStringArray("升星", "成长", "特殊")
+target_kind = 1
+action_cost = 1
+builtin_effect = 5
+effect_amount = 1
+rules_text = "选择一名我方英雄，令其升一星。"

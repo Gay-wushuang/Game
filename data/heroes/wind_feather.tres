@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/data/HeroDefinition.cs" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"hero_role_3"
+display_name = "风羽"
+description = "操纵行动点和双方手牌的斥候。"
+tags = PackedStringArray("斥候", "行动点", "弃牌")
+designer_notes = "依据 docs/角色3.md"
+custom_fields = {"turn_ap_bonus": 1, "discard_count": 2, "leader_duration": 5, "free_self_cards_limit": 2}
+character_number = 3
+hero_type = 2
+initial_star = 0
+max_hp = 100
+attack = 10
+innate_ability = &"extra_action"
+skill_ids = PackedStringArray("expose_and_discard")
+passive_text = "每回合开始额外获得1行动点。"
+skill_1_text = "消耗全部行动点，展示并弃置敌方2张手牌，冷却5回合。"
+leader_bonus_text = "每回合随机一张锦囊费用为0，持续5回合。"
+star_attack_choices = PackedInt32Array(10, 0, 0, 15, 0, 65)
+star_hp_choices = PackedInt32Array(50, 0, 0, 25, 0, 75)
+star_progression_text = "2星每回合一张免费牌；3星逆克制反伤-25%；5星每回合2张自指锦囊免费；6星无职业。"

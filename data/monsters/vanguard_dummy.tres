@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/MonsterDefinition.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"dummy_vanguard"
+display_name = "先锋稻草人"
+description = "先锋职业训练目标。"
+tags = PackedStringArray("训练", "稻草人")
+unit_type = 0
+max_hp = 24
+attack = 4
+retaliation_ratio = 0.5
