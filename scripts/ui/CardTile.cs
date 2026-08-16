@@ -11,7 +11,7 @@ public partial class CardTile : Button
         Card = value; _faceDown = showBack; SizeFlagsHorizontal = SizeFlags.ExpandFill; SizeFlagsVertical = SizeFlags.ExpandFill;
         ClipText = true; TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         if (showBack) { Text = small ? "◆" : "◆\n卡背"; TooltipText = "敌方手牌"; }
-        else { _baseText = $"主动锦囊　AP {Card.CurrentCost()}\n\n{Card.Definition.display_name}\n\n{ShortRules(Card.Definition.rules_text)}"; Text = _baseText; TooltipText = string.IsNullOrWhiteSpace(Card.Definition.rules_text) ? Card.Definition.description : Card.Definition.rules_text; }
+        else { var kind = Card.Definition.card_kind == CardDefinition.CardKind.Passive ? "被动锦囊" : "主动锦囊"; _baseText = $"{kind}　AP {Card.CurrentCost()}\n\n{Card.Definition.display_name}\n\n{ShortRules(Card.Definition.rules_text)}"; Text = _baseText; TooltipText = string.IsNullOrWhiteSpace(Card.Definition.rules_text) ? Card.Definition.description : Card.Definition.rules_text; }
     }
     public override void _Ready() { Pressed += () => CardChosen?.Invoke(Card); GuiInput += OnGuiInput; }
     public void SetActionPreview(string target, string result) { if (!_faceDown) Text = $"{_baseText}\n\n→ {target}\n预计：{result}"; }

@@ -28,6 +28,10 @@ window/stretch/aspect="expand"
 
 project/assembly_name="RuleEvolution"
 
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
@@ -37,7 +41,3 @@ project/assembly_name="RuleEvolution"
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-
-[gui]
-
-theme/default_font_multichannel_signed_distance_field=true

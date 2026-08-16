@@ -1,6 +1,6 @@
 public sealed class CardInstance
 {
-    public enum ZoneKind { Deck, Hand, Discard, HeroBag }
+    public enum ZoneKind { Deck, Hand, Set, Discard, HeroBag }
     public CardDefinition Definition { get; }
     public string OwnerId { get; set; }
     public ZoneKind Zone { get; set; }

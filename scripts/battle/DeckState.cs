@@ -28,5 +28,7 @@ public sealed class DeckState
         return result;
     }
     public void Discard(CardInstance card) { if (!Hand.Remove(card)) return; card.Zone = CardInstance.ZoneKind.Discard; DiscardPile.Add(card); }
+    public bool SetPassive(CardInstance card) { if (!Hand.Remove(card)) return false; card.Zone = CardInstance.ZoneKind.Set; card.FaceUp = false; return true; }
+    public void DiscardPlaced(CardInstance card) { card.Zone = CardInstance.ZoneKind.Discard; card.FaceUp = true; DiscardPile.Add(card); }
     private void Shuffle<T>(IList<T> list) { for (var i = list.Count - 1; i > 0; i--) { var j = _random.Next(i + 1); (list[i], list[j]) = (list[j], list[i]); } }
 }
