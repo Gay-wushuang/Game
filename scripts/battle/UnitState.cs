@@ -18,6 +18,11 @@ public sealed class UnitState
     public int DebuffTurns { get; set; }
     public int AttackRestore { get; set; }
     public int LinkTurns { get; set; }
+    public float ShieldRatio { get; set; }
+    public int ShieldTurns { get; set; }
+    public int GrudgeStacks { get; set; }
+    public int CeasefireTurns { get; set; }
+    public float DamageTakenMultiplier { get; set; } = 1f;
     public int LinkedEnemy { get; set; } = -1;
     public bool Alive => Hp > 0;
     public string Id => Definition.id.ToString();

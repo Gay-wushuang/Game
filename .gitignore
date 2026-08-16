@@ -11,3 +11,5 @@
 /training_preview.avi
 /.codex_doc_review/
 *.log
+/.local/
+/outputs/

@@ -16,11 +16,12 @@ public partial class TrainingArena : Control
     private readonly List<string> _logs = [];
     private HeroCardInstance? _pendingHero; private CardInstance? _pendingCard; private UnitSlot? _pendingStarSlot;
     private int _pendingCardTarget = -1, _allyIndex = -1, _enemyIndex = -1, _ap = 3, _turn = 1, _pendingStarCost;
-    private string _leaderId = "", _freeCardId = ""; private int _leaderTurns; private readonly Random _rng = new();
+    private string _leaderId = "", _freeCardId = ""; private int _leaderTurns; private bool _cancelNextEnemyEffect; private readonly Random _rng = new();
     private readonly List<(string Kind, object Target, UnitSlot? Slot)> _testTargets = [];
 
     public override void _Ready()
     {
+        content.cards = CardCatalog.Load();
         _slotScene = GD.Load<PackedScene>("res://scenes/components/unit_slot.tscn"); _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn");
         _status = GetNode<Label>("%Status"); _apText = GetNode<Label>("%ActionPoints"); _hand = GetNode<HandFan>("%Hand");
         ConnectControls(); CreateSlots(); ResetTraining();
@@ -66,7 +67,7 @@ public partial class TrainingArena : Control
         _allyIndex = slot.SlotIndex; _enemyIndex = -1; N<Button>("SkillButton").Disabled = slot.Unit.Cooldown > 0;
         if (_pendingCard != null) { if (_pendingCardTarget == slot.SlotIndex) await UseCard(slot); else PreviewCard(slot); } else _status.Text = $"已选择 {slot.Unit.Name}；请选择敌方目标"; RefreshSelection();
     }
-    private async void EnemyChosen(UnitSlot slot) { if (_allyIndex < 0 || _allies[_allyIndex].Unit == null) { _status.Text = "请先选择我方英雄"; return; } if (slot.Unit?.Alive != true) return; if (_enemyIndex == slot.SlotIndex) { await ConfirmAttack(); return; } _enemyIndex = slot.SlotIndex; UpdatePreview(); RefreshSelection(); }
+    private async void EnemyChosen(UnitSlot slot) { if (slot.Unit?.Alive != true) return; if (_pendingCard?.Definition.target_kind is CardDefinition.TargetKind.Enemy or CardDefinition.TargetKind.AllyEnemyPair) { if (_pendingCard.Definition.target_kind == CardDefinition.TargetKind.AllyEnemyPair && (_allyIndex < 0 || _allies[_allyIndex].Unit?.Alive != true)) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) await UseEnemyCard(slot); else PreviewEnemyCard(slot); return; } if (_allyIndex < 0 || _allies[_allyIndex].Unit == null) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) { await ConfirmAttack(); return; } _enemyIndex = slot.SlotIndex; UpdatePreview(); RefreshSelection(); }
     private static string Relation(string a, string d) => Counters.GetValueOrDefault(a) == d ? "克制" : Counters.GetValueOrDefault(d) == a ? "被克制" : "中性";
     private static int Retaliation(UnitState a, UnitState d) { var v = Mathf.RoundToInt(d.Attack * d.RetaliationRatio); if (Relation(a.Type, d.Type) == "克制") v = Mathf.RoundToInt(v * .5f); else if (Relation(a.Type, d.Type) == "被克制") v = Mathf.RoundToInt(v * 1.5f); if (a.Star >= 3 && Relation(a.Type, d.Type) == "被克制") v = Mathf.RoundToInt(v * .75f); return v; }
     private static int AttackValue(UnitState a, UnitState d) { var v = a.Attack; if (a.Id == "hero_role_2") { v += 5; if (a.SkillTurns > 0) v += 10; if (a.Star >= 2 && d.Hp * 2 < d.MaxHp) v += 5; } return v; }
@@ -75,17 +76,55 @@ public partial class TrainingArena : Control
     private async void ChooseCard(CardInstance card)
     {
         foreach (var c in _hand.GetChildren().OfType<CardTile>()) c.ClearActionPreview(); if (card.Definition.card_kind == CardDefinition.CardKind.Passive) { if (card.CurrentCost() > _ap) { _status.Text = "行动点不足"; return; } _pendingCard = card; _pendingHero = null; _pendingCardTarget = -3; _hand.SetSelected(_deck.Hand.IndexOf(card)); _status.Text = $"选择一个已有英雄且没有伏牌的我方英雄槽，盖放「{card.Definition.display_name}」"; return; }
-        if (card.Definition.builtin_effect == CardDefinition.BuiltinEffect.StealCard) { if (_pendingCard == card && _pendingCardTarget == -2) await UseStealCard(card, false); else { _pendingCard = card; _pendingCardTarget = -2; var i = _deck.Hand.IndexOf(card); _hand.SetSelected(i); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview("敌方手牌", $"{_aiDeck.Hand.Count} → {Math.Max(0, _aiDeck.Hand.Count - 1)}；我方 {_deck.Hand.Count} → {_deck.Hand.Count + 1}"); _status.Text = "拿来主义效果已写入卡面；再次点击该牌确认"; } return; }
+        if (card.Definition.target_kind == CardDefinition.TargetKind.None) { if (_pendingCard == card && _pendingCardTarget == -2) await UseNoTargetCard(card); else { _pendingCard = card; _pendingCardTarget = -2; var i = _deck.Hand.IndexOf(card); _hand.SetSelected(i); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview("结算预览", NoTargetPreview(card)); _status.Text = $"{card.Definition.display_name}效果已写入卡面；再次点击该牌确认"; } return; }
         if (EffectiveCost(card) > _ap && !_allies.Any(s => s.Unit is { Id: "hero_role_3", Star: >= 5, FreeSelfCards: > 0 })) { _status.Text = "行动点不足"; return; }
-        _pendingCard = card; _pendingCardTarget = -1; _pendingHero = null; _enemyIndex = -1; _hand.SetSelected(_deck.Hand.IndexOf(card)); _status.Text = $"锦囊「{card.Definition.display_name}」：请选择我方英雄预览效果";
+        _pendingCard = card; _pendingCardTarget = -1; _pendingHero = null; _enemyIndex = -1; _hand.SetSelected(_deck.Hand.IndexOf(card)); _status.Text = card.Definition.target_kind == CardDefinition.TargetKind.Enemy ? $"锦囊「{card.Definition.display_name}」：请选择敌方英雄预览效果" : $"锦囊「{card.Definition.display_name}」：请选择我方英雄预览效果";
     }
     private async Task UseCard(UnitSlot slot)
     {
         var card = _pendingCard!; var d = card.Definition; var u = slot.Unit!; var cost = EffectiveCost(card); if (d.id.ToString() == _freeCardId) _freeCardId = ""; if (u.Id == "hero_role_3" && u.Star >= 5 && u.FreeSelfCards > 0) { cost = 0; u.FreeSelfCards--; }
-        await AnimateCard(card); switch (d.builtin_effect) { case CardDefinition.BuiltinEffect.Heal: var amount = Math.Min(d.effect_amount, u.MaxHp - u.Hp); u.Hp += amount; AddLog($"[color=77ee99]锦囊[/color] {d.display_name} → {u.Name}：回复 {amount} HP。"); break; case CardDefinition.BuiltinEffect.AddAttack: u.Attack += d.effect_amount; break; case CardDefinition.BuiltinEffect.AddExp: GainExp(u, d.effect_amount); break; case CardDefinition.BuiltinEffect.StarUp: if (u.Star >= 6) { _status.Text = "该英雄已达到6星"; return; } _pendingStarSlot = slot; _pendingStarCost = cost; N<AcceptDialog>("StarChoiceDialog").PopupCenteredRatio(.42f); return; }
+        await AnimateCard(card); switch (d.handler_key) { case "HEAL_CLEANSE": var amount = Math.Min(Param(d, "heal", 20), u.MaxHp - u.Hp); u.Hp += amount; if (u.Star >= Param(d, "star_required", 2)) { u.DebuffTurns = 0; u.Attack += u.AttackRestore; u.AttackRestore = 0; } AddLog($"[color=77ee99]锦囊[/color] {d.display_name} → {u.Name}：回复 {amount} HP。"); break; case "APPLY_SHIELD": u.ShieldRatio = u.Star >= Param(d, "star_required", 4) ? .5f : .2f; u.ShieldTurns = 1; break; case "FREE_UNANSWERED_ATTACK": var target = _enemies.Where(s => s.Unit?.Alive == true).OrderBy(_ => _rng.Next()).FirstOrDefault(); if (target?.Unit != null) { target.Unit.Hp = Math.Max(0, target.Unit.Hp - AttackValue(u, target.Unit)); target.Refresh(); } break; case "STAR_UP": if (u.Star >= 6) { _status.Text = "该英雄已达到6星"; return; } _pendingStarSlot = slot; _pendingStarCost = cost; N<AcceptDialog>("StarChoiceDialog").PopupCenteredRatio(.42f); return; default: ApplyGenericAlly(d, u); break; }
         _ap -= cost; _deck.Discard(card); _pendingCard = null; _pendingCardTarget = -1; _status.Text = "锦囊已结算并进入弃牌堆"; RefreshAll();
     }
-    private void PreviewCard(UnitSlot slot) { var d = _pendingCard!.Definition; var u = slot.Unit!; var effect = d.builtin_effect switch { CardDefinition.BuiltinEffect.Heal => $"HP {u.Hp} → {Math.Min(u.MaxHp, u.Hp + d.effect_amount)}", CardDefinition.BuiltinEffect.AddAttack => $"攻击 {u.Attack} → {u.Attack + d.effect_amount}", CardDefinition.BuiltinEffect.AddExp => $"EXP {u.Exp} → {u.Exp + d.effect_amount}", CardDefinition.BuiltinEffect.StarUp => $"星级 {u.Star} → {Math.Min(6, u.Star + 1)}", _ => "无数值变化" }; _pendingCardTarget = slot.SlotIndex; _allyIndex = slot.SlotIndex; var i = _deck.Hand.IndexOf(_pendingCard); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview(u.Name, effect); slot.SetActionPreview(effect); _status.Text = "效果已预览，再次点击同一英雄确认使用"; RefreshSelection(); }
+    private void PreviewCard(UnitSlot slot) { var d = _pendingCard!.Definition; var u = slot.Unit!; var effect = d.handler_key switch { "HEAL_CLEANSE" => $"HP {u.Hp} → {Math.Min(u.MaxHp, u.Hp + Param(d, "heal", 20))}", "STAR_UP" => $"星级 {u.Star} → {Math.Min(6, u.Star + 1)}", "APPLY_SHIELD" => $"护盾 0% → {(u.Star >= Param(d, "star_required", 4) ? 50 : 20)}%", "FREE_UNANSWERED_ATTACK" => $"免费攻击，攻击 {u.Attack}，不受反伤", _ => "按卡面规则结算" }; _pendingCardTarget = slot.SlotIndex; _allyIndex = slot.SlotIndex; var i = _deck.Hand.IndexOf(_pendingCard); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview(u.Name, effect); slot.SetActionPreview(effect); _status.Text = d.target_kind == CardDefinition.TargetKind.AllyEnemyPair ? "已选择我方英雄；请选择敌方英雄预览" : "效果已预览，再次点击同一英雄确认使用"; RefreshSelection(); }
+    private void PreviewEnemyCard(UnitSlot slot)
+    {
+        var card = _pendingCard!; var unit = slot.Unit!; _enemyIndex = slot.SlotIndex;
+        var effect = card.Definition.handler_key switch { "DAMAGE_STAR_ALL" => $"HP {unit.Hp} → {Math.Max(0, unit.Hp - Param(card.Definition, "damage", 15))}", "LINK_RESONANCE" when _allyIndex >= 0 => $"HP {unit.Hp} → {Math.Max(0, unit.Hp - _allies[_allyIndex].Unit!.Attack)}", "APPLY_DAMAGE_HEAL_AMPLIFY" => "本回合受到的伤害与回复提高10%", _ => "按卡面规则结算" };
+        var i = _deck.Hand.IndexOf(card); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview(unit.Name, effect); slot.SetActionPreview(effect); _status.Text = "效果已预览，再次点击同一敌方英雄确认使用"; RefreshSelection();
+    }
+    private async Task UseEnemyCard(UnitSlot slot)
+    {
+        var card = _pendingCard!; var definition = card.Definition; var unit = slot.Unit!; var cost = EffectiveCost(card); await AnimateCard(card);
+        switch (definition.handler_key) {
+            case "DAMAGE_STAR_ALL": unit.Hp = Math.Max(0, unit.Hp - Param(definition, "damage", 15)); break;
+            case "LINK_RESONANCE" when _allyIndex >= 0: unit.Hp = Math.Max(0, unit.Hp - _allies[_allyIndex].Unit!.Attack); break;
+            case "APPLY_DAMAGE_HEAL_AMPLIFY": unit.DamageTakenMultiplier = 1.1f; break;
+            default: unit.Hp = Math.Max(0, unit.Hp - Param(definition, "damage", 0)); break;
+        }
+        _ap -= cost; _deck.Discard(card); AddLog($"[color=dd99ff]锦囊[/color] 「{definition.display_name}」对 {unit.Name} 生效。"); CancelSelection(false); MarkDefeated(); RefreshAll();
+    }
+    private async Task UseNoTargetCard(CardInstance card)
+    {
+        if (EffectiveCost(card) > _ap) { _status.Text = "行动点不足"; return; }
+        if (card.Definition.handler_key == "STEAL_TEMPORARY") { await UseStealCard(card, false); return; }
+        await AnimateCard(card); var definition = card.Definition;
+        switch (definition.handler_key) {
+            case "CANCEL_PENDING_EFFECT": _cancelNextEnemyEffect = true; break;
+            case "ZERO_HAND_COSTS": foreach (var held in _deck.Hand.Where(c => c != card)) held.RuntimeCostModifier = -held.Definition.action_cost; break;
+            case "PREPAY_AND_DISCARD": foreach (var held in _deck.Hand.Where(c => c != card).ToList()) _deck.Discard(held); break;
+            case "APPLY_GRUDGE": foreach (var enemy in _enemies.Where(s => s.Unit?.Alive == true)) enemy.Unit!.GrudgeStacks += Param(definition, "stacks", 5); break;
+            case "APPLY_CEASEFIRE": foreach (var enemy in _enemies.Where(s => s.Unit?.Alive == true)) enemy.Unit!.CeasefireTurns = Param(definition, "silence_turns", 2); break;
+            case "FORCE_MUTUAL_ATTACK": ForceEnemyMutualAttack(); break;
+            case "RANDOM_CROSS_ATTACK": RandomCrossAttack(); break;
+        }
+        _ap -= EffectiveCost(card); _deck.Discard(card); AddLog($"[color=dd99ff]锦囊[/color] 「{definition.display_name}」已结算。"); CancelSelection(false); RefreshAll();
+    }
+    private string NoTargetPreview(CardInstance card) => card.Definition.handler_key switch { "STEAL_TEMPORARY" => $"敌方手牌 {_aiDeck.Hand.Count} → {Math.Max(0, _aiDeck.Hand.Count - 1)}；我方 {_deck.Hand.Count} → {_deck.Hand.Count + 1}", "ZERO_HAND_COSTS" => $"其余 {_deck.Hand.Count - 1} 张手牌费用变为0", "APPLY_GRUDGE" => "所有敌方英雄获得5层怨恨", "APPLY_CEASEFIRE" => "所有敌方英雄2回合无法发动技能", _ => "按卡面规则结算" };
+    private void ForceEnemyMutualAttack() { var living = _enemies.Where(s => s.Unit?.Alive == true).OrderBy(_ => _rng.Next()).Take(2).ToList(); if (living.Count < 2) return; var first = living[0].Unit!; var second = living[1].Unit!; var firstAttack = first.Attack; var secondAttack = second.Attack; first.Hp = Math.Max(0, first.Hp - secondAttack); second.Hp = Math.Max(0, second.Hp - firstAttack); }
+    private void RandomCrossAttack() { var allies = _allies.Where(s => s.Unit?.Alive == true).ToList(); var enemies = _enemies.Where(s => s.Unit?.Alive == true).ToList(); if (allies.Count == 0 || enemies.Count == 0) return; var ally = allies[_rng.Next(allies.Count)].Unit!; var enemy = enemies[_rng.Next(enemies.Count)].Unit!; enemy.Hp = Math.Max(0, enemy.Hp - ally.Attack); }
+    private static void ApplyGenericAlly(CardDefinition definition, UnitState unit) { if (definition.effect_params.TryGetValue("attack", out Variant value)) unit.Attack += value.AsInt32(); }
+    private static int Param(CardDefinition definition, string key, int fallback) => definition.effect_params.TryGetValue(key, out Variant value) && value.VariantType == Variant.Type.Int ? value.AsInt32() : fallback;
     private void PlacePassive(UnitSlot slot)
     {
         var card = _pendingCard!; if (slot.PassiveCard != null) { _status.Text = "该英雄槽已经设置了一张被动锦囊"; return; }
@@ -99,6 +138,7 @@ public partial class TrainingArena : Control
     private async Task EnemyPhase()
     {
         if (N<CheckButton>("DummyMode").ButtonPressed) { AddLog("[color=999999]稻草人模式[/color] 敌方跳过全部行动。"); return; }
+        if (await TriggerPassive(_allies, _deck, "BATTLE_PHASE_STARTED")) { AddLog("[color=99bbff]被动锦囊[/color] 敌方战斗阶段被跳过。"); return; }
         var aiAp = 3; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
         for (var i = 0; i < attacks && aiAp > 0; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && await AiUseCard()) aiAp--; if (_aiDeck.Hand.Count < 5) _aiDeck.Draw(); AddLog($"[color=ff8888]AI回合[/color] 敌方行动结束，剩余行动点 {aiAp}。");
     }
@@ -111,7 +151,8 @@ public partial class TrainingArena : Control
     {
         var playable = _aiDeck.Hand.Where(c => c.Definition.card_kind == CardDefinition.CardKind.Active || _enemies.Any(s => s.Unit?.Alive == true && s.PassiveCard == null)).ToList(); if (playable.Count == 0) return false; var card = playable[_rng.Next(playable.Count)];
         if (card.Definition.card_kind == CardDefinition.CardKind.Passive) { var slots = _enemies.Where(s => s.Unit?.Alive == true && s.PassiveCard == null).ToList(); if (slots.Count == 0) return false; var setSlot = slots[_rng.Next(slots.Count)]; if (!_aiDeck.SetPassive(card) || !setSlot.SetPassive(card)) return false; AddLog($"[color=ff99aa]AI伏牌[/color] 敌方在 {setSlot.SlotIndex + 1} 号英雄槽背面设置了1张被动锦囊。"); RefreshEnemyHand(); return true; }
-        if (card.Definition.builtin_effect == CardDefinition.BuiltinEffect.StealCard) { await UseStealCard(card, true); return true; } var slot = AiCardTarget(card.Definition); if (slot?.Unit == null) return false; await AnimateCard(card); var u = slot.Unit; switch (card.Definition.builtin_effect) { case CardDefinition.BuiltinEffect.Heal: u.Hp = Math.Min(u.MaxHp, u.Hp + card.Definition.effect_amount); break; case CardDefinition.BuiltinEffect.AddAttack: u.Attack += card.Definition.effect_amount; break; case CardDefinition.BuiltinEffect.AddExp: u.Exp += card.Definition.effect_amount; break; case CardDefinition.BuiltinEffect.StarUp: AiStarUp(u); break; default: return false; } _aiDeck.Discard(card); slot.Refresh(); AddLog($"[color=dd99ff]AI锦囊[/color] 「{card.Definition.display_name}」对 {u.Name} 生效。"); return true;
+        if (_cancelNextEnemyEffect) { _cancelNextEnemyEffect = false; await Announce($"拒绝生效：敌方「{card.Definition.display_name}」被抵消"); _aiDeck.Discard(card); return true; }
+        if (card.Definition.builtin_effect == CardDefinition.BuiltinEffect.StealCard) { await UseStealCard(card, true); return true; } var slot = AiCardTarget(card.Definition); if (slot?.Unit == null) { await AnimateCard(card); _aiDeck.Discard(card); AddLog($"[color=dd99ff]AI锦囊[/color] 「{card.Definition.display_name}」已结算。"); return true; } await AnimateCard(card); var u = slot.Unit; switch (card.Definition.builtin_effect) { case CardDefinition.BuiltinEffect.Heal: u.Hp = Math.Min(u.MaxHp, u.Hp + card.Definition.effect_amount); break; case CardDefinition.BuiltinEffect.AddAttack: u.Attack += card.Definition.effect_amount; break; case CardDefinition.BuiltinEffect.AddExp: u.Exp += card.Definition.effect_amount; break; case CardDefinition.BuiltinEffect.StarUp: AiStarUp(u); break; default: ApplyGenericAlly(card.Definition, u); break; } _aiDeck.Discard(card); slot.Refresh(); AddLog($"[color=dd99ff]AI锦囊[/color] 「{card.Definition.display_name}」对 {u.Name} 生效。"); return true;
     }
     private async Task UseStealCard(CardInstance card, bool byAi)
     {
@@ -121,6 +162,12 @@ public partial class TrainingArena : Control
         (byAi ? _aiDeck : _deck).Discard(card); if (!byAi) _ap -= card.CurrentCost(); _pendingCard = null; _pendingCardTarget = -1; _hand.SetSelected(-1); CallDeferred(MethodName.RefreshAll);
     }
     private UnitSlot? FindCounterSlot(bool attackerAi) => (attackerAi ? _allies : _enemies).FirstOrDefault(s => s.PassiveCard?.Definition.builtin_effect == CardDefinition.BuiltinEffect.CancelEnemyDraw);
+    private async Task<bool> TriggerPassive(IEnumerable<UnitSlot> slots, DeckState ownerDeck, string eventKey)
+    {
+        var slot = slots.FirstOrDefault(candidate => candidate.PassiveCard?.Definition.trigger_keys.Contains(eventKey) == true);
+        if (slot?.PassiveCard == null) return false;
+        var card = slot.RemovePassive()!; card.FaceUp = true; await AnimateCard(card); ownerDeck.DiscardPlaced(card); await Announce($"被动锦囊「{card.Definition.display_name}」发动"); AddLog($"[color=ff99aa]被动锦囊[/color] 「{card.Definition.display_name}」翻面并结算，随后进入弃牌堆。"); return card.Definition.handler_key is "CANCEL_DAMAGE" or "SKIP_ENEMY_BATTLE_PHASE" or "CANCEL_DRAW";
+    }
     private async Task TriggerCounter(UnitSlot slot, bool attackerAi) { var card = slot.RemovePassive()!; card.FaceUp = true; await AnimateCard(card); (attackerAi ? _deck : _aiDeck).DiscardPlaced(card); AddLog($"[color=ff99aa]被动锦囊[/color] {(attackerAi ? "玩家" : "AI")}的「我觉得不行」从 {slot.SlotIndex + 1} 号英雄槽翻开并阻止了拿来主义。"); }
     private async Task AnimateAttack(UnitSlot a, UnitSlot d) { _status.Text = $"{a.Unit!.Name} 锁定 {d.Unit!.Name}，准备结算……"; await a.PlayTargetFlash(new(1.55f, 1.25f, .55f)); await d.PlayTargetFlash(new(1.55f, .7f, .7f)); }
     private async Task Announce(string text) { var label = N<Label>("Announcement"); label.Text = text; label.Visible = true; label.Modulate = new(1.35f, 1.25f, .65f, 0); var t = CreateTween(); t.TweenProperty(label, "modulate:a", 1, .12); t.TweenInterval(.5); t.TweenProperty(label, "modulate:a", 0, .18); await ToSignal(t, Tween.SignalName.Finished); label.Visible = false; }

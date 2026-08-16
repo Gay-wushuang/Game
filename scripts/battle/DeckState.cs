@@ -11,10 +11,7 @@ public sealed class DeckState
     public void Setup(IEnumerable<CardDefinition> cards, string owner)
     {
         OwnerId = owner; DrawPile.Clear(); Hand.Clear(); DiscardPile.Clear();
-        var normal = new List<CardDefinition>(); CardDefinition? star = null;
-        foreach (var card in cards) { if (card.builtin_effect == CardDefinition.BuiltinEffect.StarUp) star = card; else normal.Add(card); }
-        for (var i = 0; i < 15 && normal.Count > 0; i++) DrawPile.Add(new CardInstance(normal[i % normal.Count], owner));
-        if (star != null) { DrawPile.Add(new CardInstance(star, owner)); DrawPile.Add(new CardInstance(star, owner)); }
+        foreach (var card in cards) DrawPile.Add(new CardInstance(card, owner));
         Shuffle(DrawPile);
     }
     public List<CardInstance> Draw(int amount = 1)

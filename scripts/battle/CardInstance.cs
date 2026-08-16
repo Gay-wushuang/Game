@@ -7,5 +7,9 @@ public sealed class CardInstance
     public bool FaceUp { get; set; }
     public int RuntimeCostModifier { get; set; }
     public CardInstance(CardDefinition definition, string owner = "player") { Definition = definition; OwnerId = owner; }
-    public int CurrentCost() => System.Math.Max(0, Definition.action_cost + RuntimeCostModifier);
+    public int CurrentCost(int currentAp = 3, int maxAp = 3)
+    {
+        var baseCost = Definition.cost_mode switch { "ALL_CURRENT" => currentAp, "MAX_AP" => maxAp, _ => Definition.action_cost };
+        return System.Math.Max(0, baseCost + RuntimeCostModifier);
+    }
 }
