@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int randomSeed = 1)
 {
@@ -18,6 +19,11 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
     public int PlayerNextTurnBonus { get; set; }
     public int EnemyNextTurnBonus { get; set; }
     public List<PlacedPassive> Passives { get; } = [];
+    public PassiveEventContext? CurrentPassiveEvent { get; set; }
+    public List<(string OwnerId, int SlotIndex, CardInstance Card)> InvalidatedPassives { get; } = [];
+    public List<(string OwnerId, int SlotIndex, UnitState Unit)> PendingSummons { get; } = [];
+
+    public void QueueSummon(string ownerId, int slotIndex, UnitState unit) => PendingSummons.Add((ownerId, slotIndex, unit));
 
     public void SynchronizeUnits(IEnumerable<UnitState> player, IEnumerable<UnitState> enemy)
     {
@@ -36,9 +42,14 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
     public void AdvanceTurn()
     {
         Turn++;
+        ExileExpiredCopies(PlayerDeck); ExileExpiredCopies(EnemyDeck);
         ReturnTemporaryCards(PlayerDeck, EnemyDeck); ReturnTemporaryCards(EnemyDeck, PlayerDeck);
         foreach (var scheduled in _scheduled.FindAll(item => item.DueTurn <= Turn)) scheduled.Action();
         _scheduled.RemoveAll(item => item.DueTurn <= Turn);
+    }
+    private static void ExileExpiredCopies(DeckState deck)
+    {
+        foreach (var card in deck.Hand.FindAll(card => card.ExileAtTurnEnd).ToList()) deck.Exile(card);
     }
     private static void ReturnTemporaryCards(DeckState current, DeckState original)
     {

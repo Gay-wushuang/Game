@@ -1,3 +1,3 @@
--- 机关算尽：沙盒只提供受控卡牌 API，不开放 Godot、文件或系统接口。
+-- 机关算尽；规则入口统一由 Lua 编排，状态修改只能经过 C# Card API。
 zero_other_hand_costs()
-log_card("机关算尽：其余手牌本回合费用变为0。")
+log_card("机关算尽：效果已结算。")

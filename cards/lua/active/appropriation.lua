@@ -1,3 +1,3 @@
--- 拿来主义：所有权、临时费用与回合结束回收均由 C# Card API 保证。
+-- 拿来主义；规则入口统一由 Lua 编排，状态修改只能经过 C# Card API。
 steal_random_opponent_card()
-log_card("拿来主义：随机获得敌方手牌，该牌本回合费用为0。")
+log_card("拿来主义：效果已结算。")

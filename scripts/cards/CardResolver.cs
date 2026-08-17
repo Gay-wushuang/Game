@@ -6,6 +6,7 @@ public sealed class CardResolver : IDisposable
     private readonly LuaCardRuntime _lua = new();
     public bool LuaAvailable => _lua.Available;
     public bool ValidateLua(string path, out string error) => _lua.ValidateScript(path, out error);
+    public bool ValidateSandboxIsolation(out string error) => _lua.ValidateSandboxIsolation(out error);
     public void ReloadLua() => _lua.Reload();
     public bool CanResolveBuiltin(string handlerKey) => _builtin.CanResolve(handlerKey);
 

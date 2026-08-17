@@ -9,6 +9,7 @@ public sealed class CardInstance
     public int RuntimeCostModifier { get; set; }
     public int RuntimeCostOverride { get; set; } = -1;
     public bool ReturnToOriginalOwnerDiscardAtTurnEnd { get; set; }
+    public bool ExileAtTurnEnd { get; set; }
     public CardInstance(CardDefinition definition, string owner = "player") { Definition = definition; OwnerId = owner; OriginalOwnerId = owner; }
     public int CurrentCost(int currentAp = 3, int maxAp = 3)
     {

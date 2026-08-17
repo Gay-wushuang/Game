@@ -1,0 +1,2 @@
+-- Lua 沙盒隔离冒烟：此脚本由 LuaCardRuntime.ValidateSandboxIsolation() 内联执行。
+-- 卡牌脚本不得访问 OS、IO、require、Godot API；只能使用 CardApi 注入的白名单函数。

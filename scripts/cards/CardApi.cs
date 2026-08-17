@@ -95,6 +95,68 @@ public sealed class CardApi(CardExecutionContext context)
         return new CardApi(redirected).DamageTarget(amount);
     }
 
+    public void SetTargetStar(int amount) { if (Context.Target?.Alive == true) Context.Target.Star = Math.Min(6, Context.Target.Star + amount); }
+    public void SetTargetShield(float ratio, int turns) { if (Context.Target?.Alive == true) { Context.Target.ShieldRatio = ratio; Context.Target.ShieldTurns = turns; } }
+    public void SetLinkTurns(int turns) { if (Context.Source != null) Context.Source.LinkTurns = turns; if (Context.Target != null) Context.Target.LinkTurns = turns; }
+    public void SetTargetDamageMultiplier(float multiplier) { if (Context.Target?.Alive == true) Context.Target.DamageTakenMultiplier = multiplier; }
+    public void AddGrudgeStacksToOpponents(int stacks) { foreach (var unit in OpposingUnits.Where(unit => unit.Alive)) unit.GrudgeStacks += stacks; }
+    public void SetCeasefireOnOpponents(int turns) { foreach (var unit in OpposingUnits.Where(unit => unit.Alive)) unit.CeasefireTurns = turns; }
+    public void IncreaseNextEnemyCardCost(int amount) { foreach (var held in Context.OpponentDeck.Hand) held.RuntimeCostModifier += amount; }
+    public int RefillHand(int targetCount) => Draw(Math.Max(0, targetCount - Context.OwnerDeck.Hand.Count));
+    public void SetRandomActionPoints()
+    {
+        var value = Context.State.Random.Next(4);
+        if (Context.OwnerDeck.OwnerId == "player") Context.State.PlayerActionPoints = value; else Context.State.EnemyActionPoints = value;
+    }
+    public void CounterPassiveSet()
+    {
+        var ctx = Context.State.CurrentPassiveEvent; var subject = ctx?.SubjectCard; if (subject == null || ctx == null) return;
+        Context.State.RemovePassive(subject);
+        Context.State.InvalidatedPassives.Add((ctx.SubjectOwnerId, ctx.SubjectSlotIndex, subject));
+        ApplyExposePenalty(subject.Definition, ctx.SubjectOwnerId);
+    }
+    public int RedirectToAdjacent()
+    {
+        var ctx = Context.State.CurrentPassiveEvent; if (ctx == null || ctx.AttackTargetSlot < 0) return -1;
+        var candidates = new System.Collections.Generic.List<int>();
+        if (ctx.AliveAllySlots.Contains(ctx.AttackTargetSlot - 1)) candidates.Add(ctx.AttackTargetSlot - 1);
+        if (ctx.AliveAllySlots.Contains(ctx.AttackTargetSlot + 1)) candidates.Add(ctx.AttackTargetSlot + 1);
+        if (candidates.Count == 0) return -1;
+        ctx.RedirectSlot = candidates[Context.State.Random.Next(candidates.Count)];
+        return ctx.RedirectSlot;
+    }
+    public void CopyResolvedCard()
+    {
+        var subject = Context.State.CurrentPassiveEvent?.SubjectCard; if (subject == null) return;
+        var copy = new CardInstance(subject.Definition, Context.OwnerDeck.OwnerId) { RuntimeCostOverride = Param(Context.Card.Definition, "cost", 0), ExileAtTurnEnd = true, FaceUp = Context.OwnerDeck.OwnerId == "player" };
+        Context.OwnerDeck.Hand.Add(copy);
+    }
+    public void SummonDelayedRabbit()
+    {
+        var ctx = Context.State.CurrentPassiveEvent;
+        var slotIndex = ctx?.SubjectSlotIndex ?? -1;
+        if (slotIndex < 0) return;
+        Context.State.QueueSummon(ctx?.SubjectOwnerId ?? "ai", slotIndex, new UnitState { Name = "兔子", Type = "无职业", Hp = 1, MaxHp = 1, Attack = 0, Star = 1 });
+        var card = Context.Card.Definition;
+        Context.State.Schedule(Param(card, "delay_turns", 3), () => { foreach (var unit in OpposingUnits.Where(unit => unit.Alive)) unit.Hp = Math.Max(0, unit.Hp - Param(card, "damage", 20)); });
+    }
+    public void ReviveTargetReducedMaxHp()
+    {
+        if (Context.Target == null || Context.Target.Alive) return;
+        Context.Target.MaxHp = Math.Max(1, (int)Math.Floor(Context.Target.MaxHp * .8));
+        Context.Target.Hp = Context.Target.MaxHp;
+    }
+    public void FreeUnansweredAttack(int amount) => DamageRandomEnemy(amount);
+    public int GetSourceAttack() => Context.Source?.Attack ?? Context.Target?.Attack ?? 0;
+    public int GetTargetStar() => Context.Target?.Star ?? 0;
+    public int GetCardParamInt(string key, int fallback = 0) => Param(Context.Card.Definition, key, fallback);
+    public float GetCardParamFloat(string key, float fallback = 0f)
+    {
+        var def = Context.Card.Definition;
+        if (def.effect_params.TryGetValue(key, out Godot.Variant value) && value.VariantType == Godot.Variant.Type.Float) return value.AsSingle();
+        return fallback;
+    }
+
     public void ResolveCardEffect(string handler)
     {
         var card = Context.Card.Definition;
@@ -115,21 +177,44 @@ public sealed class CardApi(CardExecutionContext context)
             case "APPLY_CEASEFIRE": foreach (var unit in OpposingUnits.Where(unit => unit.Alive)) unit.CeasefireTurns = Param(card, "silence_turns", 2); break;
             case "RANDOM_CROSS_ATTACK": RandomCrossAttack(); break;
             case "TEMP_RANDOM_CLASS": TemporarilyRandomizeOpponentClass(); break;
-            case "COUNTER_PASSIVE_SET": break;
+            case "COUNTER_PASSIVE_SET": CounterPassiveSet(); break;
             case "REVIVE_REDUCED_MAX_HP": if (Context.Target != null && !Context.Target.Alive) { Context.Target.MaxHp = Math.Max(1, (int)Math.Floor(Context.Target.MaxHp * .8)); Context.Target.Hp = Context.Target.MaxHp; } break;
             case "TARGETED_HARD_CHOICE": DiscardOpponentHand(1); break;
             case "NEXT_ENEMY_CARD_COST_UP": foreach (var held in Context.OpponentDeck.Hand) held.RuntimeCostModifier += 1; break;
             case "REFILL_HAND": Draw(Math.Max(0, 5 - Context.OwnerDeck.Hand.Count)); break;
-            case "REDIRECT_TO_ADJACENT": break;
+            case "REDIRECT_TO_ADJACENT": RedirectToAdjacent(); break;
             case "SWAP_CLASS_AND_ATTACK": TemporarilySwapOpposingStats(); break;
             case "DISCARD_EQUAL_DRAW": DiscardOtherHand(); break;
             case "GAMBLE_ACTION_POINTS": if (Context.OwnerDeck.OwnerId == "player") Context.State.PlayerActionPoints = Context.State.Random.Next(4); else Context.State.EnemyActionPoints = Context.State.Random.Next(4); break;
-            case "COPY_RESOLVED_CARD": break;
-            case "SUMMON_DELAYED_RABBIT": Context.State.Schedule(Param(card, "delay_turns", 3), () => { foreach (var unit in OpposingUnits.Where(unit => unit.Alive)) unit.Hp = Math.Max(0, unit.Hp - Param(card, "damage", 20)); }); break;
+            case "COPY_RESOLVED_CARD": CopyResolvedCard(); break;
+            case "SUMMON_DELAYED_RABBIT": SummonDelayedRabbit(); break;
         }
     }
 
-    private void ForceOpponentsToAttack()
+    private static bool HasExposeConsequences(CardDefinition exposedPassive) =>
+        Param(exposedPassive, "expose_ap_bonus", 0) > 0
+        || (exposedPassive.effect_params.TryGetValue("expose_penalty_ratio", out Godot.Variant ratio) && ratio.VariantType == Godot.Variant.Type.Float)
+        || exposedPassive.handler_key == "TARGETED_HARD_CHOICE";
+
+    private void ApplyExposePenalty(CardDefinition exposedPassive, string exposedOwnerId)
+    {
+        if (!HasExposeConsequences(exposedPassive)) return;
+        var deck = exposedOwnerId == "player" ? Context.State.PlayerDeck : Context.State.EnemyDeck;
+        if (Param(exposedPassive, "expose_ap_bonus", 0) > 0)
+        {
+            if (exposedOwnerId == "player") Context.State.PlayerNextTurnBonus += Param(exposedPassive, "expose_ap_bonus", 0);
+            else Context.State.EnemyNextTurnBonus += Param(exposedPassive, "expose_ap_bonus", 0);
+        }
+        if (exposedPassive.effect_params.TryGetValue("expose_penalty_ratio", out Godot.Variant ratioValue) && ratioValue.VariantType == Godot.Variant.Type.Float)
+        {
+            var units = exposedOwnerId == "player" ? Context.State.PlayerUnits : Context.State.EnemyUnits;
+            foreach (var unit in units.Where(unit => unit.Alive)) unit.MaxHp = Math.Max(1, (int)Math.Floor(unit.MaxHp * (1f - ratioValue.AsSingle())));
+        }
+        if (exposedPassive.handler_key == "TARGETED_HARD_CHOICE" && deck.Hand.Count > 0)
+            deck.Discard(deck.Hand[Context.State.Random.Next(deck.Hand.Count)]);
+    }
+
+    public void ForceOpponentsToAttack()
     {
         var units = OpposingUnits.Where(unit => unit.Alive).OrderBy(_ => Context.State.Random.Next()).Take(2).ToList(); if (units.Count < 2) return;
         var firstAttack = units[0].Attack; var secondAttack = units[1].Attack; units[0].Hp = Math.Max(0, units[0].Hp - secondAttack); units[1].Hp = Math.Max(0, units[1].Hp - firstAttack);
