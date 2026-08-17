@@ -22,6 +22,39 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
     public PassiveEventContext? CurrentPassiveEvent { get; set; }
     public List<(string OwnerId, int SlotIndex, CardInstance Card)> InvalidatedPassives { get; } = [];
     public List<(string OwnerId, int SlotIndex, UnitState Unit)> PendingSummons { get; } = [];
+    public BattleOutcome Outcome { get; private set; } = BattleOutcome.Playing;
+    public bool IsFinished => Outcome != BattleOutcome.Playing;
+
+    public BattleOutcome EvaluateOutcome()
+    {
+        if (IsFinished) return Outcome;
+        
+        bool playerAlive = PlayerUnits.Any(x => x.Alive);
+        bool enemyAlive = EnemyUnits.Any(x => x.Alive);
+        
+        if (!playerAlive && !enemyAlive)
+        {
+            Outcome = BattleOutcome.Draw;
+            Events.Publish(new BattleEventData(BattleEvent.BattleEnded) { Amount = 0 });
+        }
+        else if (!enemyAlive)
+        {
+            Outcome = BattleOutcome.PlayerVictory;
+            Events.Publish(new BattleEventData(BattleEvent.BattleEnded) { Amount = 1 });
+        }
+        else if (!playerAlive)
+        {
+            Outcome = BattleOutcome.EnemyVictory;
+            Events.Publish(new BattleEventData(BattleEvent.BattleEnded) { Amount = -1 });
+        }
+        
+        return Outcome;
+    }
+
+    public void ResetOutcome()
+    {
+        Outcome = BattleOutcome.Playing;
+    }
 
     public void QueueSummon(string ownerId, int slotIndex, UnitState unit) => PendingSummons.Add((ownerId, slotIndex, unit));
 

@@ -8,7 +8,9 @@ public sealed class DeckState
     public readonly List<CardInstance> DiscardPile = [];
     public readonly List<CardInstance> ExilePile = [];
     public string OwnerId { get; private set; } = "player";
-    private readonly Random _random = new();
+    private Random _random = new();
+    
+    public void SetRandom(Random random) => _random = random;
     public void Setup(IEnumerable<CardDefinition> cards, string owner)
     {
         OwnerId = owner; DrawPile.Clear(); Hand.Clear(); DiscardPile.Clear(); ExilePile.Clear();

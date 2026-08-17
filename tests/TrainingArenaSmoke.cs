@@ -14,6 +14,8 @@ public partial class TrainingArenaSmoke : Node
     private static void Check(bool value, string message) { if (!value) throw new InvalidOperationException(message); }
     private async Task Run()
     {
+        BattleOutcomeTest.Run();
+        
         var arena = GD.Load<PackedScene>("res://scenes/training_arena.tscn").Instantiate<TrainingArena>(); AddChild(arena); await Frame(); await Frame();
         Check(arena.content.heroes.Count == 4, "必须加载4张英雄资源"); Check(arena.content.heroes[1].character_number == 2, "刺客编号必须为2");
         arena.GetNode<CheckButton>("%TestMode").ButtonPressed = true; arena.GetNode<Button>("%OpenTestEditor").EmitSignal(Button.SignalName.Pressed); await Frame(); arena.GetNode<OptionButton>("%Category").Select(2); arena.GetNode<OptionButton>("%Category").EmitSignal(OptionButton.SignalName.ItemSelected, 2); await Frame(); var heroTargets = arena.GetNode<OptionButton>("%Target"); Check(heroTargets.GetItemText(0) == "1 · 铁卫 · 先锋", "先锋必须显示编号、名称和职业"); Check(heroTargets.GetItemText(1) == "2 · 训练用木桩 · 刺客", "刺客必须同时显示编号、名称和职业"); Check(heroTargets.GetItemText(2) == "3 · 风羽 · 斥候", "斥候必须显示编号、名称和职业"); Check(heroTargets.GetItemText(3) == "4 · 律祷 · 祭司", "祭司必须显示编号、名称和职业"); arena.GetNode<AcceptDialog>("%TestEditorDialog").Hide();

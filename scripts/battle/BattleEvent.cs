@@ -9,6 +9,7 @@ public enum BattleEvent
     CardPlayed,
     CardResolved,
     HeroDefeated,
+    BattleEnded,
     TurnStarted,
     TurnEnded,
 }
