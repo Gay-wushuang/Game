@@ -310,6 +310,9 @@ min_value = 0.5
 max_value = 2.0
 step = 0.5
 value = 1.0
+[node name="ReloadLuaButton" type="Button" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+text = "重新加载并校验全部卡牌脚本"
 [node name="ResetButton" type="Button" parent="SettingsDialog/Settings"]
 unique_name_in_owner = true
 text = "重置训练"

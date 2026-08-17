@@ -5,6 +5,7 @@
 ## 工程基准
 
 - 唯一游戏运行时为 Godot 4.x .NET，正式代码使用 C#，不得新增 GDScript 实现。
+- 正式卡牌统一使用独立的受限 Lua 效果入口；战斗状态机、合法性、随机数、事件与原子效果 API 必须保留在 C#。Lua 不得直接访问 `OS`、`FileAccess`、`SceneTree`、Godot 单例或任意场景节点。
 - 当前目标版本为 Godot 4.7 .NET、.NET 8、Compatibility 渲染器。
 - UI 必须使用 Container、Anchor、比例和最小尺寸适配分辨率，不使用依赖单一屏幕的绝对坐标布局。
 - 像素素材启用 nearest 过滤，禁用 mipmap；不得用平滑缩放破坏像素边缘。

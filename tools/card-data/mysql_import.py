@@ -32,7 +32,7 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=int(os.getenv("LAW_DB_PORT", "3306")))
     parser.add_argument("--user", default=os.getenv("LAW_DB_USER", "law_dev"))
     parser.add_argument("--password", default=os.getenv("LAW_DB_PASSWORD", ""))
-    parser.add_argument("--migration", type=Path, default=Path("db/migrations/001_card_catalog.sql"))
+    parser.add_argument("--migrations", type=Path, default=Path("db/migrations"))
     parser.add_argument("--seed", type=Path, default=Path("db/seeds/cards.v1.json"))
     args = parser.parse_args()
 
@@ -42,15 +42,18 @@ def main() -> None:
     if len(cards) != 30 or len(ids) != len(set(ids)) or len(codes) != len(set(codes)):
         raise SystemExit("Seed validation failed: expected 30 unique card_id and design_code values")
 
-    statements = [args.migration.read_text(encoding="utf-8"), "USE law_evolution;", "SET FOREIGN_KEY_CHECKS=0;", "TRUNCATE card_upgrades;", "TRUNCATE card_triggers;", "TRUNCATE card_effects;", "TRUNCATE card_tags;", "TRUNCATE cards;", "SET FOREIGN_KEY_CHECKS=1;"]
+    migration_files = sorted(args.migrations.glob("*.sql"))
+    if not migration_files:
+        raise SystemExit(f"No migrations found in {args.migrations}")
+    statements = [*(path.read_text(encoding="utf-8") for path in migration_files), "USE law_evolution;", "SET FOREIGN_KEY_CHECKS=0;", "TRUNCATE card_upgrades;", "TRUNCATE card_triggers;", "TRUNCATE card_effects;", "TRUNCATE card_tags;", "TRUNCATE cards;", "SET FOREIGN_KEY_CHECKS=1;"]
     for card in cards:
         base_cost = "NULL" if card["base_cost"] is None else str(int(card["base_cost"]))
         statements.append(
-            "INSERT INTO cards(card_id,design_code,name,card_kind,cost_mode,base_cost,target_key,rarity,rules_text,handler_key,params_json,designer_notes) VALUES ("
+            "INSERT INTO cards(card_id,design_code,name,card_kind,cost_mode,base_cost,target_key,rarity,rules_text,handler_key,logic_mode,lua_script,params_json,designer_notes) VALUES ("
             + ",".join([
                 sql_string(card["card_id"]), sql_string(card["design_code"]), sql_string(card["name"]), sql_string(card["card_kind"]),
                 sql_string(card["cost_mode"]), base_cost, sql_string(card["target_key"]), str(int(card["rarity"])), sql_string(card["rules_text"]),
-                sql_string(card["handler_key"]), json_sql(card.get("params", {})), sql_string(card.get("designer_notes", "")),
+                sql_string(card["handler_key"]), sql_string(card.get("logic_mode", "BUILTIN")), sql_string(card.get("lua_script")), json_sql(card.get("params", {})), sql_string(card.get("designer_notes", "")),
             ]) + ");"
         )
         for order, tag in enumerate(card.get("keywords", []), start=1):

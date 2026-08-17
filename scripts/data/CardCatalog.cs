@@ -31,6 +31,8 @@ public static class CardCatalog
             target_kind = ParseTarget(row.GetProperty("target_key").GetString()),
             rarity = row.GetProperty("rarity").GetInt32(),
             handler_key = handler,
+            logic_mode = row.TryGetProperty("logic_mode", out var logicMode) ? logicMode.GetString() ?? "LUA" : "LUA",
+            lua_script = row.TryGetProperty("lua_script", out var luaScript) ? luaScript.GetString() ?? "" : "",
             builtin_effect = LegacyEffect(handler),
         };
         foreach (var tag in row.GetProperty("keywords").EnumerateArray()) definition.tags = [.. definition.tags, tag.GetString() ?? ""];

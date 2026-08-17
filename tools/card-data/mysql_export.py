@@ -28,7 +28,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=Path("data/generated/cards.generated.json"))
     args = parser.parse_args()
 
-    rows = query(args, "SELECT card_id,design_code,name,card_kind,cost_mode,IFNULL(base_cost,''),target_key,rarity,rules_text,handler_key,COALESCE(CAST(params_json AS CHAR),'{}'),COALESCE(designer_notes,'') FROM cards WHERE is_enabled=1 ORDER BY design_code")
+    rows = query(args, "SELECT card_id,design_code,name,card_kind,cost_mode,IFNULL(base_cost,''),target_key,rarity,rules_text,handler_key,logic_mode,COALESCE(lua_script,''),COALESCE(CAST(params_json AS CHAR),'{}'),COALESCE(designer_notes,'') FROM cards WHERE is_enabled=1 ORDER BY design_code")
     tags = query(args, "SELECT card_id,tag_key FROM card_tags ORDER BY card_id,sort_order,tag_key")
     triggers = query(args, "SELECT card_id,event_key FROM card_triggers ORDER BY card_id,sequence_no")
     tag_map: dict[str, list[str]] = {}
@@ -37,8 +37,8 @@ def main() -> None:
     for card_id, trigger in triggers: trigger_map.setdefault(card_id, []).append(trigger)
     cards = []
     for row in rows:
-        card_id, design_code, name, kind, cost_mode, base_cost, target, rarity, rules, handler, params, notes = row
-        cards.append({"design_code":design_code,"card_id":card_id,"name":name,"card_kind":kind,"cost_mode":cost_mode,"base_cost":None if base_cost == "" else int(base_cost),"target_key":target,"rarity":int(rarity),"keywords":tag_map.get(card_id,[]),"rules_text":rules,"designer_notes":notes,"handler_key":handler,"trigger_keys":trigger_map.get(card_id,[]),"params":json.loads(params)})
+        card_id, design_code, name, kind, cost_mode, base_cost, target, rarity, rules, handler, logic_mode, lua_script, params, notes = row
+        cards.append({"design_code":design_code,"card_id":card_id,"name":name,"card_kind":kind,"cost_mode":cost_mode,"base_cost":None if base_cost == "" else int(base_cost),"target_key":target,"rarity":int(rarity),"keywords":tag_map.get(card_id,[]),"rules_text":rules,"designer_notes":notes,"handler_key":handler,"logic_mode":logic_mode,"lua_script":lua_script,"trigger_keys":trigger_map.get(card_id,[]),"params":json.loads(params)})
     if len(cards) != 30:
         raise SystemExit(f"Expected 30 enabled cards, got {len(cards)}")
     args.output.parent.mkdir(parents=True, exist_ok=True)

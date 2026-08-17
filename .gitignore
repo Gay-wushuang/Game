@@ -13,3 +13,11 @@
 *.log
 /.local/
 /outputs/
+__pycache__/
+/addons/lua-gdextension/*
+!/addons/lua-gdextension/build/
+/addons/lua-gdextension/build/*
+!/addons/lua-gdextension/build/libluagdextension.windows.template_debug.x86_64.dll
+!/addons/lua-gdextension/build/libluagdextension.windows.template_release.x86_64.dll
+!/addons/lua-gdextension/luagdextension.gdextension
+!/addons/lua-gdextension/LICENSE

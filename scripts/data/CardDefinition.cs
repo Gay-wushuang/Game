@@ -18,6 +18,8 @@ public partial class CardDefinition : ContentDefinition
     [Export] public string cost_mode { get; set; } = "FIXED";
     [Export(PropertyHint.Range, "1,5,1")] public int rarity { get; set; } = 1;
     [Export] public string handler_key { get; set; } = "";
+    [Export(PropertyHint.Enum, "LUA")] public string logic_mode { get; set; } = "LUA";
+    [Export(PropertyHint.File, "*.lua")] public string lua_script { get; set; } = "";
     [Export] public string[] trigger_keys { get; set; } = [];
     [Export] public Godot.Collections.Dictionary effect_params { get; set; } = new();
 }

@@ -6,11 +6,12 @@ public sealed class DeckState
     public readonly List<CardInstance> DrawPile = [];
     public readonly List<CardInstance> Hand = [];
     public readonly List<CardInstance> DiscardPile = [];
+    public readonly List<CardInstance> ExilePile = [];
     public string OwnerId { get; private set; } = "player";
     private readonly Random _random = new();
     public void Setup(IEnumerable<CardDefinition> cards, string owner)
     {
-        OwnerId = owner; DrawPile.Clear(); Hand.Clear(); DiscardPile.Clear();
+        OwnerId = owner; DrawPile.Clear(); Hand.Clear(); DiscardPile.Clear(); ExilePile.Clear();
         foreach (var card in cards) DrawPile.Add(new CardInstance(card, owner));
         Shuffle(DrawPile);
     }
@@ -27,5 +28,7 @@ public sealed class DeckState
     public void Discard(CardInstance card) { if (!Hand.Remove(card)) return; card.Zone = CardInstance.ZoneKind.Discard; DiscardPile.Add(card); }
     public bool SetPassive(CardInstance card) { if (!Hand.Remove(card)) return false; card.Zone = CardInstance.ZoneKind.Set; card.FaceUp = false; return true; }
     public void DiscardPlaced(CardInstance card) { card.Zone = CardInstance.ZoneKind.Discard; card.FaceUp = true; DiscardPile.Add(card); }
+    public void ReceiveToDiscard(CardInstance card) { card.OwnerId = OwnerId; card.RuntimeCostModifier = 0; card.RuntimeCostOverride = -1; card.ReturnToOriginalOwnerDiscardAtTurnEnd = false; card.Zone = CardInstance.ZoneKind.Discard; card.FaceUp = true; DiscardPile.Add(card); }
+    public void Exile(CardInstance card) { Hand.Remove(card); DiscardPile.Remove(card); card.Zone = CardInstance.ZoneKind.Exile; card.FaceUp = true; ExilePile.Add(card); }
     private void Shuffle<T>(IList<T> list) { for (var i = list.Count - 1; i > 0; i--) { var j = _random.Next(i + 1); (list[i], list[j]) = (list[j], list[i]); } }
 }
