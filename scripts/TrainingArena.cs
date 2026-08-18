@@ -55,8 +55,8 @@ public partial class TrainingArena : Control
     public void ResetTraining()
     {
         _heroBag.Clear(); _aiHeroBag.Clear(); foreach (var h in content.heroes) { _heroBag.Add(new(h)); _aiHeroBag.Add(new(h, "ai")); }
-        _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai"); _aiDeck.Draw(4);
-        _ap = 3; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = 3; _battle.EnemyActionPoints = 3; _battle.Passives.Clear(); _battle.ResetOutcome(); _battle.ResetRandom();
+        _battle.ResetRandom(); _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai"); _aiDeck.Draw(4);
+        _ap = 3; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = 3; _battle.EnemyActionPoints = 3; _battle.Passives.Clear(); _battle.ResetOutcome();
         _battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count);
         _logs.Clear(); _leaderId = _freeCardId = ""; _leaderTurns = 0; N<Label>("Title").Text = "训练场 · 第 1 回合";
         EnableAllBattleControls();
@@ -93,7 +93,7 @@ public partial class TrainingArena : Control
     private async void AllyChosen(UnitSlot slot)
     {
         if (_battle.IsFinished) return;
-        if (_pendingHero != null) { if (slot.Unit?.Alive == true) { _status.Text = "该站位已有存活英雄"; return; } var hero = _pendingHero; slot.SetUnit(hero.Deploy()); _heroBag.Remove(hero); _battle.DecrementReserveHero("player"); _ap--; if (_leaderId == "") { _leaderId = hero.Definition.id.ToString(); _leaderTurns = hero.Definition.CustomValue("leader_duration", 0).AsInt32(); ApplyLeaderBonus(); } else if (_leaderId == "hero_role_1" && (_leaderTurns > 0 || LeaderIsStarTwo())) { slot.Unit!.MaxHp += 50; slot.Unit.Hp += 50; } AddLog($"[color=75d7ff]部署[/color] {hero.Definition.display_name} 进入我方 {slot.SlotIndex + 1} 号位。"); _pendingHero = null; _allyIndex = slot.SlotIndex; RefreshAll(); await slot.PlayDeployAnimation(); return; }
+        if (_pendingHero != null) { if (slot.Unit?.Alive == true) { _status.Text = "该站位已有存活英雄"; return; } var hero = _pendingHero; slot.SetUnit(hero.Deploy()); _battle.SetSlotUnit("player", slot.SlotIndex, slot.Unit); _heroBag.Remove(hero); _battle.DecrementReserveHero("player"); _ap--; if (_leaderId == "") { _leaderId = hero.Definition.id.ToString(); _leaderTurns = hero.Definition.CustomValue("leader_duration", 0).AsInt32(); ApplyLeaderBonus(); } else if (_leaderId == "hero_role_1" && (_leaderTurns > 0 || LeaderIsStarTwo())) { slot.Unit!.MaxHp += 50; slot.Unit.Hp += 50; } AddLog($"[color=75d7ff]部署[/color] {hero.Definition.display_name} 进入我方 {slot.SlotIndex + 1} 号位。"); _pendingHero = null; _allyIndex = slot.SlotIndex; RefreshAll(); await slot.PlayDeployAnimation(); return; }
         if (slot.Unit?.Alive != true) return;
         if (_pendingCard?.Definition.card_kind == CardDefinition.CardKind.Passive) { PlacePassive(slot); return; }
         _allyIndex = slot.SlotIndex; _enemyIndex = -1; N<Button>("SkillButton").Disabled = slot.Unit.Cooldown > 0;
@@ -201,7 +201,7 @@ public partial class TrainingArena : Control
         var aiAp = 3; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
         for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_battle.IsFinished) return; if (_aiDeck.Hand.Count < 5) _aiDeck.Draw(); AddLog($"[color=ff8888]AI回合[/color] 敌方行动结束，剩余行动点 {aiAp}。");
     }
-    private async Task<int> AiDeploy() { if (_battle.IsFinished) return 0; var empty = _enemies.Where(s => s.Unit?.Alive != true).ToList(); if (empty.Count == 0 || _aiHeroBag.Count == 0) return 0; var hero = _aiHeroBag[_battle.Random.Next(_aiHeroBag.Count)]; var slot = empty[_battle.Random.Next(empty.Count)]; slot.SetUnit(hero.Deploy()); _aiHeroBag.Remove(hero); _battle.DecrementReserveHero("ai"); await slot.PlayDeployAnimation(); AddLog($"[color=ff8888]AI部署[/color] {hero.Definition.display_name} 进入敌方 {slot.SlotIndex + 1} 号位（消耗1行动点）。"); return 1; }
+    private async Task<int> AiDeploy() { if (_battle.IsFinished) return 0; var empty = _enemies.Where(s => s.Unit?.Alive != true).ToList(); if (empty.Count == 0 || _aiHeroBag.Count == 0) return 0; var hero = _aiHeroBag[_battle.Random.Next(_aiHeroBag.Count)]; var slot = empty[_battle.Random.Next(empty.Count)]; slot.SetUnit(hero.Deploy()); _battle.SetSlotUnit("ai", slot.SlotIndex, slot.Unit); _aiHeroBag.Remove(hero); _battle.DecrementReserveHero("ai"); await slot.PlayDeployAnimation(); AddLog($"[color=ff8888]AI部署[/color] {hero.Definition.display_name} 进入敌方 {slot.SlotIndex + 1} 号位（消耗1行动点）。"); return 1; }
     private async Task<bool> AiAttack()
     {
         if (_battle.IsFinished) return false;
@@ -277,6 +277,7 @@ public partial class TrainingArena : Control
         _battle.FinalizeDeaths(
             _allies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!),
             _enemies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!));
+        SynchronizeBattleState();
         CallDeferred(MethodName.DeferredCheckEnemyEmptySlots);
     }
 

@@ -51,7 +51,12 @@ public static class BattleOutcomeTest
         TestPassiveMissingCard();
         TestPassiveRemoval();
         
-        Console.WriteLine("[PASS] 所有 BattleOutcome / BattleRules / Reserve / RNG / Passive 测试通过");
+        // ===== Phase D: 回归测试 =====
+        TestRngResetBeforeSetup();
+        TestDeployedHeroCanPlacePassive();
+        TestDeadHeroRejectsPassiveAfterDeath();
+        
+        Console.WriteLine("[PASS] 所有 BattleOutcome / BattleRules / Reserve / RNG / Passive / 回归 测试通过");
     }
 
     private static void Check(bool value, string message)
@@ -1180,6 +1185,104 @@ public static class BattleOutcomeTest
         Check(battle.Passives.Count == 0, "Removing non-existent card is safe");
         
         Console.WriteLine("[PASS] TestPassiveRemoval: 被动移除成功，安全处理不存在的卡");
+    }
+
+    // ===== Phase D: 回归测试 =====
+
+    /// <summary>
+    /// 验证 ResetRandom → Setup → Draw 两次产生相同开局牌序。
+    /// 这模拟了 ResetTraining 的正确调用顺序：先 Reset，再 Setup/Draw。
+    /// </summary>
+    private static void TestRngResetBeforeSetup()
+    {
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 77777);
+        
+        // 第一轮：ResetRandom → Setup → Draw
+        battle.ResetRandom();
+        playerDeck.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5"), MakeCard("c6") }, "player");
+        var draw1 = playerDeck.Draw(3);
+        var firstIds = draw1.Select(c => c.Definition.id).ToList();
+        
+        // 第二轮：同样顺序
+        battle.ResetRandom();
+        playerDeck.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5"), MakeCard("c6") }, "player");
+        var draw2 = playerDeck.Draw(3);
+        var secondIds = draw2.Select(c => c.Definition.id).ToList();
+        
+        // 验证两次相同
+        Check(firstIds.Count == secondIds.Count, $"Draw count mismatch: {firstIds.Count} vs {secondIds.Count}");
+        for (int i = 0; i < firstIds.Count; i++)
+        {
+            Check(firstIds[i] == secondIds[i],
+                $"After Reset→Setup→Draw cycle: card at index {i} mismatch (first={firstIds[i]}, second={secondIds[i]})");
+        }
+        
+        Console.WriteLine("[PASS] TestRngResetBeforeSetup: ResetRandom→Setup→Draw两次产生相同牌序");
+    }
+
+    /// <summary>
+    /// 验证刚部署的存活英雄可以立即放置 Passive。
+    /// 这确保 BattleState slot-unit 映射在部署后立即同步。
+    /// </summary>
+    private static void TestDeployedHeroCanPlacePassive()
+    {
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 88888);
+        
+        // 模拟部署：先在 BattleState 中设置 slot 单位
+        var hero = AliveHero("deployed", "先锋", 120);
+        battle.SetSlotUnit("player", 2, hero);
+        battle.PlayerUnits.Add(hero);
+        
+        // 创建 Passive 卡并加入手牌
+        var passiveDef = new CardDefinition { id = "deployed_passive", display_name = "Deployed Passive", action_cost = 1, card_kind = CardDefinition.CardKind.Passive };
+        var card = new CardInstance(passiveDef, "player");
+        playerDeck.Hand.Add(card);
+        
+        // 立即尝试放置 — 应该成功
+        bool result = battle.TryPlacePassive("player", 2, card, out var error);
+        Check(result, $"刚部署的英雄应该能放置被动，但失败了: {error}");
+        Check(battle.Passives.Count == 1, "应该有1个被动");
+        Check(battle.Passives[0].SlotIndex == 2, "被动应该在slot 2");
+        
+        Console.WriteLine("[PASS] TestDeployedHeroCanPlacePassive: 刚部署的存活英雄可立即放置Passive");
+    }
+
+    /// <summary>
+    /// 验证死亡后的英雄槽立即拒绝 Passive 放置。
+    /// 这确保死亡同步后 BattleState slot-unit 映射反映真实状态。
+    /// </summary>
+    private static void TestDeadHeroRejectsPassiveAfterDeath()
+    {
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 99999);
+        
+        // 模拟英雄死亡后：slot-unit 映射包含已死亡单位
+        var deadHero = DeadHero("dead", "刺客");
+        battle.SetSlotUnit("player", 3, deadHero);
+        battle.PlayerUnits.Add(deadHero);
+        
+        // 创建 Passive 卡并加入手牌
+        var passiveDef = new CardDefinition { id = "dead_passive", display_name = "Dead Passive", action_cost = 1, card_kind = CardDefinition.CardKind.Passive };
+        var card = new CardInstance(passiveDef, "player");
+        playerDeck.Hand.Add(card);
+        
+        // 尝试放置 — 应该失败
+        bool result = battle.TryPlacePassive("player", 3, card, out var error);
+        Check(!result, $"死亡英雄槽应该拒绝放置被动，但成功了");
+        Check(error.Contains("阵亡"), $"错误信息应包含'阵亡'，但得到: {error}");
+        
+        // 同时验证空 slot 也拒绝
+        battle.SetSlotUnit("player", 4, null);
+        bool result2 = battle.TryPlacePassive("player", 4, card, out var error2);
+        Check(!result2, $"空英雄槽应该拒绝放置被动，但成功了");
+        Check(error2.Contains("没有英雄"), $"错误信息应包含'没有英雄'，但得到: {error2}");
+        
+        Console.WriteLine("[PASS] TestDeadHeroRejectsPassiveAfterDeath: 死亡/空slot立即拒绝Passive");
     }
 
     // ===== 辅助方法 =====
