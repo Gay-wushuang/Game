@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public sealed class CardResolver : IDisposable
 {
@@ -7,7 +8,7 @@ public sealed class CardResolver : IDisposable
     public bool LuaAvailable => _lua.Available;
     public bool ValidateLua(string path, out string error) => _lua.ValidateScript(path, out error);
     public bool ValidateSandboxIsolation(out string error) => _lua.ValidateSandboxIsolation(out error);
-    public void ReloadLua() => _lua.Reload();
+    public void ReloadLua(IEnumerable<CardDefinition>? cardsToValidate = null) => _lua.Reload(cardsToValidate);
     public bool CanResolveBuiltin(string handlerKey) => _builtin.CanResolve(handlerKey);
 
     public bool Resolve(CardExecutionContext context, out string error)

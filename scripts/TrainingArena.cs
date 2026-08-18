@@ -147,7 +147,24 @@ public partial class TrainingArena : Control
         await AnimateCard(card); var definition = card.Definition;
         if (definition.logic_mode == "LUA")
         {
-            if (!_cardResolver.Resolve(CardContext(card), out var luaError)) { _status.Text = $"Lua卡牌结算失败：{luaError}"; AddLog($"[color=ff6666]Lua错误[/color] {luaError}"); return; }
+            if (!_cardResolver.Resolve(CardContext(card), out var luaError))
+            {
+                if (luaError == "CANCELLED")
+                {
+                    // 拒绝生效：取消敌方下一张锦囊。卡牌本身正常打出并弃置。
+                    _cancelNextEnemyEffect = true;
+                    _ap -= EffectiveCost(card);
+                    _deck.Discard(card);
+                    AddLog($"[color=77ee99]Lua锦囊[/color] 「{definition.display_name}」触发拒绝生效：敌方下一张锦囊将被抵消。");
+                    _status.Text = "拒绝生效：敌方下一张锦囊将被抵消";
+                }
+                else
+                {
+                    _status.Text = $"Lua卡牌结算失败：{luaError}";
+                    AddLog($"[color=ff6666]Lua错误[/color] {luaError}");
+                }
+                CancelSelection(false); RefreshAll(); return;
+            }
             if (definition.handler_key == "PREPAY_AND_DISCARD") _ap = _battle.PlayerActionPoints; else _ap -= EffectiveCost(card); _deck.Discard(card); AddLog($"[color=dd99ff]Lua锦囊[/color] 「{definition.display_name}」已在沙盒中结算。"); CancelSelection(false); MarkDefeated(); RefreshAll(); return;
         }
         if (_cardResolver.CanResolveBuiltin(definition.handler_key))
@@ -359,7 +376,9 @@ public partial class TrainingArena : Control
     private void AddLog(string e) { _logs.Insert(0, $"[b]第 {_turn} 回合[/b]　{e}"); if (_logs.Count > 80) _logs.RemoveAt(_logs.Count - 1); N<RichTextLabel>("LogText").Text = string.Join("\n\n", _logs); }
     public void ReloadCardScripts()
     {
-        _cardResolver.ReloadLua(); var errors = new List<string>(); foreach (var card in content.cards) if (!_cardResolver.ValidateLua(card.lua_script, out var error)) errors.Add($"{card.display_name}：{error}");
+        // 传递所有卡牌定义给 Reload，使其在替换前验证所有脚本。
+        _cardResolver.ReloadLua(content.cards);
+        var errors = new List<string>(); foreach (var card in content.cards) if (!_cardResolver.ValidateLua(card.lua_script, out var error)) errors.Add($"{card.display_name}：{error}");
         if (errors.Count == 0) { _status.Text = "30张卡牌Lua脚本已重新加载并通过校验"; AddLog("[color=77ee99]Lua热重载[/color] 30张卡牌脚本校验通过。"); }
         else { _status.Text = $"Lua热重载失败：{errors.Count}张脚本错误"; AddLog($"[color=ff6666]Lua热重载失败[/color]\n{string.Join("\n", errors)}"); }
     }

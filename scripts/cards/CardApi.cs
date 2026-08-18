@@ -75,16 +75,35 @@ public sealed class CardApi(CardExecutionContext context)
     public void TemporarilyRandomizeOpponentClass()
     {
         var living = OpposingUnits.Where(unit => unit.Alive).ToList(); if (living.Count == 0) return;
-        var target = living[Context.State.Random.Next(living.Count)]; var original = target.Type; var classes = new[] { "先锋", "刺客", "斥候", "祭司" };
-        target.Type = classes[Context.State.Random.Next(classes.Length)]; Context.State.Schedule(1, () => target.Type = original);
+        var target = living[Context.State.Random.Next(living.Count)];
+        // 首次临时修改时记录原始 Type，避免嵌套效果后恢复到中间状态。
+        if (target.OriginalType == null) target.OriginalType = target.Type;
+        var classes = new[] { "先锋", "刺客", "斥候", "祭司" };
+        target.Type = classes[Context.State.Random.Next(classes.Length)];
+        Context.State.Schedule(1, () =>
+        {
+            if (target.OriginalType != null) { target.Type = target.OriginalType; target.OriginalType = null; }
+        });
     }
 
     public void TemporarilySwapOpposingStats()
     {
         var friendly = FriendlyUnits.Where(unit => unit.Alive).ToList(); var opposing = OpposingUnits.Where(unit => unit.Alive).ToList(); if (friendly.Count == 0 || opposing.Count == 0) return;
-        var first = friendly[Context.State.Random.Next(friendly.Count)]; var second = opposing[Context.State.Random.Next(opposing.Count)]; var firstType = first.Type; var firstAttack = first.Attack; var secondType = second.Type; var secondAttack = second.Attack;
-        first.Type = secondType; first.Attack = secondAttack; second.Type = firstType; second.Attack = firstAttack;
-        Context.State.Schedule(1, () => { first.Type = firstType; first.Attack = firstAttack; second.Type = secondType; second.Attack = secondAttack; });
+        var first = friendly[Context.State.Random.Next(friendly.Count)]; var second = opposing[Context.State.Random.Next(opposing.Count)];
+        // 首次临时修改时记录双方最初的 Type / Attack，避免嵌套效果后恢复到中间状态。
+        if (first.OriginalType == null) first.OriginalType = first.Type;
+        if (first.OriginalAttack == null) first.OriginalAttack = first.Attack;
+        if (second.OriginalType == null) second.OriginalType = second.Type;
+        if (second.OriginalAttack == null) second.OriginalAttack = second.Attack;
+        first.Type = second.Type; first.Attack = second.Attack; second.Type = first.Type; second.Attack = first.Attack;
+        Context.State.Schedule(1, () =>
+        {
+            // 使用保存的最初值恢复，而不是闭包中捕获的"当前值"。
+            if (first.OriginalType != null) { first.Type = first.OriginalType; first.OriginalType = null; }
+            if (first.OriginalAttack != null) { first.Attack = first.OriginalAttack.Value; first.OriginalAttack = null; }
+            if (second.OriginalType != null) { second.Type = second.OriginalType; second.OriginalType = null; }
+            if (second.OriginalAttack != null) { second.Attack = second.OriginalAttack.Value; second.OriginalAttack = null; }
+        });
     }
 
     public int DamageRandomEnemy(int amount)
@@ -105,10 +124,21 @@ public sealed class CardApi(CardExecutionContext context)
     public int RefillHand(int targetCount) => Draw(Math.Max(0, targetCount - Context.OwnerDeck.Hand.Count));
     public void SetRandomActionPoints()
     {
-        // 规则：50% 恢复至上限（3），50% 下回合归零（当前清零）。
-        var max = 3;
-        var value = Context.State.Random.Next(2) == 0 ? max : 0;
-        if (Context.OwnerDeck.OwnerId == "player") Context.State.PlayerActionPoints = value; else Context.State.EnemyActionPoints = value;
+        // 规则：50% 恢复当前回合至上限（3），50% 下回合行动力归零（通过下回合奖励 -3 实现）。
+        var isPlayer = Context.OwnerDeck.OwnerId == "player";
+        var rng = Context.State.Random;
+        if (rng.Next(2) == 0)
+        {
+            // 50%：恢复当前回合至上限
+            if (isPlayer) Context.State.PlayerActionPoints = 3;
+            else Context.State.EnemyActionPoints = 3;
+        }
+        else
+        {
+            // 50%：下回合行动力归零（通过设置负的 NextTurnBonus，下回合 AdvanceTurn 时会加上这个负值）
+            if (isPlayer) Context.State.PlayerNextTurnBonus = -3;
+            else Context.State.EnemyNextTurnBonus = -3;
+        }
     }
     public void CounterPassiveSet()
     {

@@ -26,4 +26,8 @@ public sealed class UnitState
     public int LinkedEnemy { get; set; } = -1;
     public bool Alive => Hp > 0;
     public string Id => Definition.id.ToString();
+
+    // 临时效果原始值跟踪：首次临时修改时记录，恢复时使用，避免嵌套后恢复到中间状态。
+    public string? OriginalType { get; set; }
+    public int? OriginalAttack { get; set; }
 }

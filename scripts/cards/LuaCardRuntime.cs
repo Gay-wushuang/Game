@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public sealed class LuaCardRuntime : IDisposable
 {
@@ -93,9 +94,9 @@ public sealed class LuaCardRuntime : IDisposable
         if (resultObject?.IsClass("LuaError") == true) { error = resultObject.ToString(); return false; }
         return true;
     }
-    public void Reload()
+    public void Reload(IEnumerable<CardDefinition>? cardsToValidate = null)
     {
-        // 先创建新的 LuaState，成功后再替换旧的，避免 Dispose 后创建失败导致无法回滚。
+        // 先创建新的 LuaState，验证所有卡牌脚本通过后再替换旧状态。
         var previous = _state;
         GodotObject? next = null;
         if (ClassDB.ClassExists("LuaState"))
@@ -103,13 +104,40 @@ public sealed class LuaCardRuntime : IDisposable
             try { next = ClassDB.Instantiate("LuaState").AsGodotObject(); }
             catch { next = null; }
         }
-        if (next != null)
+        if (next == null)
         {
-            // 新状态创建成功，释放旧状态并替换。
-            previous?.Dispose();
-            _state = next;
+            // 新状态创建失败，保留旧状态用于回滚。
+            return;
         }
-        // 如果新状态创建失败，保留旧状态用于回滚，不做任何变更。
+
+        // 可选：使用新状态验证所有卡牌脚本。如果任何脚本失败，释放新状态并保留旧状态。
+        if (cardsToValidate != null)
+        {
+            var temp = _state;
+            _state = next;
+            var allValid = true;
+            foreach (var card in cardsToValidate)
+            {
+                if (string.IsNullOrWhiteSpace(card.lua_script)) continue;
+                if (!ValidateScript(card.lua_script, out _))
+                {
+                    allValid = false;
+                    break;
+                }
+            }
+            _state = temp; // 恢复旧状态
+
+            if (!allValid)
+            {
+                // 脚本验证失败：释放新状态，保留旧状态，不做任何变更。
+                next.Dispose();
+                return;
+            }
+        }
+
+        // 所有验证通过，正式替换。
+        previous?.Dispose();
+        _state = next;
     }
 
     public void Dispose() => _state?.Dispose();
