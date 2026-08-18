@@ -958,16 +958,15 @@ public static class BattleOutcomeTest
 
     private static void TestRngSameSeed()
     {
-        // Same seed should produce same deck order
+        // Same seed on same BattleState should produce same deck order
         var deck1 = new DeckState();
-        deck1.SetRandom(new Random(12345));
+        var battle1 = NewBattleWithDecks(50001, deck1, new DeckState());
         deck1.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
         
         var deck2 = new DeckState();
-        deck2.SetRandom(new Random(12345));
+        var battle2 = NewBattleWithDecks(50001, deck2, new DeckState());
         deck2.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
         
-        // Draw the same cards
         var draw1 = deck1.Draw(5);
         var draw2 = deck2.Draw(5);
         
@@ -983,140 +982,192 @@ public static class BattleOutcomeTest
 
     private static void TestRngDifferentSeed()
     {
+        // Different seeds should produce different shuffles
         var deck1 = new DeckState();
-        deck1.SetRandom(new Random(12345));
-        deck1.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
+        var battle1 = NewBattleWithDecks(50002, deck1, new DeckState());
+        deck1.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5"), MakeCard("c6"), MakeCard("c7"), MakeCard("c8") }, "player");
         
         var deck2 = new DeckState();
-        deck2.SetRandom(new Random(54321));
-        deck2.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
+        var battle2 = NewBattleWithDecks(54321, deck2, new DeckState());
+        deck2.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5"), MakeCard("c6"), MakeCard("c7"), MakeCard("c8") }, "player");
         
-        var draw1 = deck1.Draw(5);
-        var draw2 = deck2.Draw(5);
+        var draw1 = deck1.Draw(8);
+        var draw2 = deck2.Draw(8);
         
-        // With 5 unique cards it's possible they'd happen to match, but very unlikely
-        // Just verify both decks function correctly
-        Check(draw1.Count == 5, "Deck1 should draw 5 cards");
-        Check(draw2.Count == 5, "Deck2 should draw 5 cards");
+        // With 8 unique cards, it's very unlikely both shuffles produce identical order
+        bool allSame = true;
+        for (int i = 0; i < draw1.Count && i < draw2.Count; i++)
+        {
+            if (draw1[i].Definition.id != draw2[i].Definition.id) { allSame = false; break; }
+        }
+        Check(!allSame, "不同seed应产生不同的牌序（8张唯一卡）");
         
-        Console.WriteLine("[PASS] TestRngDifferentSeed: 不同seed正确初始化");
+        Console.WriteLine("[PASS] TestRngDifferentSeed: 不同seed产生不同牌序");
     }
 
     private static void TestRngResetSameSeed()
     {
-        // Consume some randoms, then reset to same seed, should get same sequence
-        var deck1 = new DeckState();
-        var rng1 = new Random(99999);
-        deck1.SetRandom(rng1);
-        deck1.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
-        var draw1 = deck1.Draw(3);
+        // Test actual ResetRandom on SAME BattleState:
+        // consume RNG, Reset, re-consume → same sequence
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 66666);
         
-        // Reset: new RNG with same seed
-        var deck2 = new DeckState();
-        var rng2 = new Random(99999);
-        deck2.SetRandom(rng2);
-        deck2.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
-        var draw2 = deck2.Draw(3);
+        // First round: setup + draw
+        playerDeck.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
+        var draw1 = playerDeck.Draw(3);
+        var firstIds = draw1.Select(c => c.Definition.id).ToList();
         
-        Check(draw1.Count == draw2.Count, "Draw counts should match");
-        for (int i = 0; i < draw1.Count; i++)
+        // Reset: reset RNG + re-setup deck
+        battle.ResetRandom();
+        playerDeck.Setup(new[] { MakeCard("c1"), MakeCard("c2"), MakeCard("c3"), MakeCard("c4"), MakeCard("c5") }, "player");
+        var draw2 = playerDeck.Draw(3);
+        var secondIds = draw2.Select(c => c.Definition.id).ToList();
+        
+        Check(firstIds.Count == secondIds.Count, "Draw counts should match after reset");
+        for (int i = 0; i < firstIds.Count; i++)
         {
-            Check(draw1[i].Definition.id == draw2[i].Definition.id,
-                $"After reset: card at index {i} mismatch");
+            Check(firstIds[i] == secondIds[i],
+                $"After ResetRandom: card at index {i} mismatch (first={firstIds[i]}, second={secondIds[i]})");
         }
         
-        Console.WriteLine("[PASS] TestRngResetSameSeed: Reset后相同seed可复现牌序");
+        Console.WriteLine("[PASS] TestRngResetSameSeed: ResetRandom后相同seed可复现牌序");
     }
 
     // ===== Phase C: Passive 测试 =====
 
+    /// <summary>
+    /// 为被动测试设置 BattleState：在玩家/AI Deck中放入手牌，并在指定槽位设置存活英雄。
+    /// </summary>
+    private static (BattleState Battle, CardInstance PassiveCard) SetupPassiveTest(
+        int seed, string ownerId, int slotIndex, UnitState? hero = null, bool addToHand = true)
+    {
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, seed);
+        
+        // Create a Passive card in the appropriate deck
+        var deck = ownerId == "player" ? playerDeck : enemyDeck;
+        var passiveDef = new CardDefinition { id = "passive_test", display_name = "Passive Test", action_cost = 1, card_kind = CardDefinition.CardKind.Passive };
+        var card = new CardInstance(passiveDef, ownerId);
+        
+        if (addToHand)
+        {
+            deck.Hand.Add(card);
+        }
+        
+        // Set hero at slot
+        if (hero != null)
+        {
+            battle.SetSlotUnit(ownerId, slotIndex, hero);
+            // Also add to the flat unit list for completeness
+            if (ownerId == "player") battle.PlayerUnits.Add(hero);
+            else battle.EnemyUnits.Add(hero);
+        }
+        
+        return (battle, card);
+    }
+
     private static void TestPassivePlacementSuccess()
     {
-        var battle = NewBattle(40001);
-        var card = MakeCardInstance("test_passive");
-        battle.Events.Subscribe(BattleEvent.BattleEnded, _ => { }); // subscribe to test no issues
+        var hero = AliveHero("p1", "先锋", 100);
+        var (battle, card) = SetupPassiveTest(40001, "player", 2, hero);
         
-        bool result = battle.SetPassive("player", 2, card);
-        Check(result, "SetPassive should succeed");
+        bool result = battle.TryPlacePassive("player", 2, card, out var error);
+        Check(result, $"TryPlacePassive should succeed but got error: {error}");
         Check(battle.Passives.Count == 1, "Should have 1 passive");
         Check(battle.Passives[0].OwnerId == "player", "Owner should be player");
         Check(battle.Passives[0].SlotIndex == 2, "Slot should be 2");
         
-        Console.WriteLine("[PASS] TestPassivePlacementSuccess: 被动放置成功");
+        Console.WriteLine("[PASS] TestPassivePlacementSuccess: TryPlacePassive成功放置被动");
     }
 
     private static void TestPassiveDuplicatePlacement()
     {
-        var battle = NewBattle(40002);
-        var card1 = MakeCardInstance("c1");
-        var card2 = MakeCardInstance("c2");
+        var hero1 = AliveHero("p1", "先锋", 100);
+        var hero2 = AliveHero("p2", "刺客", 80);
+        var heroAi = AliveHero("e1", "祭司", 90);
         
-        bool r1 = battle.SetPassive("player", 1, card1);
-        Check(r1, "First SetPassive should succeed");
-        Check(battle.Passives.Count == 1, "Should have 1 passive");
+        var (battle, card1) = SetupPassiveTest(40002, "player", 1, hero1);
+        // Add second card to player hand
+        var card2 = new CardInstance(new CardDefinition { id = "c2", display_name = "c2", action_cost = 1, card_kind = CardDefinition.CardKind.Passive }, "player");
+        battle.PlayerDeck.Hand.Add(card2);
         
-        // Same slot, same owner - should fail
-        bool r2 = battle.SetPassive("player", 1, card2);
-        Check(!r2, "Second SetPassive on same slot should fail");
-        Check(battle.Passives.Count == 1, "Should still have 1 passive");
+        // First placement succeeds
+        bool r1 = battle.TryPlacePassive("player", 1, card1, out _);
+        Check(r1, "First TryPlacePassive should succeed");
         
-        // Same slot, different owner - should fail (slot already has passive)
-        bool r3 = battle.SetPassive("ai", 1, card2);
-        Check(!r3, "Different owner on same slot should fail");
-        Check(battle.Passives.Count == 1, "Should still have 1 passive");
+        // Same owner + same slot → should fail
+        bool r2 = battle.TryPlacePassive("player", 1, card2, out var err2);
+        Check(!r2, $"Second placement on same slot should fail: {err2}");
         
-        // Different slot - should succeed
-        bool r4 = battle.SetPassive("player", 3, card2);
-        Check(r4, "SetPassive on different slot should succeed");
-        Check(battle.Passives.Count == 2, "Should have 2 passives now");
+        // Different owner + same slot index → should SUCCEED (different owner, different slot list)
+        // Setup AI slot 1 with hero
+        battle.SetSlotUnit("ai", 1, heroAi);
+        battle.EnemyUnits.Add(heroAi);
+        var aiCard = new CardInstance(new CardDefinition { id = "ai_card", display_name = "AI Card", action_cost = 1, card_kind = CardDefinition.CardKind.Passive }, "ai");
+        battle.EnemyDeck.Hand.Add(aiCard);
+        bool r3 = battle.TryPlacePassive("ai", 1, aiCard, out _);
+        Check(r3, "AI placing on slot 1 should succeed (different owner = different slot list)");
         
-        Console.WriteLine("[PASS] TestPassiveDuplicatePlacement: 重复放置正确拒绝");
+        // Same owner + different slot → should succeed
+        battle.SetSlotUnit("player", 3, hero2);
+        battle.PlayerUnits.Add(hero2);
+        bool r4 = battle.TryPlacePassive("player", 3, card2, out _);
+        Check(r4, "Different slot for same owner should succeed");
+        
+        Console.WriteLine("[PASS] TestPassiveDuplicatePlacement: 同槽同owner拒绝，不同owner或不同槽位允许");
     }
 
     private static void TestPassiveWrongOwner()
     {
-        var battle = NewBattle(40003);
-        var card = MakeCardInstance("ai_card");
+        var hero = AliveHero("p1", "先锋", 100);
+        // Create AI card in player's hand (wrong owner)
+        var (battle, card) = SetupPassiveTest(40003, "player", 0, hero);
+        // Override: card has owner "ai" but is in player's hand
+        card.OwnerId = "ai";
         
-        // Can't place AI card in player slot? Actually the API allows any owner for any slot
-        // The rule is enforced by UI, not BattleState
-        bool result = battle.SetPassive("ai", 0, card);
-        Check(result, "AI card can be placed in AI slot");
-        Check(battle.Passives[0].OwnerId == "ai", "Owner should be ai");
+        bool result = battle.TryPlacePassive("player", 0, card, out var error);
+        Check(!result, $"Wrong owner should fail: {error}");
+        Check(error.Contains("归属"), $"Error should mention ownership mismatch, got: {error}");
         
-        Console.WriteLine("[PASS] TestPassiveWrongOwner: BattleState不限制阵营放置（由UI层控制）");
+        Console.WriteLine("[PASS] TestPassiveWrongOwner: Owner不匹配时放置失败");
     }
 
     private static void TestPassiveDeadHero()
     {
-        var battle = NewBattle(40004);
-        // BattleState does not validate hero alive status - that's UI/TrainingArena's job
-        // We just verify BattleState accepts the placement
-        var card = MakeCardInstance("p1");
-        var result = battle.SetPassive("player", 0, card);
-        Check(result, "BattleState allows placement regardless of hero alive status");
+        var deadHero = DeadHero("p1", "先锋");
+        var (battle, card) = SetupPassiveTest(40004, "player", 0, deadHero);
         
-        Console.WriteLine("[PASS] TestPassiveDeadHero: BattleState不验证英雄存活（由UI层控制）");
+        bool result = battle.TryPlacePassive("player", 0, card, out var error);
+        Check(!result, $"Dead hero should fail: {error}");
+        Check(error.Contains("阵亡"), $"Error should mention hero death, got: {error}");
+        
+        Console.WriteLine("[PASS] TestPassiveDeadHero: 死亡英雄槽放置被动失败");
     }
 
     private static void TestPassiveMissingCard()
     {
-        var battle = NewBattle(40005);
-        var card = MakeCardInstance("missing");
+        var hero = AliveHero("p1", "先锋", 100);
+        // Create battle without adding card to hand
+        var (battle, _) = SetupPassiveTest(40005, "player", 0, hero, addToHand: false);
         
-        // SetPassive in BattleState does not check if card is in hand
-        // That validation happens at DeckState/TrainingArena level
-        bool result = battle.SetPassive("player", 0, card);
-        Check(result, "BattleState.SetPassive validates slot occupancy only");
+        // Create a card that's NOT in hand
+        var missingCard = new CardInstance(new CardDefinition { id = "missing", display_name = "Missing", action_cost = 1, card_kind = CardDefinition.CardKind.Passive }, "player");
         
-        Console.WriteLine("[PASS] TestPassiveMissingCard: BattleState仅验证slot占用（手牌验证在DeckState层）");
+        bool result = battle.TryPlacePassive("player", 0, missingCard, out var error);
+        Check(!result, $"Card not in hand should fail: {error}");
+        Check(error.Contains("手牌"), $"Error should mention hand, got: {error}");
+        
+        Console.WriteLine("[PASS] TestPassiveMissingCard: 不在手牌中的卡放置失败");
     }
 
     private static void TestPassiveRemoval()
     {
-        var battle = NewBattle(40006);
-        var card = MakeCardInstance("removable");
+        var hero = AliveHero("p1", "先锋", 100);
+        var (battle, card) = SetupPassiveTest(40006, "player", 1, hero);
         
+        // Use internal SetPassive for setup (bypasses validation for removal test)
         battle.SetPassive("player", 1, card);
         Check(battle.Passives.Count == 1, "Should have 1 passive before removal");
         
@@ -1124,7 +1175,7 @@ public static class BattleOutcomeTest
         Check(battle.Passives.Count == 0, "Should have 0 passives after removal");
         
         // Remove non-existent card - should not throw
-        var fakeCard = MakeCardInstance("fake");
+        var fakeCard = new CardInstance(new CardDefinition { id = "fake", display_name = "Fake", action_cost = 1 }, "player");
         battle.RemovePassive(fakeCard);
         Check(battle.Passives.Count == 0, "Removing non-existent card is safe");
         
@@ -1137,6 +1188,11 @@ public static class BattleOutcomeTest
     {
         var playerDeck = new DeckState();
         var enemyDeck = new DeckState();
+        return new BattleState(playerDeck, enemyDeck, seed);
+    }
+
+    private static BattleState NewBattleWithDecks(int seed, DeckState playerDeck, DeckState enemyDeck)
+    {
         return new BattleState(playerDeck, enemyDeck, seed);
     }
 

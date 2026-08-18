@@ -23,7 +23,6 @@ public partial class TrainingArena : Control
     {
         content.cards = CardCatalog.Load();
         _battle = new(_deck, _aiDeck, 20260817); _cardResolver = new();
-        _deck.SetRandom(_battle.Random); _aiDeck.SetRandom(_battle.Random);
         ValidateCardScripts();
         _slotScene = GD.Load<PackedScene>("res://scenes/components/unit_slot.tscn"); _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn");
         _status = GetNode<Label>("%Status"); _apText = GetNode<Label>("%ActionPoints"); _hand = GetNode<HandFan>("%Hand");
@@ -57,7 +56,7 @@ public partial class TrainingArena : Control
     {
         _heroBag.Clear(); _aiHeroBag.Clear(); foreach (var h in content.heroes) { _heroBag.Add(new(h)); _aiHeroBag.Add(new(h, "ai")); }
         _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai"); _aiDeck.Draw(4);
-        _ap = 3; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = 3; _battle.EnemyActionPoints = 3; _battle.Passives.Clear(); _battle.ResetOutcome();
+        _ap = 3; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = 3; _battle.EnemyActionPoints = 3; _battle.Passives.Clear(); _battle.ResetOutcome(); _battle.ResetRandom();
         _battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count);
         _logs.Clear(); _leaderId = _freeCardId = ""; _leaderTurns = 0; N<Label>("Title").Text = "训练场 · 第 1 回合";
         EnableAllBattleControls();
@@ -67,7 +66,17 @@ public partial class TrainingArena : Control
         CancelSelection(false); AddLog($"[color=75d7ff]系统[/color] {(N<CheckButton>("DummyMode").ButtonPressed ? "三职业稻草人就位" : "AI持有4张英雄牌")}，双方开局各抽取4张锦囊。"); _status.Text = "打开英雄卡包，选择英雄并部署到我方空位"; RefreshAll();
     }
     private static void s_set(UnitSlot s, UnitState? u) => s.SetUnit(u);
-    private void SynchronizeBattleState() => _battle.SynchronizeUnits(_allies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!), _enemies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!));
+    private void SynchronizeBattleState()
+    {
+        _battle.SynchronizeUnits(
+            _allies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!),
+            _enemies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!));
+        // 同步槽位索引单位，供 TryPlacePassive 验证
+        for (int i = 0; i < _allies.Count; i++)
+            _battle.SetSlotUnit("player", i, _allies[i].Unit);
+        for (int i = 0; i < _enemies.Count; i++)
+            _battle.SetSlotUnit("ai", i, _enemies[i].Unit);
+    }
     private CardExecutionContext CardContext(CardInstance card, UnitState? source = null, UnitState? target = null, bool ai = false)
     {
         SynchronizeBattleState(); if (ai) _battle.EnemyActionPoints = 3; else _battle.PlayerActionPoints = _ap;
@@ -182,7 +191,7 @@ public partial class TrainingArena : Control
     }
     private void GainExp(UnitState u, int n) { u.Exp += n; AddLog($"[color=aaddff]经验[/color] {u.Name} 当前 EXP {u.Exp}；升星仅由升星牌触发。"); }
     public void DrawOne() { if (_battle.IsFinished) return; if (_deck.Hand.Count >= 5) { _status.Text = "手牌已满"; return; } var result = _deck.Draw(); _status.Text = result.Count == 0 ? "没有可抽的牌" : $"抽到「{result[0].Definition.display_name}」"; RefreshAll(); }
-    private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); await EnemyPhase(); _battle.AdvanceTurn(); _turn = _battle.Turn; _ap = 3 + _battle.PlayerNextTurnBonus; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } AssignFreeCard(); if (_deck.Hand.Count < 5) _deck.Draw(); N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; AddLog($"[color=75d7ff]系统[/color] 第 {_turn} 回合开始。"); CancelSelection(false); _status.Text = "新回合：行动点恢复，自动抽牌"; RefreshAll(); }
+    private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _ap = 3 + _battle.PlayerNextTurnBonus; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } AssignFreeCard(); if (_deck.Hand.Count < 5) _deck.Draw(); N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; AddLog($"[color=75d7ff]系统[/color] 第 {_turn} 回合开始。"); CancelSelection(false); _status.Text = "新回合：行动点恢复，自动抽牌"; RefreshAll(); }
     private void CancelSelection(bool update = true) { _pendingHero = null; _pendingCard = null; _pendingCardTarget = _allyIndex = _enemyIndex = -1; _hand.SetSelected(-1); foreach (var s in _allies.Concat(_enemies)) s.ClearActionPreview(); if (update) _status.Text = "已取消选择"; RefreshSelection(); }
     private async Task EnemyPhase()
     {
@@ -190,7 +199,7 @@ public partial class TrainingArena : Control
         if (N<CheckButton>("DummyMode").ButtonPressed) { AddLog("[color=999999]稻草人模式[/color] 敌方跳过全部行动。"); return; }
         if (await TriggerPassive(_allies, _deck, "ENEMY_BATTLE_PHASE_STARTED")) { AddLog("[color=99bbff]被动锦囊[/color] 敌方战斗阶段被跳过。"); return; }
         var aiAp = 3; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
-        for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_aiDeck.Hand.Count < 5) _aiDeck.Draw(); AddLog($"[color=ff8888]AI回合[/color] 敌方行动结束，剩余行动点 {aiAp}。");
+        for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_battle.IsFinished) return; if (_aiDeck.Hand.Count < 5) _aiDeck.Draw(); AddLog($"[color=ff8888]AI回合[/color] 敌方行动结束，剩余行动点 {aiAp}。");
     }
     private async Task<int> AiDeploy() { if (_battle.IsFinished) return 0; var empty = _enemies.Where(s => s.Unit?.Alive != true).ToList(); if (empty.Count == 0 || _aiHeroBag.Count == 0) return 0; var hero = _aiHeroBag[_battle.Random.Next(_aiHeroBag.Count)]; var slot = empty[_battle.Random.Next(empty.Count)]; slot.SetUnit(hero.Deploy()); _aiHeroBag.Remove(hero); _battle.DecrementReserveHero("ai"); await slot.PlayDeployAnimation(); AddLog($"[color=ff8888]AI部署[/color] {hero.Definition.display_name} 进入敌方 {slot.SlotIndex + 1} 号位（消耗1行动点）。"); return 1; }
     private async Task<bool> AiAttack()
