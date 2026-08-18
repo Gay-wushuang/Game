@@ -134,6 +134,18 @@ public sealed class BattleState
     }
 
     /// <summary>
+    /// 清空所有槽位单位映射。用于重置战斗时确保无残留状态。
+    /// </summary>
+    public void ClearSlotUnits()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            _playerSlotUnits[i] = null;
+            _enemySlotUnits[i] = null;
+        }
+    }
+
+    /// <summary>
     /// 设置指定阵营指定槽位的单位（用于被动放置验证）。
     /// </summary>
     public void SetSlotUnit(string ownerId, int slotIndex, UnitState? unit)

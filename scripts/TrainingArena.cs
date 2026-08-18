@@ -55,7 +55,7 @@ public partial class TrainingArena : Control
     public void ResetTraining()
     {
         _heroBag.Clear(); _aiHeroBag.Clear(); foreach (var h in content.heroes) { _heroBag.Add(new(h)); _aiHeroBag.Add(new(h, "ai")); }
-        _battle.ResetRandom(); _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai"); _aiDeck.Draw(4);
+        _battle.ResetRandom(); _battle.ClearSlotUnits(); _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai"); _aiDeck.Draw(4);
         _ap = 3; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = 3; _battle.EnemyActionPoints = 3; _battle.Passives.Clear(); _battle.ResetOutcome();
         _battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count);
         _logs.Clear(); _leaderId = _freeCardId = ""; _leaderTurns = 0; N<Label>("Title").Text = "训练场 · 第 1 回合";
