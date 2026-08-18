@@ -18,6 +18,8 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
     public int EnemyActionPoints { get; set; } = 3;
     public int PlayerNextTurnBonus { get; set; }
     public int EnemyNextTurnBonus { get; set; }
+    public int PlayerReserveHeroCount { get; private set; }
+    public int EnemyReserveHeroCount { get; private set; }
     public List<PlacedPassive> Passives { get; } = [];
     public PassiveEventContext? CurrentPassiveEvent { get; set; }
     public List<(string OwnerId, int SlotIndex, CardInstance Card)> InvalidatedPassives { get; } = [];
@@ -29,8 +31,8 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
     {
         if (IsFinished) return Outcome;
         
-        bool playerAlive = PlayerUnits.Any(x => x.Alive);
-        bool enemyAlive = EnemyUnits.Any(x => x.Alive);
+        bool playerAlive = PlayerUnits.Any(x => x.Alive) || PlayerReserveHeroCount > 0;
+        bool enemyAlive = EnemyUnits.Any(x => x.Alive) || EnemyReserveHeroCount > 0;
         
         if (!playerAlive && !enemyAlive)
         {
@@ -51,6 +53,44 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
         return Outcome;
     }
 
+    /// <summary>
+    /// 设置指定阵营的后备英雄数量。
+    /// </summary>
+    public void SetReserveHeroCount(string ownerId, int count)
+    {
+        if (ownerId == "player") PlayerReserveHeroCount = count;
+        else if (ownerId == "ai" || ownerId == "enemy") EnemyReserveHeroCount = count;
+    }
+
+    /// <summary>
+    /// 指定阵营部署一个后备英雄后调用，减少Reserve计数。
+    /// </summary>
+    public void DecrementReserveHero(string ownerId)
+    {
+        if (ownerId == "player" && PlayerReserveHeroCount > 0) PlayerReserveHeroCount--;
+        else if ((ownerId == "ai" || ownerId == "enemy") && EnemyReserveHeroCount > 0) EnemyReserveHeroCount--;
+    }
+
+    /// <summary>
+    /// 指定阵营是否仍有存活英雄（场上+后备）。
+    /// </summary>
+    public bool HasLivingHeroes(string ownerId)
+    {
+        if (ownerId == "player")
+            return PlayerUnits.Any(x => x.Alive) || PlayerReserveHeroCount > 0;
+        return EnemyUnits.Any(x => x.Alive) || EnemyReserveHeroCount > 0;
+    }
+
+    /// <summary>
+    /// 统一致死结算边界：同步单位状态后评估战斗结果。
+    /// 所有致死来源最终都应通过此方法结算。
+    /// </summary>
+    public BattleOutcome FinalizeDeaths(IEnumerable<UnitState> playerUnits, IEnumerable<UnitState> enemyUnits)
+    {
+        SynchronizeUnits(playerUnits, enemyUnits);
+        return EvaluateOutcome();
+    }
+
     public void ResetOutcome()
     {
         Outcome = BattleOutcome.Playing;
@@ -69,6 +109,29 @@ public sealed class BattleState(DeckState playerDeck, DeckState enemyDeck, int r
         if (Passives.Exists(placed => placed.OwnerId == ownerId && placed.SlotIndex == slotIndex)) return false;
         Passives.Add(new(ownerId, slotIndex, card)); return true;
     }
+
+    /// <summary>
+    /// 完整验证并放置被动锦囊。先验证所有条件，再提交状态。
+    /// 验证项：卡仍在正确Owner的Hand、卡是Passive类型、Slot有效、Slot未被占用、Owner匹配。
+    /// </summary>
+    public bool TryPlacePassive(string ownerId, int slotIndex, CardInstance card, out string error)
+    {
+        error = "";
+        if (card == null) { error = "卡牌不能为空"; return false; }
+        if (card.Definition.card_kind != CardDefinition.CardKind.Passive) { error = "该锦囊不是被动类型"; return false; }
+        if (!card.OwnerId.Equals(ownerId, StringComparison.OrdinalIgnoreCase)) { error = "锦囊归属与放置阵营不匹配"; return false; }
+        if (Passives.Exists(placed => placed.OwnerId == ownerId && placed.SlotIndex == slotIndex)) { error = "该英雄槽已经设置了一张被动锦囊"; return false; }
+        
+        Passives.Add(new(ownerId, slotIndex, card));
+        return true;
+    }
+
+    /// <summary>
+    /// 验证后放置被动（无输出错误信息版本）。
+    /// </summary>
+    public bool TryPlacePassive(string ownerId, int slotIndex, CardInstance card)
+        => TryPlacePassive(ownerId, slotIndex, card, out _);
+
     public void RemovePassive(CardInstance card) => Passives.RemoveAll(placed => placed.Card == card);
     public IEnumerable<PlacedPassive> MatchingPassives(string ownerId, string eventKey) => Passives.FindAll(placed => placed.OwnerId == ownerId && Array.Exists(placed.Card.Definition.trigger_keys, key => key == eventKey));
     public void Schedule(int turns, Action action) => _scheduled.Add(new(Turn + Math.Max(1, turns), action));
