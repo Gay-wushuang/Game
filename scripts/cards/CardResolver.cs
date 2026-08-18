@@ -13,11 +13,19 @@ public sealed class CardResolver : IDisposable
     public bool Resolve(CardExecutionContext context, out string error)
     {
         error = "";
-        return context.Card.Definition.logic_mode switch {
+        var result = context.Card.Definition.logic_mode switch {
             "LUA" => _lua.Resolve(context, out error),
             "BUILTIN" => ResolveBuiltin(context, out error),
             _ => Fail($"未知逻辑模式：{context.Card.Definition.logic_mode}", out error),
         };
+        
+        if (result && context.Cancelled)
+        {
+            error = "CANCELLED";
+            return false;
+        }
+        
+        return result;
     }
     private bool ResolveBuiltin(CardExecutionContext context, out string error)
     {

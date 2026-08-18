@@ -73,7 +73,7 @@ public static class CardCatalog
         "STEAL_TEMPORARY" => CardDefinition.BuiltinEffect.StealCard,
         "STAR_UP" => CardDefinition.BuiltinEffect.StarUp,
         "HEAL_CLEANSE" => CardDefinition.BuiltinEffect.Heal,
-        "APPLY_DAMAGE_HEAL_AMPLIFY" => CardDefinition.BuiltinEffect.AddAttack,
+        "APPLY_DAMAGE_HEAL_AMPLIFY" => CardDefinition.BuiltinEffect.Custom,
         _ => CardDefinition.BuiltinEffect.Custom,
     };
     private static int PrimaryAmount(CardDefinition d)

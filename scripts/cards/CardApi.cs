@@ -105,7 +105,9 @@ public sealed class CardApi(CardExecutionContext context)
     public int RefillHand(int targetCount) => Draw(Math.Max(0, targetCount - Context.OwnerDeck.Hand.Count));
     public void SetRandomActionPoints()
     {
-        var value = Context.State.Random.Next(4);
+        // 规则：50% 恢复至上限（3），50% 下回合归零（当前清零）。
+        var max = 3;
+        var value = Context.State.Random.Next(2) == 0 ? max : 0;
         if (Context.OwnerDeck.OwnerId == "player") Context.State.PlayerActionPoints = value; else Context.State.EnemyActionPoints = value;
     }
     public void CounterPassiveSet()
@@ -185,7 +187,7 @@ public sealed class CardApi(CardExecutionContext context)
             case "REDIRECT_TO_ADJACENT": RedirectToAdjacent(); break;
             case "SWAP_CLASS_AND_ATTACK": TemporarilySwapOpposingStats(); break;
             case "DISCARD_EQUAL_DRAW": DiscardOtherHand(); break;
-            case "GAMBLE_ACTION_POINTS": if (Context.OwnerDeck.OwnerId == "player") Context.State.PlayerActionPoints = Context.State.Random.Next(4); else Context.State.EnemyActionPoints = Context.State.Random.Next(4); break;
+            case "GAMBLE_ACTION_POINTS": SetRandomActionPoints(); break;
             case "COPY_RESOLVED_CARD": CopyResolvedCard(); break;
             case "SUMMON_DELAYED_RABBIT": SummonDelayedRabbit(); break;
         }

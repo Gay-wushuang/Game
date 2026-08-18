@@ -93,7 +93,24 @@ public sealed class LuaCardRuntime : IDisposable
         if (resultObject?.IsClass("LuaError") == true) { error = resultObject.ToString(); return false; }
         return true;
     }
-    public void Reload() { _state?.Dispose(); _state = ClassDB.ClassExists("LuaState") ? ClassDB.Instantiate("LuaState").AsGodotObject() : null; }
+    public void Reload()
+    {
+        // 先创建新的 LuaState，成功后再替换旧的，避免 Dispose 后创建失败导致无法回滚。
+        var previous = _state;
+        GodotObject? next = null;
+        if (ClassDB.ClassExists("LuaState"))
+        {
+            try { next = ClassDB.Instantiate("LuaState").AsGodotObject(); }
+            catch { next = null; }
+        }
+        if (next != null)
+        {
+            // 新状态创建成功，释放旧状态并替换。
+            previous?.Dispose();
+            _state = next;
+        }
+        // 如果新状态创建失败，保留旧状态用于回滚，不做任何变更。
+    }
 
     public void Dispose() => _state?.Dispose();
 }
