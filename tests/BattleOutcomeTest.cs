@@ -55,6 +55,7 @@ public static class BattleOutcomeTest
         TestRngResetBeforeSetup();
         TestDeployedHeroCanPlacePassive();
         TestDeadHeroRejectsPassiveAfterDeath();
+        TestClearSlotUnits();
         
         Console.WriteLine("[PASS] 所有 BattleOutcome / BattleRules / Reserve / RNG / Passive / 回归 测试通过");
     }
@@ -1283,6 +1284,52 @@ public static class BattleOutcomeTest
         Check(error2.Contains("没有英雄"), $"错误信息应包含'没有英雄'，但得到: {error2}");
         
         Console.WriteLine("[PASS] TestDeadHeroRejectsPassiveAfterDeath: 死亡/空slot立即拒绝Passive");
+    }
+
+    /// <summary>
+    /// 验证 ClearSlotUnits 清空所有 slot 映射，包括玩家和敌方。
+    /// 这模拟了 ResetTraining 的正确清理顺序。
+    /// </summary>
+    private static void TestClearSlotUnits()
+    {
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 11111);
+        
+        // 在所有 5 个玩家槽和 5 个敌方槽设置英雄
+        for (int i = 0; i < 5; i++)
+        {
+            battle.SetSlotUnit("player", i, AliveHero($"p{i}", "先锋", 100 + i));
+            battle.SetSlotUnit("ai", i, AliveHero($"e{i}", "刺客", 100 + i));
+        }
+        
+        // 验证设置成功
+        for (int i = 0; i < 5; i++)
+        {
+            Check(battle.GetSlotUnit("player", i) != null, $"Player slot {i} should have hero before clear");
+            Check(battle.GetSlotUnit("ai", i) != null, $"Enemy slot {i} should have hero before clear");
+        }
+        
+        // 清空
+        battle.ClearSlotUnits();
+        
+        // 验证全部为 null
+        for (int i = 0; i < 5; i++)
+        {
+            Check(battle.GetSlotUnit("player", i) == null, $"Player slot {i} should be null after ClearSlotUnits");
+            Check(battle.GetSlotUnit("ai", i) == null, $"Enemy slot {i} should be null after ClearSlotUnits");
+        }
+        
+        // 验证 null slot 的 Passive 放置被拒绝
+        var passiveDef = new CardDefinition { id = "clear_test", display_name = "Clear Test", action_cost = 1, card_kind = CardDefinition.CardKind.Passive };
+        var card = new CardInstance(passiveDef, "player");
+        playerDeck.Hand.Add(card);
+        
+        bool result = battle.TryPlacePassive("player", 2, card, out var error);
+        Check(!result, $"Cleared slot should reject passive placement");
+        Check(error.Contains("没有英雄"), $"Error should mention missing hero, got: {error}");
+        
+        Console.WriteLine("[PASS] TestClearSlotUnits: ClearSlotUnits清空所有slot映射");
     }
 
     // ===== 辅助方法 =====
