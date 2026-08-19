@@ -11,6 +11,18 @@ public sealed class CardResolver : IDisposable
     public void ReloadLua(IEnumerable<CardDefinition>? cardsToValidate = null) => _lua.Reload(cardsToValidate);
     public bool CanResolveBuiltin(string handlerKey) => _builtin.CanResolve(handlerKey);
 
+    /// <summary>
+    /// 自身设置 Cancelled 标志的主动卡牌 handler_key 集合。
+    /// 这些卡牌的 Cancelled=true 是预期行为，不应被视为被动取消错误。
+    /// </summary>
+    private static readonly HashSet<string> SelfCancellingHandlers = new()
+    {
+        "CANCEL_PENDING_EFFECT",
+        "CANCEL_DAMAGE",
+        "CANCEL_DRAW",
+        "SKIP_ENEMY_BATTLE_PHASE"
+    };
+
     public bool Resolve(CardExecutionContext context, out string error)
     {
         error = "";
@@ -22,6 +34,13 @@ public sealed class CardResolver : IDisposable
         
         if (result && context.Cancelled)
         {
+            // 如果卡牌自身就是取消类卡牌（主动锦囊），Cancelled 是预期行为
+            if (SelfCancellingHandlers.Contains(context.Card.Definition.handler_key))
+            {
+                error = "CANCELLED";  // 保留 CANCELLED 标记供 TrainingArena 检查
+                return true;  // 但卡牌执行成功，返回 true
+            }
+            // 否则视为被动取消，返回错误
             error = "CANCELLED";
             return false;
         }

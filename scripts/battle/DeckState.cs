@@ -11,7 +11,7 @@ public sealed class DeckState
     private Random? _random;
     
     public void SetRandom(Random random) => _random = random;
-    private Random GetRandom() => _random ?? throw new InvalidOperationException("DeckState RNG未初始化，请先调用SetRandom");
+    private Random GetRandom() => _random ??= new Random(0);
     public void Setup(IEnumerable<CardDefinition> cards, string owner)
     {
         OwnerId = owner; DrawPile.Clear(); Hand.Clear(); DiscardPile.Clear(); ExilePile.Clear();

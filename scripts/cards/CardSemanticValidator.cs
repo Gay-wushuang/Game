@@ -4,6 +4,19 @@ using System.Linq;
 
 public static class CardSemanticValidator
 {
+    /// <summary>
+    /// 正确顺序创建 DeckState + BattleState：BattleState 先注入 RNG，再调用 Setup 执行洗牌。
+    /// </summary>
+    private static (DeckState Player, DeckState Enemy, BattleState Battle) CreateBattle(int seed)
+    {
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, seed);
+        playerDeck.Setup([], "player");
+        enemyDeck.Setup([], "ai");
+        return (playerDeck, enemyDeck, battle);
+    }
+
     public static void Validate(Godot.Collections.Array<CardDefinition> cards)
     {
         Check(cards.Count == CardCatalog.V1ExpectedCount, $"V1 数据集应为 {CardCatalog.V1ExpectedCount} 张，实际 {cards.Count} 张");
@@ -46,9 +59,7 @@ public static class CardSemanticValidator
     {
         var expose = cards.First(c => c.handler_key == "COUNTER_PASSIVE_SET");
         var cage = cards.First(c => c.handler_key == "SKIP_ENEMY_BATTLE_PHASE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 7);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(7);
         var exposeCard = new CardInstance(expose);
         var enemyPassive = new CardInstance(cage, "ai");
         Check(battle.SetPassive("player", 0, exposeCard), "揭穿伏牌登记失败");
@@ -67,9 +78,7 @@ public static class CardSemanticValidator
     {
         var expose = cards.First(c => c.handler_key == "COUNTER_PASSIVE_SET");
         var hardChoice = cards.First(c => c.handler_key == "TARGETED_HARD_CHOICE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 8);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(8);
         var hero = new UnitState { Name = "测试英雄", Type = "先锋", Hp = 30, MaxHp = 30 };
         battle.SynchronizeUnits([hero], []);
         var testCard = new CardInstance(cards.First(c => c.handler_key == "STAR_UP"), "ai");
@@ -91,9 +100,7 @@ public static class CardSemanticValidator
     private static void ValidateBackstab(Godot.Collections.Array<CardDefinition> cards)
     {
         var backstab = cards.First(c => c.handler_key == "REDIRECT_TO_ADJACENT");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 9);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(9);
         var passive = new CardInstance(backstab);
         Check(battle.SetPassive("player", 1, passive), "背刺伏牌登记失败");
         var ctx = new PassiveEventContext { EventKey = "BEFORE_ATTACK", AttackTargetSlot = 2, AliveAllySlots = [1, 3] };
@@ -113,9 +120,7 @@ public static class CardSemanticValidator
     {
         var copyCard = cards.First(c => c.handler_key == "COPY_RESOLVED_CARD");
         var resolved = cards.First(c => c.handler_key == "DAMAGE_STAR_ALL");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 11);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(11);
         var passive = new CardInstance(copyCard);
         var enemyCard = new CardInstance(resolved, "ai");
         Check(battle.SetPassive("player", 0, passive), "以偏概全伏牌登记失败");
@@ -134,9 +139,7 @@ public static class CardSemanticValidator
     private static void ValidateSummonRabbit(Godot.Collections.Array<CardDefinition> cards)
     {
         var rabbit = cards.First(c => c.handler_key == "SUMMON_DELAYED_RABBIT");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 13);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(13);
         var passive = new CardInstance(rabbit);
         Check(battle.SetPassive("player", 0, passive), "守株待兔伏牌登记失败");
         battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ENEMY_SLOT_EMPTY", SubjectSlotIndex = 2, SubjectOwnerId = "ai" };
@@ -155,9 +158,7 @@ public static class CardSemanticValidator
     private static void ValidateStarUp(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "STAR_UP");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 21);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(21);
         var target = new UnitState { Name = "测试英雄", Type = "先锋", Hp = 30, MaxHp = 30, Star = 2 };
         battle.SynchronizeUnits([target], []);
         var instance = new CardInstance(card);
@@ -174,9 +175,7 @@ public static class CardSemanticValidator
     private static void ValidateHealCleanse(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "HEAL_CLEANSE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 22);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(22);
         var target = new UnitState { Name = "治疗目标", Type = "祭司", Hp = 10, MaxHp = 30 };
         battle.SynchronizeUnits([target], []);
         var instance = new CardInstance(card);
@@ -192,9 +191,7 @@ public static class CardSemanticValidator
     private static void ValidateCancelPendingEffect(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "CANCEL_PENDING_EFFECT");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 23);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(23);
         var instance = new CardInstance(card);
         using var resolver = new CardResolver();
         var context = new CardExecutionContext { State = battle, Card = instance, OwnerDeck = playerDeck, OpponentDeck = enemyDeck, Log = _ => { } };
@@ -205,9 +202,7 @@ public static class CardSemanticValidator
     private static void ValidateDamageStarAll(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "DAMAGE_STAR_ALL");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 24);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(24);
         var target = new UnitState { Name = "受伤目标", Type = "刺客", Hp = 30, MaxHp = 30 };
         battle.SynchronizeUnits([], [target]);
         var instance = new CardInstance(card);
@@ -220,9 +215,7 @@ public static class CardSemanticValidator
     private static void ValidateApplyShield(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "APPLY_SHIELD");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 25);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(25);
         var target = new UnitState { Name = "低星目标", Type = "先锋", Hp = 30, MaxHp = 30, Star = 3 };
         battle.SynchronizeUnits([target], []);
         var instance = new CardInstance(card);
@@ -241,9 +234,7 @@ public static class CardSemanticValidator
     private static void ValidateLinkResonance(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "LINK_RESONANCE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 26);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(26);
         var source = new UnitState { Name = "链接源", Type = "先锋", Hp = 30, MaxHp = 30 };
         var target = new UnitState { Name = "链接目标", Type = "祭司", Hp = 30, MaxHp = 30 };
         battle.SynchronizeUnits([source], [target]);
@@ -258,9 +249,7 @@ public static class CardSemanticValidator
     private static void ValidateDamageHealAmplify(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "APPLY_DAMAGE_HEAL_AMPLIFY");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 27);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(27);
         var target = new UnitState { Name = "放大目标", Type = "先锋", Hp = 30, MaxHp = 30, DamageTakenMultiplier = 1f };
         battle.SynchronizeUnits([target], []);
         var instance = new CardInstance(card);
@@ -273,9 +262,7 @@ public static class CardSemanticValidator
     private static void ValidateFreeUnansweredAttack(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "FREE_UNANSWERED_ATTACK");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 28);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(28);
         var source = new UnitState { Name = "攻击源", Type = "刺客", Hp = 30, MaxHp = 30, Attack = 5 };
         var enemy = new UnitState { Name = "随机敌人", Type = "先锋", Hp = 30, MaxHp = 30, Attack = 3 };
         battle.SynchronizeUnits([source], [enemy]);
@@ -290,9 +277,7 @@ public static class CardSemanticValidator
     private static void ValidateApplyGrudge(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "APPLY_GRUDGE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 29);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(29);
         var enemy1 = new UnitState { Name = "敌1", Type = "先锋", Hp = 30, MaxHp = 30, GrudgeStacks = 0 };
         var enemy2 = new UnitState { Name = "敌2", Type = "刺客", Hp = 30, MaxHp = 30, GrudgeStacks = 0 };
         battle.SynchronizeUnits([], [enemy1, enemy2]);
@@ -307,9 +292,7 @@ public static class CardSemanticValidator
     private static void ValidateForceMutualAttack(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "FORCE_MUTUAL_ATTACK");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 30);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(30);
         var enemy1 = new UnitState { Name = "敌1", Type = "先锋", Hp = 20, MaxHp = 30, Attack = 5 };
         var enemy2 = new UnitState { Name = "敌2", Type = "刺客", Hp = 20, MaxHp = 30, Attack = 8 };
         battle.SynchronizeUnits([], [enemy1, enemy2]);
@@ -324,9 +307,7 @@ public static class CardSemanticValidator
     private static void ValidateApplyCeasefire(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "APPLY_CEASEFIRE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 31);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(31);
         var enemy1 = new UnitState { Name = "敌1", Type = "先锋", Hp = 30, MaxHp = 30, CeasefireTurns = 0 };
         var enemy2 = new UnitState { Name = "敌2", Type = "刺客", Hp = 30, MaxHp = 30, CeasefireTurns = 0 };
         battle.SynchronizeUnits([], [enemy1, enemy2]);
@@ -341,9 +322,7 @@ public static class CardSemanticValidator
     private static void ValidateCancelDamage(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "CANCEL_DAMAGE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 32);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(32);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "CANCEL_DAMAGE 伏牌登记失败");
         battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "BEFORE_DAMAGE" };
@@ -359,9 +338,7 @@ public static class CardSemanticValidator
     private static void ValidateReviveReducedMaxHp(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "REVIVE_REDUCED_MAX_HP");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 33);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(33);
         var target = new UnitState { Name = "复活目标", Type = "先锋", Hp = 0, MaxHp = 30 };
         battle.SynchronizeUnits([target], []);
         var instance = new CardInstance(card);
@@ -376,18 +353,16 @@ public static class CardSemanticValidator
     private static void ValidateTargetedHardChoice(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "TARGETED_HARD_CHOICE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 34);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(34);
         var card1 = new CardInstance(cards.First(c => c.handler_key == "STAR_UP"), "ai");
         var card2 = new CardInstance(cards.First(c => c.handler_key == "HEAL_CLEANSE"), "ai");
         enemyDeck.Hand.Add(card1);
         enemyDeck.Hand.Add(card2);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "TARGETED_HARD_CHOICE 伏牌登记失败");
-        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ALLY_TURN_ENDED" };
-        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "ALLY_TURN_ENDED", battle.CurrentPassiveEvent);
-        Check(triggered.Count == 1, "TARGETED_HARD_CHOICE 未在 ALLY_TURN_ENDED 时触发");
+        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "CARD_TARGETED" };
+        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "CARD_TARGETED", battle.CurrentPassiveEvent);
+        Check(triggered.Count == 1, "TARGETED_HARD_CHOICE 未在 CARD_TARGETED 时触发");
         using var resolver = new CardResolver();
         var context = new CardExecutionContext { State = battle, Card = passive, OwnerDeck = playerDeck, OpponentDeck = enemyDeck, Log = _ => { } };
         Check(resolver.Resolve(context, out var error), "TARGETED_HARD_CHOICE Lua 执行失败：" + error);
@@ -397,9 +372,7 @@ public static class CardSemanticValidator
     private static void ValidateNextEnemyCostUp(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "NEXT_ENEMY_CARD_COST_UP");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 35);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(35);
         var enemyCard = new CardInstance(cards.First(c => c.handler_key == "STAR_UP"), "ai");
         enemyCard.RuntimeCostOverride = 2;
         enemyDeck.Hand.Add(enemyCard);
@@ -417,16 +390,18 @@ public static class CardSemanticValidator
     private static void ValidateRefillHand(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "REFILL_HAND");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 36);
+        playerDeck.Setup([], "player");
+        enemyDeck.Setup([], "ai");
         playerDeck.Hand.Add(new CardInstance(cards.First(c => c.handler_key == "STAR_UP")));
         playerDeck.Hand.Add(new CardInstance(cards.First(c => c.handler_key == "HEAL_CLEANSE")));
-        var battle = new BattleState(playerDeck, enemyDeck, 36);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "REFILL_HAND 伏牌登记失败");
-        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ALLY_BATTLE_PHASE_STARTED" };
-        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "ALLY_BATTLE_PHASE_STARTED", battle.CurrentPassiveEvent);
-        Check(triggered.Count == 1, "REFILL_HAND 未在 ALLY_BATTLE_PHASE_STARTED 时触发");
+        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "HAND_EMPTY" };
+        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "HAND_EMPTY", battle.CurrentPassiveEvent);
+        Check(triggered.Count == 1, "REFILL_HAND 未在 HAND_EMPTY 时触发");
         using var resolver = new CardResolver();
         var context = new CardExecutionContext { State = battle, Card = passive, OwnerDeck = playerDeck, OpponentDeck = enemyDeck, Log = _ => { } };
         var handCountBefore = playerDeck.Hand.Count;
@@ -438,9 +413,7 @@ public static class CardSemanticValidator
     private static void ValidateCancelDraw(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "CANCEL_DRAW");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 37);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(37);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "CANCEL_DRAW 伏牌登记失败");
         battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "BEFORE_DRAW" };
@@ -456,9 +429,7 @@ public static class CardSemanticValidator
     private static void ValidateSkipEnemyBattlePhase(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "SKIP_ENEMY_BATTLE_PHASE");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 38);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(38);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "SKIP_ENEMY_BATTLE_PHASE 伏牌登记失败");
         battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ENEMY_BATTLE_PHASE_STARTED" };
@@ -474,18 +445,16 @@ public static class CardSemanticValidator
     private static void ValidateDiscardEqualDraw(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "DISCARD_EQUAL_DRAW");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 39);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(39);
         var card1 = new CardInstance(cards.First(c => c.handler_key == "STAR_UP"));
         var card2 = new CardInstance(cards.First(c => c.handler_key == "HEAL_CLEANSE"));
         playerDeck.Hand.Add(card1);
         playerDeck.Hand.Add(card2);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "DISCARD_EQUAL_DRAW 伏牌登记失败");
-        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ALLY_TURN_ENDED" };
-        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "ALLY_TURN_ENDED", battle.CurrentPassiveEvent);
-        Check(triggered.Count == 1, "DISCARD_EQUAL_DRAW 未在 ALLY_TURN_ENDED 时触发");
+        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "AFTER_DRAW" };
+        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "AFTER_DRAW", battle.CurrentPassiveEvent);
+        Check(triggered.Count == 1, "DISCARD_EQUAL_DRAW 未在 AFTER_DRAW 时触发");
         using var resolver = new CardResolver();
         var context = new CardExecutionContext { State = battle, Card = passive, OwnerDeck = playerDeck, OpponentDeck = enemyDeck, Log = _ => { } };
         Check(resolver.Resolve(context, out var error), "DISCARD_EQUAL_DRAW Lua 执行失败：" + error);
@@ -495,14 +464,12 @@ public static class CardSemanticValidator
     private static void ValidateGambleActionPoints(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "GAMBLE_ACTION_POINTS");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
-        var battle = new BattleState(playerDeck, enemyDeck, 40);
+        var (playerDeck, enemyDeck, battle) = CreateBattle(40);
         var passive = new CardInstance(card);
         Check(battle.SetPassive("player", 0, passive), "GAMBLE_ACTION_POINTS 伏牌登记失败");
-        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ALLY_BATTLE_PHASE_STARTED" };
-        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "ALLY_BATTLE_PHASE_STARTED", battle.CurrentPassiveEvent);
-        Check(triggered.Count == 1, "GAMBLE_ACTION_POINTS 未在 ALLY_BATTLE_PHASE_STARTED 时触发");
+        battle.CurrentPassiveEvent = new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO" };
+        var triggered = new PassiveTriggerResolver().Collect(battle, "player", "ACTION_POINTS_ZERO", battle.CurrentPassiveEvent);
+        Check(triggered.Count == 1, "GAMBLE_ACTION_POINTS 未在 ACTION_POINTS_ZERO 时触发");
         using var resolver = new CardResolver();
         var context = new CardExecutionContext { State = battle, Card = passive, OwnerDeck = playerDeck, OpponentDeck = enemyDeck, Log = _ => { } };
         Check(resolver.Resolve(context, out var error), "GAMBLE_ACTION_POINTS Lua 执行失败：" + error);
@@ -512,12 +479,14 @@ public static class CardSemanticValidator
     private static void ValidateStealTemporary(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "STEAL_TEMPORARY");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 41);
+        playerDeck.Setup([], "player");
+        enemyDeck.Setup([], "ai");
         var stolenCard = new CardInstance(cards.First(c => c.handler_key == "STAR_UP"), "ai");
         stolenCard.Zone = CardInstance.ZoneKind.Hand;
         enemyDeck.Hand.Add(stolenCard);
-        var battle = new BattleState(playerDeck, enemyDeck, 41);
         var instance = new CardInstance(card);
         using var resolver = new CardResolver();
         var context = new CardExecutionContext { State = battle, Card = instance, OwnerDeck = playerDeck, OpponentDeck = enemyDeck, Log = _ => { } };
@@ -532,11 +501,13 @@ public static class CardSemanticValidator
     private static void ValidateZeroHandCosts(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "ZERO_HAND_COSTS");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 42);
+        playerDeck.Setup([], "player");
+        enemyDeck.Setup([], "ai");
         var otherCard = new CardInstance(cards.First(c => c.handler_key == "STAR_UP"));
         playerDeck.Hand.Add(otherCard);
-        var battle = new BattleState(playerDeck, enemyDeck, 42);
         var instance = new CardInstance(card);
         playerDeck.Hand.Add(instance);
         using var resolver = new CardResolver();
@@ -549,12 +520,14 @@ public static class CardSemanticValidator
     private static void ValidatePrepayAndDiscard(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "PREPAY_AND_DISCARD");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 43);
+        playerDeck.Setup([], "player");
+        enemyDeck.Setup([], "ai");
         enemyDeck.Hand.Add(new CardInstance(cards.First(c => c.handler_key == "STAR_UP"), "ai"));
         enemyDeck.Hand.Add(new CardInstance(cards.First(c => c.handler_key == "HEAL_CLEANSE"), "ai"));
         enemyDeck.Hand.Add(new CardInstance(cards.First(c => c.handler_key == "DAMAGE_STAR_ALL"), "ai"));
-        var battle = new BattleState(playerDeck, enemyDeck, 43);
         battle.PlayerActionPoints = 3;
         var instance = new CardInstance(card);
         using var resolver = new CardResolver();
@@ -568,11 +541,13 @@ public static class CardSemanticValidator
     private static void ValidateRandomCrossAttack(Godot.Collections.Array<CardDefinition> cards)
     {
         var card = cards.First(c => c.handler_key == "RANDOM_CROSS_ATTACK");
-        var playerDeck = new DeckState(); playerDeck.Setup([], "player");
-        var enemyDeck = new DeckState(); enemyDeck.Setup([], "ai");
+        var playerDeck = new DeckState();
+        var enemyDeck = new DeckState();
+        var battle = new BattleState(playerDeck, enemyDeck, 44);
+        playerDeck.Setup([], "player");
+        enemyDeck.Setup([], "ai");
         var ally = new UnitState { Name = "友方", Type = "先锋", Hp = 30, MaxHp = 30, Attack = 5 };
         var enemy = new UnitState { Name = "敌方", Type = "刺客", Hp = 30, MaxHp = 30, Attack = 4 };
-        var battle = new BattleState(playerDeck, enemyDeck, 44);
         battle.SynchronizeUnits([ally], [enemy]);
         var instance = new CardInstance(card);
         using var resolver = new CardResolver();
