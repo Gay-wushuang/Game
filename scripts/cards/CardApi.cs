@@ -95,7 +95,10 @@ public sealed class CardApi(CardExecutionContext context)
         if (first.OriginalAttack == null) first.OriginalAttack = first.Attack;
         if (second.OriginalType == null) second.OriginalType = second.Type;
         if (second.OriginalAttack == null) second.OriginalAttack = second.Attack;
-        first.Type = second.Type; first.Attack = second.Attack; second.Type = first.Type; second.Attack = first.Attack;
+        // 先缓存原始值，再交换，避免直接赋值导致 second 被覆盖
+        var firstType = first.Type; var firstAttack = first.Attack;
+        first.Type = second.Type; first.Attack = second.Attack;
+        second.Type = firstType; second.Attack = firstAttack;
         Context.State.Schedule(1, () =>
         {
             // 使用保存的最初值恢复，而不是闭包中捕获的"当前值"。

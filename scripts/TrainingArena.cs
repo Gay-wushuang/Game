@@ -114,7 +114,10 @@ public partial class TrainingArena : Control
     {
         if (_battle.IsFinished) return;
         var card = _pendingCard!; var d = card.Definition; var u = slot.Unit!; var cost = EffectiveCost(card); if (d.id.ToString() == _freeCardId) _freeCardId = ""; if (u.Id == "hero_role_3" && u.Star >= 5 && u.FreeSelfCards > 0) { cost = 0; u.FreeSelfCards--; }
-        await AnimateCard(card); if (d.logic_mode == "LUA") { if (!_cardResolver.Resolve(CardContext(card, u, u), out var luaError)) { if (luaError == "CANCELLED") { _cancelNextEnemyEffect = true; _status.Text = "拒绝生效：敌方下一张锦囊将被抵消"; } else { _status.Text = $"Lua卡牌结算失败：{luaError}"; } return; } AddLog($"[color=77ee99]Lua锦囊[/color] {d.display_name} → {u.Name}。"); } else if (_cardResolver.CanResolveBuiltin(d.handler_key)) { if (!_cardResolver.Resolve(CardContext(card, u, u), out var error)) { _status.Text = error; return; } AddLog($"[color=77ee99]内置锦囊[/color] {d.display_name} → {u.Name}。"); } else switch (d.handler_key) { case "FREE_UNANSWERED_ATTACK": var target = _enemies.Where(s => s.Unit?.Alive == true).OrderBy(_ => _battle.Random.Next()).FirstOrDefault(); if (target?.Unit != null) { target.Unit.Hp = Math.Max(0, target.Unit.Hp - BattleRules.CalculateAttackValue(u, target.Unit)); target.Refresh(); } MarkDefeated(); break; case "STAR_UP": if (u.Star >= 6) { _status.Text = "该英雄已达到6星"; return; } _pendingStarSlot = slot; _pendingStarCost = cost; N<AcceptDialog>("StarChoiceDialog").PopupCenteredRatio(.42f); return; default: ApplyGenericAlly(d, u); break; }
+        await AnimateCard(card); if (d.logic_mode == "LUA") { var resolved = _cardResolver.Resolve(CardContext(card, u, u), out var luaError); if (luaError == "CANCELLED") { _cancelNextEnemyEffect = true; _status.Text = "拒绝生效：敌方下一张锦囊将被抵消"; return; } else if (!resolved) { _status.Text = $"Lua卡牌结算失败：{luaError}"; return; } AddLog($"[color=77ee99]Lua锦囊[/color] {d.display_name} → {u.Name}。"); } else if (_cardResolver.CanResolveBuiltin(d.handler_key)) { if (!_cardResolver.Resolve(CardContext(card, u, u), out var error)) { _status.Text = error; return; } AddLog($"[color=77ee99]内置锦囊[/color] {d.display_name} → {u.Name}。"); } else switch (d.handler_key) { case "FREE_UNANSWERED_ATTACK": var target = _enemies.Where(s => s.Unit?.Alive == true).OrderBy(_ => _battle.Random.Next()).FirstOrDefault(); if (target?.Unit != null) { target.Unit.Hp = Math.Max(0, target.Unit.Hp - BattleRules.CalculateAttackValue(u, target.Unit)); target.Refresh(); } MarkDefeated(); break; case "STAR_UP": if (u.Star >= 6) { _status.Text = "该英雄已达到6星"; return; } _pendingStarSlot = slot; _pendingStarCost = cost; N<AcceptDialog>("StarChoiceDialog").PopupCenteredRatio(.42f); return; default: ApplyGenericAlly(d, u); break; }
+        // 发布 CARD_TARGETED 事件，让 AI 方被动锦囊有机会响应
+        var targetedCtx = new PassiveEventContext { EventKey = "CARD_TARGETED", SubjectCard = card, SubjectOwnerId = "player" };
+        await TriggerPassive(_enemies, _aiDeck, "CARD_TARGETED", targetedCtx);
         _ap -= cost; _deck.Discard(card); _pendingCard = null; _pendingCardTarget = -1; if (_battle.IsFinished) return; _status.Text = "锦囊已结算并进入弃牌堆"; RefreshAll();
     }
     private void PreviewCard(UnitSlot slot) { var d = _pendingCard!.Definition; var u = slot.Unit!; var effect = d.handler_key switch { "HEAL_CLEANSE" => $"HP {u.Hp} → {Math.Min(u.MaxHp, u.Hp + Param(d, "heal", 20))}", "STAR_UP" => $"星级 {u.Star} → {Math.Min(6, u.Star + 1)}", "APPLY_SHIELD" => $"护盾 0% → {(u.Star >= Param(d, "star_required", 4) ? 50 : 20)}%", "FREE_UNANSWERED_ATTACK" => $"免费攻击，攻击 {u.Attack}，不受反伤", _ => "按卡面规则结算" }; _pendingCardTarget = slot.SlotIndex; _allyIndex = slot.SlotIndex; var i = _deck.Hand.IndexOf(_pendingCard); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview(u.Name, effect); slot.SetActionPreview(effect); _status.Text = d.target_kind == CardDefinition.TargetKind.AllyEnemyPair ? "已选择我方英雄；请选择敌方英雄预览" : "效果已预览，再次点击同一英雄确认使用"; RefreshSelection(); }
@@ -128,7 +131,7 @@ public partial class TrainingArena : Control
     {
         if (_battle.IsFinished) return;
         var card = _pendingCard!; var definition = card.Definition; var unit = slot.Unit!; var cost = EffectiveCost(card); await AnimateCard(card);
-        if (definition.logic_mode == "LUA") { if (!_cardResolver.Resolve(CardContext(card, null, unit), out var luaError)) { if (luaError == "CANCELLED") { _cancelNextEnemyEffect = false; _status.Text = "敌方锦囊被抵消"; } else { _status.Text = luaError; } return; } }
+        if (definition.logic_mode == "LUA") { var resolved = _cardResolver.Resolve(CardContext(card, null, unit), out var luaError); if (luaError == "CANCELLED") { _cancelNextEnemyEffect = false; _status.Text = "敌方锦囊被抵消"; return; } else if (!resolved) { _status.Text = luaError; return; } }
         else if (_cardResolver.CanResolveBuiltin(definition.handler_key)) { if (!_cardResolver.Resolve(CardContext(card, null, unit), out var error)) { _status.Text = error; return; } }
         else switch (definition.handler_key)
             {
@@ -137,7 +140,11 @@ public partial class TrainingArena : Control
                 case "APPLY_DAMAGE_HEAL_AMPLIFY": unit.DamageTakenMultiplier = 1.1f; break;
                 default: unit.Hp = Math.Max(0, unit.Hp - Param(definition, "damage", 0)); break;
             }
-        _ap -= cost; _deck.Discard(card); AddLog($"[color=dd99ff]锦囊[/color] 「{definition.display_name}」对 {unit.Name} 生效。"); CancelSelection(false); MarkDefeated(); RefreshAll();
+        _ap -= cost; _deck.Discard(card); AddLog($"[color=dd99ff]锦囊[/color] 「{definition.display_name}」对 {unit.Name} 生效。");
+        // 发布 CARD_TARGETED 事件，让玩家方被动锦囊有机会响应
+        var enemyTargetedCtx = new PassiveEventContext { EventKey = "CARD_TARGETED", SubjectCard = card, SubjectOwnerId = "ai" };
+        await TriggerPassive(_allies, _deck, "CARD_TARGETED", enemyTargetedCtx);
+        CancelSelection(false); MarkDefeated(); RefreshAll();
     }
     private async Task UseNoTargetCard(CardInstance card)
     {
@@ -147,22 +154,21 @@ public partial class TrainingArena : Control
         await AnimateCard(card); var definition = card.Definition;
         if (definition.logic_mode == "LUA")
         {
-            if (!_cardResolver.Resolve(CardContext(card), out var luaError))
+            var resolved = _cardResolver.Resolve(CardContext(card), out var luaError);
+            if (luaError == "CANCELLED")
             {
-                if (luaError == "CANCELLED")
-                {
-                    // 拒绝生效：取消敌方下一张锦囊。卡牌本身正常打出并弃置。
-                    _cancelNextEnemyEffect = true;
-                    _ap -= EffectiveCost(card);
-                    _deck.Discard(card);
-                    AddLog($"[color=77ee99]Lua锦囊[/color] 「{definition.display_name}」触发拒绝生效：敌方下一张锦囊将被抵消。");
-                    _status.Text = "拒绝生效：敌方下一张锦囊将被抵消";
-                }
-                else
-                {
-                    _status.Text = $"Lua卡牌结算失败：{luaError}";
-                    AddLog($"[color=ff6666]Lua错误[/color] {luaError}");
-                }
+                // 拒绝生效：取消敌方下一张锦囊。卡牌本身正常打出并弃置。
+                _cancelNextEnemyEffect = true;
+                _ap -= EffectiveCost(card);
+                _deck.Discard(card);
+                AddLog($"[color=77ee99]Lua锦囊[/color] 「{definition.display_name}」触发拒绝生效：敌方下一张锦囊将被抵消。");
+                _status.Text = "拒绝生效：敌方下一张锦囊将被抵消";
+                CancelSelection(false); RefreshAll(); return;
+            }
+            else if (!resolved)
+            {
+                _status.Text = $"Lua卡牌结算失败：{luaError}";
+                AddLog($"[color=ff6666]Lua错误[/color] {luaError}");
                 CancelSelection(false); RefreshAll(); return;
             }
             if (definition.handler_key == "PREPAY_AND_DISCARD") _ap = _battle.PlayerActionPoints; else _ap -= EffectiveCost(card); _deck.Discard(card); AddLog($"[color=dd99ff]Lua锦囊[/color] 「{definition.display_name}」已在沙盒中结算。"); CancelSelection(false); MarkDefeated(); RefreshAll(); return;
@@ -207,16 +213,38 @@ public partial class TrainingArena : Control
         RefreshAll();
     }
     private void GainExp(UnitState u, int n) { u.Exp += n; AddLog($"[color=aaddff]经验[/color] {u.Name} 当前 EXP {u.Exp}；升星仅由升星牌触发。"); }
+    private async Task CheckActionPointsZero(string ownerId)
+    {
+        var (slots, deck) = ownerId == "player" ? (_enemies, _aiDeck) : (_allies, _deck);
+        await TriggerPassive(slots, deck, "ACTION_POINTS_ZERO", new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = ownerId });
+    }
     public void DrawOne() { if (_battle.IsFinished) return; if (_deck.Hand.Count >= 5) { _status.Text = "手牌已满"; return; } var result = _deck.Draw(); _status.Text = result.Count == 0 ? "没有可抽的牌" : $"抽到「{result[0].Definition.display_name}」"; RefreshAll(); }
-    private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _ap = 3 + _battle.PlayerNextTurnBonus; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } _battle.PlayerActionPoints = _ap; AssignFreeCard(); if (_deck.Hand.Count < 5) _deck.Draw(); N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; AddLog($"[color=75d7ff]系统[/color] 第 {_turn} 回合开始。"); CancelSelection(false); _status.Text = "新回合：行动点恢复，自动抽牌"; RefreshAll(); }
+    private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _ap = 3 + _battle.PlayerNextTurnBonus; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } _battle.PlayerActionPoints = _ap;
+        // 检查 AP 是否为 0，触发 ACTION_POINTS_ZERO 事件
+        if (_ap == 0) await CheckActionPointsZero("player"); AssignFreeCard(); if (_deck.Hand.Count < 5) { var drawResult = _deck.Draw(); AddLog($"[color=75d7ff]抽牌[/color] 抽到 {drawResult.Count} 张。");
+            // 发布 AFTER_DRAW 和 HAND_EMPTY 事件
+            await TriggerPassive(_enemies, _aiDeck, "AFTER_DRAW", new PassiveEventContext { EventKey = "AFTER_DRAW", SubjectOwnerId = "player" });
+            if (_deck.Hand.Count == 0)
+                await TriggerPassive(_enemies, _aiDeck, "HAND_EMPTY", new PassiveEventContext { EventKey = "HAND_EMPTY", SubjectOwnerId = "player" });
+        } N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; AddLog($"[color=75d7ff]系统[/color] 第 {_turn} 回合开始。"); CancelSelection(false); _status.Text = "新回合：行动点恢复，自动抽牌"; RefreshAll(); }
     private void CancelSelection(bool update = true) { _pendingHero = null; _pendingCard = null; _pendingCardTarget = _allyIndex = _enemyIndex = -1; _hand.SetSelected(-1); foreach (var s in _allies.Concat(_enemies)) s.ClearActionPreview(); if (update) _status.Text = "已取消选择"; RefreshSelection(); }
     private async Task EnemyPhase()
     {
         if (_battle.IsFinished) return;
         if (N<CheckButton>("DummyMode").ButtonPressed) { AddLog("[color=999999]稻草人模式[/color] 敌方跳过全部行动。"); return; }
         if (await TriggerPassive(_allies, _deck, "ENEMY_BATTLE_PHASE_STARTED")) { AddLog("[color=99bbff]被动锦囊[/color] 敌方战斗阶段被跳过。"); return; }
-        var aiAp = 3; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
-        for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_battle.IsFinished) return; if (_aiDeck.Hand.Count < 5) _aiDeck.Draw(); AddLog($"[color=ff8888]AI回合[/color] 敌方行动结束，剩余行动点 {aiAp}。");
+        var aiAp = 3 + _battle.EnemyNextTurnBonus; _battle.EnemyNextTurnBonus = 0; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
+        // 检查 AI AP 是否为 0，触发 ACTION_POINTS_ZERO 事件
+        if (aiAp == 0) await CheckActionPointsZero("ai");
+        for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_battle.IsFinished) return; if (_aiDeck.Hand.Count < 5)
+        {
+            var aiDrawResult = _aiDeck.Draw();
+            // 发布 AFTER_DRAW 和 HAND_EMPTY 事件
+            await TriggerPassive(_allies, _deck, "AFTER_DRAW", new PassiveEventContext { EventKey = "AFTER_DRAW", SubjectOwnerId = "ai" });
+            if (_aiDeck.Hand.Count == 0)
+                await TriggerPassive(_allies, _deck, "HAND_EMPTY", new PassiveEventContext { EventKey = "HAND_EMPTY", SubjectOwnerId = "ai" });
+        }
+        AddLog($"[color=ff8888]AI回合[/color] 敌方行动结束，剩余行动点 {aiAp}。");
     }
     private async Task<int> AiDeploy() { if (_battle.IsFinished) return 0; var empty = _enemies.Where(s => s.Unit?.Alive != true).ToList(); if (empty.Count == 0 || _aiHeroBag.Count == 0) return 0; var hero = _aiHeroBag[_battle.Random.Next(_aiHeroBag.Count)]; var slot = empty[_battle.Random.Next(empty.Count)]; slot.SetUnit(hero.Deploy()); _battle.SetSlotUnit("ai", slot.SlotIndex, slot.Unit); _aiHeroBag.Remove(hero); _battle.DecrementReserveHero("ai"); await slot.PlayDeployAnimation(); AddLog($"[color=ff8888]AI部署[/color] {hero.Definition.display_name} 进入敌方 {slot.SlotIndex + 1} 号位（消耗1行动点）。"); return 1; }
     private async Task<bool> AiAttack()
@@ -289,11 +317,28 @@ public partial class TrainingArena : Control
     private int PreviewDamage(UnitState u, int amount) { var target = _allies.Select(s => s.Unit).FirstOrDefault(x => x is { Alive: true, TauntTurns: > 0 }) ?? u; if (target.Id == "hero_role_1") { var ratio = (float)target.Hp / target.MaxHp; if (target.Star >= 5 && ratio <= .3) return Mathf.RoundToInt(amount * .25f); if (ratio <= .5) return Mathf.RoundToInt(amount * .5f); } return amount; }
     private void MarkDefeated()
     {
+        var newlyDead = new List<(UnitState Unit, string Side)>();
+        foreach (var s in _allies)
+            if (s.Unit is { Alive: false }) newlyDead.Add((s.Unit!, "player"));
+        foreach (var s in _enemies)
+            if (s.Unit is { Alive: false }) newlyDead.Add((s.Unit!, "ai"));
+        
         foreach (var s in _allies.Concat(_enemies))
             if (s.Unit is { Alive: false }) s.Refresh();
         _battle.FinalizeDeaths(
             _allies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!),
             _enemies.Where(slot => slot.Unit != null).Select(slot => slot.Unit!));
+        
+        // 发布 HERO_DIED 事件，让对方被动锦囊有机会响应
+        foreach (var (deadUnit, side) in newlyDead)
+        {
+            var ctx = new PassiveEventContext { EventKey = "HERO_DIED", SubjectCard = null, SubjectOwnerId = side };
+            if (side == "player")
+                TriggerPassive(_enemies, _aiDeck, "HERO_DIED", ctx).Wait();
+            else
+                TriggerPassive(_allies, _deck, "HERO_DIED", ctx).Wait();
+        }
+        
         SynchronizeBattleState();
         CallDeferred(MethodName.DeferredCheckEnemyEmptySlots);
     }
