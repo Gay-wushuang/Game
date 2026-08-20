@@ -8,7 +8,7 @@ public partial class TrainingArena : Control
 {
     [Export] public TrainingContent content { get; set; } = null!;
     private PackedScene _slotScene = null!, _cardScene = null!;
-    private Label _status = null!, _apText = null!; private HandFan _hand = null!;
+    private Label _status = null!, _apText = null!; private HandFan _hand = null!; private BattleRightSidebar _rightSidebar = null!;
     private readonly DeckState _deck = new(), _aiDeck = new();
     private BattleState _battle = null!; private CardResolver _cardResolver = null!; private readonly PassiveTriggerResolver _passiveResolver = new();
     private readonly List<UnitSlot> _allies = [], _enemies = [];
@@ -25,11 +25,17 @@ public partial class TrainingArena : Control
         _battle = new(_deck, _aiDeck, 20260817); _cardResolver = new();
         ValidateCardScripts();
         _slotScene = GD.Load<PackedScene>("res://scenes/components/unit_slot.tscn"); _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn");
-        _status = GetNode<Label>("%Status"); _apText = GetNode<Label>("%ActionPoints"); _hand = GetNode<HandFan>("%Hand");
+        _status = GetNode<Label>("%Status"); _apText = GetNode<Label>("%ActionPoints"); _hand = GetNode<HandFan>("%Hand"); _rightSidebar = GetNode<BattleRightSidebar>("%ContentHost");
         _battle.Events.Subscribe(BattleEvent.BattleEnded, HandleBattleEnd);
         ConnectControls(); CreateSlots(); ResetTraining();
     }
     public override void _ExitTree() => _cardResolver?.Dispose();
+    public override void _UnhandledInput(InputEvent input)
+    {
+        if (input is not InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) return;
+        if (_rightSidebar.ShowingDetail) { _rightSidebar.ShowCommanderOverview(); GetViewport().SetInputAsHandled(); return; }
+        if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) { CancelSelection(); GetViewport().SetInputAsHandled(); }
+    }
     private void ValidateCardScripts()
     {
         if (content.cards.Count != CardCatalog.V1ExpectedCount) throw new InvalidOperationException($"卡牌目录数量错误：{content.cards.Count}，预期 {CardCatalog.V1ExpectedCount}");
@@ -50,7 +56,7 @@ public partial class TrainingArena : Control
     }
     private void CreateSlots()
     {
-        for (var i = 0; i < 5; i++) { var enemy = _slotScene.Instantiate<UnitSlot>(); enemy.Side = "enemy"; enemy.SlotIndex = i; enemy.SlotChosen += EnemyChosen; N<HBoxContainer>("EnemyRow").AddChild(enemy); _enemies.Add(enemy); var ally = _slotScene.Instantiate<UnitSlot>(); ally.Side = "ally"; ally.SlotIndex = i; ally.SlotChosen += AllyChosen; N<HBoxContainer>("AllyRow").AddChild(ally); _allies.Add(ally); }
+        for (var i = 0; i < 5; i++) { var enemy = _slotScene.Instantiate<UnitSlot>(); enemy.Side = "enemy"; enemy.SlotIndex = i; enemy.SlotChosen += EnemyChosen; enemy.DetailRequested += ShowUnitDetail; enemy.CardDropped += OnCardDropped; N<HBoxContainer>("EnemyRow").AddChild(enemy); _enemies.Add(enemy); var ally = _slotScene.Instantiate<UnitSlot>(); ally.Side = "ally"; ally.SlotIndex = i; ally.SlotChosen += AllyChosen; ally.DetailRequested += ShowUnitDetail; ally.CardDropped += OnCardDropped; N<HBoxContainer>("AllyRow").AddChild(ally); _allies.Add(ally); }
     }
     public void ResetTraining()
     {
@@ -274,7 +280,7 @@ public partial class TrainingArena : Control
                     await TriggerPassive(_enemies, _aiDeck, "HAND_EMPTY", new PassiveEventContext { EventKey = "HAND_EMPTY", SubjectOwnerId = "player" });
             }
         } N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; AddLog($"[color=75d7ff]系统[/color] 第 {_turn} 回合开始。"); CancelSelection(false); _status.Text = "新回合：行动点恢复，自动抽牌"; RefreshAll(); }
-    private void CancelSelection(bool update = true) { _pendingHero = null; _pendingCard = null; _pendingCardTarget = _allyIndex = _enemyIndex = -1; _hand.SetSelected(-1); foreach (var s in _allies.Concat(_enemies)) s.ClearActionPreview(); if (update) _status.Text = "已取消选择"; RefreshSelection(); }
+    private void CancelSelection(bool update = true) { _pendingHero = null; _pendingCard = null; _pendingCardTarget = _allyIndex = _enemyIndex = -1; _hand.SetSelected(-1); _rightSidebar.ShowCommanderOverview(); foreach (var s in _allies.Concat(_enemies)) s.ClearActionPreview(); if (update) _status.Text = "已取消选择"; RefreshSelection(); }
     private async Task EnemyPhase()
     {
         if (_battle.IsFinished) return;
@@ -459,8 +465,8 @@ public partial class TrainingArena : Control
     private void TickStatuses() { if (_leaderTurns > 0) _leaderTurns--; foreach (var s in _allies.Where(s => s.Unit != null)) { var u = s.Unit!; u.Cooldown = Math.Max(0, u.Cooldown - 1); u.SkillTurns = Math.Max(0, u.SkillTurns - 1); u.TauntTurns = Math.Max(0, u.TauntTurns - 1); if (u.LinkTurns > 0) { if (u.LinkedEnemy >= 0 && _enemies[u.LinkedEnemy].Unit != null) { u.Attack = Math.Max(0, u.Attack - 1); _enemies[u.LinkedEnemy].Unit!.Attack = Math.Max(0, _enemies[u.LinkedEnemy].Unit!.Attack - 1); } u.LinkTurns--; } } foreach (var s in _enemies.Where(s => s.Unit != null)) { var u = s.Unit!; if (u.DebuffTurns > 0 && --u.DebuffTurns == 0) { u.Attack += u.AttackRestore; u.AttackRestore = 0; } } }
     public void RefreshAll()
     {
-        _apText.Text = $"行动点 {_ap}/3"; N<Button>("HeroBag").Text = $"英雄卡包\n{_heroBag.Count}"; N<Button>("DrawPile").Text = $"抽牌堆\n{_deck.DrawPile.Count}"; N<Button>("DiscardPile").Text = $"弃牌堆\n{_deck.DiscardPile.Count}";
-        Clear(_hand); foreach (var card in _deck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); _hand.AddChild(tile); tile.Setup(card); tile.CardChosen += ChooseCard; tile.DetailRequested += ShowCardDetail; }
+        _apText.Text = $"AP {_ap}/3"; N<Label>("LeftApText").Text = $"◆　AP　{_ap}/3"; N<Button>("HeroBag").Text = $"♛　{_heroBag.Count}"; N<Button>("HeroBag").TooltipText = $"英雄牌库\n剩余 {_heroBag.Count}"; N<Button>("DrawPile").Text = $"▣　{_deck.DrawPile.Count}"; N<Button>("DrawPile").TooltipText = $"抽牌堆\n当前 {_deck.DrawPile.Count} 张"; N<Button>("DiscardPile").Text = $"▨　{_deck.DiscardPile.Count}"; N<Button>("DiscardPile").TooltipText = $"弃牌堆\n当前 {_deck.DiscardPile.Count} 张"; N<Button>("CatalogButton").Text = $"◇　{content.cards.Count}"; N<Button>("CatalogButton").TooltipText = $"锦囊总卡包\n共 {content.cards.Count} 张";
+        Clear(_hand); foreach (var card in _deck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); _hand.AddChild(tile); tile.Setup(card); tile.CardChosen += ChooseCard; tile.DetailRequested += ShowCardDetail; _hand.RegisterCard(tile); }
         _hand.CallDeferred(HandFan.MethodName.ArrangeCards, false); RefreshEnemyHand(); RefreshSelection();
     }
     private void RefreshEnemyHand() { var row = N<HBoxContainer>("EnemyHand"); Clear(row); foreach (var card in _aiDeck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); row.AddChild(tile); tile.Setup(card, true, true); tile.CustomMinimumSize = new(20, 32); tile.MouseFilter = MouseFilterEnum.Ignore; } }
@@ -469,7 +475,22 @@ public partial class TrainingArena : Control
     private void ShowPile(string title, IEnumerable<CardInstance> cards) { PopulatePile(title, cards.ToList()); N<AcceptDialog>("PileDialog").PopupCenteredRatio(.65f); }
     private void ShowCatalog() { PopulatePile("锦囊牌总卡包", content.cards.Select(c => new CardInstance(c, "catalog")).ToList()); N<AcceptDialog>("PileDialog").PopupCenteredRatio(.72f); }
     private void PopulatePile(string title, List<CardInstance> cards) { var dialog = N<AcceptDialog>("PileDialog"); dialog.Title = $"{title}（{cards.Count}）"; var grid = N<GridContainer>("PileCards"); Clear(grid); foreach (var c in cards) { var tile = _cardScene.Instantiate<CardTile>(); grid.AddChild(tile); tile.Setup(c); tile.CustomMinimumSize = new(135, 175); tile.DetailRequested += ShowCardDetail; } }
-    private void ShowCardDetail(CardDefinition c) { var d = N<AcceptDialog>("CardDetailDialog"); d.Title = c.display_name; N<RichTextLabel>("CardDetailText").Text = $"[center][font_size=22][b]{c.display_name}[/b][/font_size][/center]\n\n[b]行动点：[/b]{c.action_cost}\n[b]标签：[/b]{string.Join("、", c.tags)}\n\n{c.rules_text}\n\n[color=999999]{c.description}[/color]"; d.PopupCenteredRatio(.58f); }
+    private void ShowCardDetail(CardInstance card) { var pile = N<AcceptDialog>("PileDialog"); if (pile.Visible) pile.Hide(); _rightSidebar.ShowCard(card); }
+    private void ShowUnitDetail(UnitSlot slot) { if (slot.Unit != null) _rightSidebar.ShowUnit(slot.Unit, slot.Side == "enemy"); }
+    private async void OnCardDropped(UnitSlot slot, CardInstance card)
+    {
+        if (!_deck.Hand.Contains(card)) return;
+        var target = card.Definition.target_kind;
+        var validSide = slot.Side == "enemy"
+            ? target is CardDefinition.TargetKind.Enemy or CardDefinition.TargetKind.AnyUnit or CardDefinition.TargetKind.AllyEnemyPair
+            : target is not CardDefinition.TargetKind.Enemy and not CardDefinition.TargetKind.None;
+        if (!validSide) { _status.Text = "该位置不是此锦囊的合法目标"; return; }
+        ChooseCard(card);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        slot.Activate();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        if (_pendingCard == card && _pendingCardTarget == slot.SlotIndex) slot.Activate();
+    }
     private void AddLog(string e) { _logs.Insert(0, $"[b]第 {_turn} 回合[/b]　{e}"); if (_logs.Count > 80) _logs.RemoveAt(_logs.Count - 1); N<RichTextLabel>("LogText").Text = string.Join("\n\n", _logs); }
     public void ReloadCardScripts()
     {
