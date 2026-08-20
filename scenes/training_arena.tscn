@@ -29,9 +29,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = 12.0
+offset_top = 16.0
 offset_right = -16.0
-offset_bottom = -12.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -39,24 +39,30 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/Root"]
+[node name="TopBar" type="PanelContainer" parent="Margin/Root"]
 layout_mode = 2
-size_flags_stretch_ratio = 0.35
+custom_minimum_size = Vector2(0, 64)
+
+[node name="TopContent" type="HBoxContainer" parent="Margin/Root/TopBar"]
+layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="Margin/Root/TopBar"]
+[node name="Title" type="Label" parent="Margin/Root/TopBar/TopContent"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.4
+size_flags_stretch_ratio = 1.0
+custom_minimum_size = Vector2(500, 48)
 theme_override_font_sizes/font_size = 22
 text = "训练场 · 第 1 回合"
 vertical_alignment = 1
 
-[node name="Status" type="Label" parent="Margin/Root/TopBar"]
+[node name="Status" type="Label" parent="Margin/Root/TopBar/TopContent"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+custom_minimum_size = Vector2(600, 48)
 theme_override_colors/font_color = Color(0.45, 0.84, 1, 1)
 text = "当前步骤：从英雄卡包选择英雄部署"
 horizontal_alignment = 1
@@ -64,55 +70,147 @@ vertical_alignment = 1
 clip_text = true
 text_overrun_behavior = 3
 
-[node name="EnemyHand" type="HBoxContainer" parent="Margin/Root/TopBar"]
+[node name="ActionPoints" type="Label" parent="Margin/Root/TopBar/TopContent"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.8
-theme_override_constants/separation = 2
-
-[node name="ActionPoints" type="Label" parent="Margin/Root/TopBar"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.55
+custom_minimum_size = Vector2(180, 48)
 text = "行动点 3/3"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LogButton" type="Button" parent="Margin/Root/TopBar"]
+[node name="LogButton" type="Button" parent="Margin/Root/TopBar/TopContent"]
 unique_name_in_owner = true
 layout_mode = 2
+custom_minimum_size = Vector2(180, 48)
 text = "战斗日志"
 
-[node name="SettingsButton" type="Button" parent="Margin/Root/TopBar"]
+[node name="SettingsButton" type="Button" parent="Margin/Root/TopBar/TopContent"]
 unique_name_in_owner = true
 layout_mode = 2
+custom_minimum_size = Vector2(196, 48)
 text = "设置"
 
-[node name="Battlefield" type="PanelContainer" parent="Margin/Root"]
+[node name="MainRow" type="HBoxContainer" parent="Margin/Root"]
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_stretch_ratio = 2.15
+theme_override_constants/separation = 8
 
-[node name="Rows" type="VBoxContainer" parent="Margin/Root/Battlefield"]
+[node name="LeftSidebar" type="PanelContainer" parent="Margin/Root/MainRow"]
 layout_mode = 2
-theme_override_constants/separation = 5
+custom_minimum_size = Vector2(240, 0)
 
-[node name="EnemyRow" type="HBoxContainer" parent="Margin/Root/Battlefield/Rows"]
-unique_name_in_owner = true
+[node name="LeftMargin" type="MarginContainer" parent="Margin/Root/MainRow/LeftSidebar"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="LeftContent" type="VBoxContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LeftTitle" type="Label" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+text = "战场信息"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FactionPanel" type="PanelContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 188)
+[node name="FactionText" type="Label" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/FactionPanel"]
+layout_mode = 2
+text = "我方阵营\n\nVS\n\n敌方阵营"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LeftApPanel" type="PanelContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 84)
+[node name="LeftApText" type="Label" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/LeftApPanel"]
+layout_mode = 2
+text = "行动点\n与顶栏同步"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Piles" type="VBoxContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
-alignment = 1
 
-[node name="AllyRow" type="HBoxContainer" parent="Margin/Root/Battlefield/Rows"]
+[node name="HeroBag" type="Button" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/Piles"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 12
+text = "英雄卡包\n3"
+
+[node name="DrawPile" type="Button" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "抽牌堆\n0"
+
+[node name="DiscardPile" type="Button" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "弃牌堆\n0"
+
+[node name="CatalogButton" type="Button" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/Piles"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "锦囊总卡包"
+
+[node name="ReservedPanel" type="PanelContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+[node name="ReservedText" type="Label" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/ReservedPanel"]
+layout_mode = 2
+text = "特殊资源预留"
+horizontal_alignment = 1
+vertical_alignment = 1
+modulate = Color(1, 1, 1, 0.45)
+
+[node name="CenterColumn" type="VBoxContainer" parent="Margin/Root/MainRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Battlefield" type="PanelContainer" parent="Margin/Root/MainRow/CenterColumn"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 700)
+size_flags_vertical = 3
+
+[node name="BattleMargin" type="MarginContainer" parent="Margin/Root/MainRow/CenterColumn/Battlefield"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 52
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 52
+
+[node name="Rows" type="VBoxContainer" parent="Margin/Root/MainRow/CenterColumn/Battlefield/BattleMargin"]
+layout_mode = 2
+theme_override_constants/separation = 76
 alignment = 1
 
-[node name="Announcement" type="Label" parent="Margin/Root/Battlefield"]
+[node name="EnemyRow" type="HBoxContainer" parent="Margin/Root/MainRow/CenterColumn/Battlefield/BattleMargin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 228)
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="AllyRow" type="HBoxContainer" parent="Margin/Root/MainRow/CenterColumn/Battlefield/BattleMargin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 228)
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Announcement" type="Label" parent="Margin/Root/MainRow/CenterColumn/Battlefield"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
@@ -133,82 +231,100 @@ horizontal_alignment = 1
 vertical_alignment = 1
 visible = false
 
-[node name="BottomArea" type="PanelContainer" parent="Margin/Root"]
+[node name="HandArea" type="PanelContainer" parent="Margin/Root/MainRow/CenterColumn"]
 layout_mode = 2
-size_flags_vertical = 3
-size_flags_stretch_ratio = 1.0
+custom_minimum_size = Vector2(0, 268)
 
-[node name="Columns" type="HBoxContainer" parent="Margin/Root/BottomArea"]
+[node name="HandSection" type="VBoxContainer" parent="Margin/Root/MainRow/CenterColumn/HandArea"]
 layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Piles" type="VBoxContainer" parent="Margin/Root/BottomArea/Columns"]
-layout_mode = 2
-custom_minimum_size = Vector2(112, 0)
-theme_override_constants/separation = 5
-
-[node name="HeroBag" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-text = "英雄卡包\n3"
-
-[node name="DrawPile" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-text = "抽牌堆\n0"
-
-[node name="DiscardPile" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-text = "弃牌堆\n0"
-
-[node name="CatalogButton" type="Button" parent="Margin/Root/BottomArea/Columns/Piles"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-text = "锦囊总卡包"
-
-[node name="HandSection" type="VBoxContainer" parent="Margin/Root/BottomArea/Columns"]
-layout_mode = 2
-size_flags_horizontal = 3
 clip_contents = true
 
-[node name="HandHeader" type="Label" parent="Margin/Root/BottomArea/Columns/HandSection"]
+[node name="HandHeader" type="Label" parent="Margin/Root/MainRow/CenterColumn/HandArea/HandSection"]
 layout_mode = 2
 text = "锦囊手牌 · 左键选择，右键查看详情"
 
-[node name="Hand" type="Control" parent="Margin/Root/BottomArea/Columns/HandSection"]
+[node name="Hand" type="Control" parent="Margin/Root/MainRow/CenterColumn/HandArea/HandSection"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 clip_contents = true
 script = ExtResource("3")
 
-[node name="Actions" type="VBoxContainer" parent="Margin/Root/BottomArea/Columns"]
+[node name="RightSidebar" type="PanelContainer" parent="Margin/Root/MainRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 0)
-theme_override_constants/separation = 5
+custom_minimum_size = Vector2(352, 0)
 
-[node name="SkillButton" type="Button" parent="Margin/Root/BottomArea/Columns/Actions"]
-unique_name_in_owner = true
+[node name="RightMargin" type="MarginContainer" parent="Margin/Root/MainRow/RightSidebar"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="RightContent" type="VBoxContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="CommanderOverview" type="PanelContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(320, 500)
+
+[node name="CommanderContent" type="VBoxContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommanderOverview"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PlayerCommander" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommanderOverview/CommanderContent"]
 layout_mode = 2
 size_flags_vertical = 3
+text = "我方指挥官\n训练场测试员\n状态：正常"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Versus" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommanderOverview/CommanderContent"]
+layout_mode = 2
+text = "VS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="EnemyCommander" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommanderOverview/CommanderContent"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "敌方指挥官\n训练场 AI\n敌方手牌"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnemyHand" type="HBoxContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommanderOverview/CommanderContent"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="RightSpacer" type="Control" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Actions" type="VBoxContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SkillButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(320, 92)
 text = "使用英雄技能"
 disabled = true
 
-[node name="CancelButton" type="Button" parent="Margin/Root/BottomArea/Columns/Actions"]
+[node name="CancelButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
+custom_minimum_size = Vector2(320, 92)
 text = "取消选择"
 
-[node name="EndTurnButton" type="Button" parent="Margin/Root/BottomArea/Columns/Actions"]
+[node name="EndTurnButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
+custom_minimum_size = Vector2(320, 156)
 text = "结束回合"
 
 [node name="HeroBagDialog" type="AcceptDialog" parent="."]
