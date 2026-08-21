@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1400" viewBox="0 0 2400 1400">
+  <defs>
+    <style>
+      text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; fill: #e9f1f8; }
+      .title { font-size: 34px; font-weight: 700; }
+      .h2 { font-size: 24px; font-weight: 700; fill: #67d2ff; }
+      .label { font-size: 18px; font-weight: 600; }
+      .note { font-size: 15px; fill: #aec3d4; }
+      .dim { font-size: 15px; fill: #ffd166; font-weight: 700; }
+      .panel { fill: #111b28; stroke: #46657e; stroke-width: 2; }
+      .weak { fill: #0b1420; stroke: #2b4255; stroke-width: 2; }
+      .slot { fill: #132131; stroke: #4b7899; stroke-width: 2; rx: 10; }
+      .asset { fill: #142334; stroke: #67d2ff; stroke-width: 2; }
+      .safe { fill: none; stroke: #ffd166; stroke-width: 2; stroke-dasharray: 8 6; }
+      .guide { stroke: #ffd166; stroke-width: 2; marker-start: url(#arrow); marker-end: url(#arrow); }
+      .leader { stroke: #ff7b72; stroke-width: 2; fill: none; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="#ffd166"/>
+    </marker>
+  </defs>
+
+  <rect width="2400" height="1400" fill="#070d16"/>
+  <text x="56" y="58" class="title">Battle UI Graybox v1.0 — Layout Frozen</text>
+  <text x="56" y="88" class="note">1920×1080 逻辑画布 · 16:9 整体适配 · 黄色为尺寸标注 · 右侧为美术交付规格</text>
+
+  <!-- 1920×1080 master, drawn at 0.72 scale -->
+  <g transform="translate(56 130) scale(.72)">
+    <rect x="0" y="0" width="1920" height="1080" fill="#08121f" stroke="#67d2ff" stroke-width="4"/>
+    <rect x="16" y="16" width="1888" height="1048" fill="none" stroke="#ffd166" stroke-width="2" stroke-dasharray="10 8"/>
+
+    <rect class="weak" x="16" y="16" width="1888" height="64"/>
+    <text x="36" y="55" class="label">顶部信息条</text>
+    <text x="840" y="55" class="note">当前阶段 / 操作提示</text>
+    <text x="1580" y="55" class="note">日志</text>
+    <text x="1770" y="55" class="note">设置</text>
+
+    <rect class="weak" x="16" y="88" width="240" height="976"/>
+    <rect class="panel" x="28" y="100" width="216" height="128"/>
+    <text x="89" y="137" class="label">◆ 敌方 ↑</text>
+    <text x="123" y="173" class="note">VS</text>
+    <text x="89" y="211" class="label">◇ 我方 ↓</text>
+    <rect class="panel" x="54" y="932" width="78" height="56"/>
+    <rect class="panel" x="140" y="932" width="78" height="56"/>
+    <rect class="panel" x="54" y="996" width="78" height="56"/>
+    <rect class="panel" x="140" y="996" width="78" height="56"/>
+    <text x="72" y="968" class="label">♛ 4</text><text x="158" y="968" class="label">▣ 26</text>
+    <text x="72" y="1032" class="label">▨ 0</text><text x="158" y="1032" class="label">◇ 30</text>
+
+    <rect class="weak" x="264" y="88" width="1328" height="700"/>
+    <text x="284" y="120" class="h2">战场 Battlefield · 1328×700</text>
+    <g transform="translate(336 173)">
+      <rect class="slot" x="0" y="0" width="224" height="228"/><rect class="slot" x="240" y="0" width="224" height="228"/>
+      <rect class="slot" x="480" y="0" width="224" height="228"/><rect class="slot" x="720" y="0" width="224" height="228"/>
+      <rect class="slot" x="960" y="0" width="224" height="228"/>
+      <rect class="slot" x="0" y="304" width="224" height="228"/><rect class="slot" x="240" y="304" width="224" height="228"/>
+      <rect class="slot" x="480" y="304" width="224" height="228"/><rect class="slot" x="720" y="304" width="224" height="228"/>
+      <rect class="slot" x="960" y="304" width="224" height="228"/>
+      <text x="523" y="-16" class="note">敌方英雄槽 ×5</text>
+      <text x="523" y="558" class="note">我方英雄槽 ×5</text>
+    </g>
+
+    <rect class="weak" x="264" y="796" width="1328" height="268"/>
+    <text x="284" y="830" class="h2">手牌 HandArea · 1328×268</text>
+    <g transform="translate(640 842)">
+      <rect class="asset" x="0" y="10" width="144" height="192" transform="rotate(-5 72 106)"/>
+      <rect class="asset" x="132" y="4" width="144" height="192" transform="rotate(-2 204 100)"/>
+      <rect class="asset" x="264" y="4" width="144" height="192" transform="rotate(2 336 100)"/>
+      <rect class="asset" x="396" y="10" width="144" height="192" transform="rotate(5 468 106)"/>
+    </g>
+
+    <rect class="weak" x="1600" y="88" width="304" height="976"/>
+    <text x="1640" y="130" class="h2">上下文右栏</text>
+    <rect class="panel" x="1612" y="148" width="280" height="500"/>
+    <text x="1684" y="250" class="label">敌方指挥官</text>
+    <text x="1720" y="390" class="note">— VS —</text>
+    <text x="1684" y="540" class="label">我方指挥官</text>
+    <circle cx="1752" cy="946" r="82" fill="#101c29" stroke="#43c9ff" stroke-width="8"/>
+    <text x="1708" y="938" class="label">AP 5/5</text>
+    <text x="1708" y="978" class="label">结束回合</text>
+
+    <line class="guide" x1="16" y1="1068" x2="1904" y2="1068"/>
+    <text x="890" y="1053" class="dim">1888 px 安全内容宽度（外边距 16 px）</text>
+    <line class="guide" x1="16" y1="92" x2="256" y2="92"/>
+    <text x="90" y="116" class="dim">240 px</text>
+    <line class="guide" x1="1600" y1="92" x2="1904" y2="92"/>
+    <text x="1708" y="116" class="dim">304 px</text>
+  </g>
+
+  <!-- Asset delivery board -->
+  <g transform="translate(1505 130)">
+    <text x="0" y="0" class="h2">美术素材交付尺寸</text>
+
+    <rect class="asset" x="0" y="30" width="192" height="240" rx="8"/>
+    <rect class="safe" x="12" y="42" width="168" height="216" rx="5"/>
+    <line class="leader" x1="0" y1="255" x2="192" y2="255"/>
+    <text x="210" y="72" class="label">英雄像素立绘</text>
+    <text x="210" y="102" class="dim">128×160 px · RGBA PNG</text>
+    <text x="210" y="130" class="note">图中按 1.5× 展示</text>
+    <text x="210" y="158" class="note">主体安全区 ≤112×144</text>
+    <text x="210" y="186" class="note">脚底基线 y≈150</text>
+    <text x="210" y="214" class="note">动画每帧同为 128×160</text>
+
+    <rect class="asset" x="0" y="310" width="192" height="256" rx="12"/>
+    <rect class="safe" x="12" y="322" width="168" height="232" rx="6"/>
+    <rect x="12" y="354" width="168" height="112" fill="#223a50" stroke="#ffd166" stroke-width="2"/>
+    <text x="210" y="352" class="label">卡牌正面 / 背面</text>
+    <text x="210" y="382" class="dim">192×256 px · 严格 3:4</text>
+    <text x="210" y="410" class="note">关键元素距边 ≥12 px</text>
+    <text x="210" y="438" class="note">动态文字不得烘焙</text>
+    <text x="210" y="466" class="note">卡背外轮廓与正面一致</text>
+    <text x="210" y="494" class="note">低分辨率母版 96×128</text>
+
+    <rect class="asset" x="0" y="606" width="288" height="216"/>
+    <rect class="safe" x="12" y="618" width="264" height="192"/>
+    <text x="310" y="650" class="label">独立卡牌插画</text>
+    <text x="310" y="680" class="dim">不低于 384×288 px</text>
+    <text x="310" y="708" class="note">4:3 源图，与卡框解耦</text>
+    <text x="310" y="736" class="note">保留二次裁切余量</text>
+    <text x="310" y="764" class="note">SVG 中按 0.75× 展示</text>
+
+    <rect class="asset" x="0" y="862" width="72" height="96" rx="5"/>
+    <text x="94" y="898" class="label">英雄槽伏牌显示</text>
+    <text x="94" y="928" class="dim">约 72×96 px · 3:4</text>
+    <text x="94" y="956" class="note">复用正式卡背，不另画小图</text>
+
+    <rect class="asset" x="0" y="1000" width="64" height="64" rx="8"/>
+    <rect class="asset" x="84" y="1016" width="32" height="32" rx="4"/>
+    <text x="140" y="1028" class="label">UI 图标（建议规格）</text>
+    <text x="140" y="1058" class="dim">资源 32×32；状态/职业 24×24</text>
+    <text x="140" y="1086" class="note">像素图使用 nearest，禁用 mipmap</text>
+
+    <text x="0" y="1142" class="h2">其他建议素材</text>
+    <text x="0" y="1176" class="note">战斗背景：1920×1080，重要内容避开左右 320 px UI 区域</text>
+    <text x="0" y="1204" class="note">指挥官头像：建议 256×256 透明 PNG，主体置于 224×224 安全区</text>
+    <text x="0" y="1232" class="note">战位皮肤：224×228；需分别提供空位/选中/目标/受击视觉状态</text>
+    <text x="0" y="1260" class="note">环形回合底图：建议 192×192 透明 PNG，程序负责 AP 弧与文字</text>
+  </g>
+</svg>
