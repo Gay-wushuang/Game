@@ -4,6 +4,7 @@ using System.Linq;
 
 public sealed class BattleState
 {
+    public const int DefaultActionPoints = 5;
     public sealed record PlacedPassive(string OwnerId, int SlotIndex, CardInstance Card);
     private sealed record ScheduledAction(int DueTurn, Action Action);
     private readonly List<ScheduledAction> _scheduled = [];
@@ -15,8 +16,8 @@ public sealed class BattleState
     public Random Random { get; private set; }
     private readonly int _initialSeed;
     public int Turn { get; set; } = 1;
-    public int PlayerActionPoints { get; set; } = 3;
-    public int EnemyActionPoints { get; set; } = 3;
+    public int PlayerActionPoints { get; set; } = DefaultActionPoints;
+    public int EnemyActionPoints { get; set; } = DefaultActionPoints;
     public int PlayerNextTurnBonus { get; set; }
     public int EnemyNextTurnBonus { get; set; }
     public int PlayerReserveHeroCount { get; private set; }

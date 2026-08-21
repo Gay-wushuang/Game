@@ -1,786 +1,845 @@
-# Battle UI Layout Spec
+- # Battle UI Graybox v1.0 — Layout Frozen
 
-> **文档状态：Battle UI Master 实现规格**  
-> **基准分辨率：1920 × 1080（16:9）**  
-> **配套几何文件：`battle_ui_master_1920x1080.svg`**  
-> **用途：指导 Codex / Trae / Godot 开发者将当前 TrainingArena 调试 UI 重构为正式战斗 HUD。**
->
-> **权威关系：** `BattleUILayoutSpec.md` = 实现规则权威源；`battle_ui_master_1920x1080.svg` = 几何参考；高保真 PNG = 视觉风格参考。  
-> 不允许从旧 TrainingArena 的现有比例反推新版布局。
+  本文定义的战斗 UI 灰盒布局自此冻结。后续只允许替换正式美术、调整视觉样式和修复交互缺陷；未经新的布局规格确认，不再变更三区结构、战位尺寸、手牌区域或核心信息层级。
 
----
+  ## 《Battle UI 最终灰盒收口方案（删减版）》
 
-## 1. 核心目标
+  ## 0. 收口目标
 
-新版战斗 UI 固定为五个视觉区：
+  最终灰盒只保留四类东西：
 
-```text
-TopBar
-LeftSidebar | Battlefield | RightSidebar
-            | HandArea    |
-```
+  > **战场主体 + 必要资源 + 当前上下文 + 唯一主操作**
 
-必须满足：
+  不再追求“每个功能都有一个常驻按钮”。
 
-- 顶栏轻量，不形成厚重 HUD；
-- 左侧将阵营与牌堆资源压缩成稳定竖栏；
-- 中央 5v5 战场无遮挡；
-- 底部手牌采用动态扇形 / 轻弧形；
-- 右侧默认显示我方与敌方玩家 / 指挥官；
-- 右键卡牌、英雄或敌人时，右栏切换为详情；
-- 右栏切换详情不得改变 Battlefield 或 HandArea 几何尺寸；
-- 正式 UI 必须由 Godot 原生 `Control` / `Container` 组件化实现，不允许把整张 SVG/PNG 当成不可交互 UI。
+  设计原则定死：
 
----
+  - **敌方永远在上，我方永远在下**
+  - **场景画面优先于面板面积**
+  - **状态信息优先于说明文字**
+  - **上下文交互优先于常驻按钮**
+  - **纠错操作不占主视觉位置**
+  - **一个信息只出现一次**
+  - **灰盒阶段不为占位内容做精装修**
 
-# 2. Master Geometry
+  ------
 
-```text
-Canvas      1920 × 1080
-SafeArea    x=16 y=16 w=1888 h=1048
-```
+  # 1. 最终整体排盘
 
-主要区域：
+  建议冻结成：
 
-```text
-TopBar
-x=16 y=16 w=1888 h=64
+  ```text
+  ┌───────────────────────────────────────────────────────────────┐
+  │ 第1回合              当前操作提示                  日志   设置 │
+  ├───────────────┬───────────────────────────────┬───────────────┤
+  │ 敌方 ↑        │                               │ 敌方指挥官    │
+  │   VS          │         敌方 5 战位            │ 敌方手牌 ●●●● │
+  │ 我方 ↓        │                               │               │
+  │               │                               │               │
+  │               │                               │               │
+  │   场景背景    │                               │               │
+  │   完全露出    │         我方 5 战位            │ 我方指挥官    │
+  │               │                               │ 状态          │
+  │               ├───────────────────────────────┤               │
+  │               │            手牌               │               │
+  │ ♛4   ▣26      │                               │     ◉         │
+  │ ▨0   ◇30      │                               │   AP 2/3      │
+  │               │                               │   结束回合     │
+  └───────────────┴───────────────────────────────┴───────────────┘
+  ```
 
-LeftSidebar
-x=16 y=88 w=240 h=976
+  核心变化：
 
-CenterColumn
-x=264 y=88 w=1280 h=976
+  **左侧不再是一根实心 Sidebar。**
 
-RightSidebar
-x=1552 y=88 w=352 h=976
+  它只是两个 HUD 锚点：
 
-Battlefield
-x=264 y=88 w=1280 h=700
+  ```text
+  左上：阵营方向
+  左下：资源 Dock
+  中间：完全露背景
+  ```
 
-HandArea
-x=264 y=796 w=1280 h=268
-```
+  右侧也不再承担“三个大按钮”，只剩：
 
-水平间距：
+  ```text
+  信息区
+  +
+  上下文动作
+  +
+  结束回合主控件
+  ```
 
-```text
-LeftSidebar -> CenterColumn = 8 px
-CenterColumn -> RightSidebar = 8 px
-```
+  ------
 
----
+  # 2. 左侧：最终改成 HUD Rail
 
-# 3. TopBar
+  ## 左上阵营 HUD
 
-只允许显示：
+  只保留：
 
-- 地图 / 战斗名称；
-- Round；
-- 当前阶段 / 操作引导；
-- AP；
-- 战斗日志入口；
-- 设置入口。
+  ```text
+  ◆ 敌方 ↑
+  
+     VS
+  
+  ◇ 我方 ↓
+  ```
 
-禁止：
+  建议高度：
 
-- 英雄长技能说明；
-- 卡牌规则正文；
-- 大尺寸角色立绘；
-- 常驻大段战斗日志。
+  ```text
+  110~128 px
+  ```
 
-基准区域：
+  不需要 `188px`。
 
-```text
-StageInfo  x=28   y=24 w=500 h=48
-PhaseInfo  x=540  y=24 w=760 h=48
-AP         x=1312 y=24 w=180 h=48
-Log        x=1504 y=24 w=180 h=48
-Settings   x=1696 y=24 w=196 h=48
-```
+  而且：
 
-`PhaseInfo` 是当前阶段提示的唯一常驻权威位置，例如：
+  ```text
+  中央战场：上敌下我
+  右栏：上敌下我
+  左栏：上敌下我
+  ```
 
-```text
-部署阶段：请选择一名英雄并部署
-自由行动：可出锦囊、使用技能或普通攻击
-请选择攻击目标
-敌方回合
-```
+  三处彻底统一。
 
-不要再在中央战场放一块常驻教学框。
+  ------
 
----
+  ## 左下资源 Dock
 
-# 4. LeftSidebar
+  保持你决定的**纯符号方案**。
 
-定位：**随时可见、低频变化的战局资源摘要。**
+  最终：
 
-顺序固定：
+  ```text
+  ┌───────┬───────┐
+  │ ♛  4  │ ▣ 26  │
+  ├───────┼───────┤
+  │ ▨  0  │ ◇ 30  │
+  └───────┴───────┘
+  ```
 
-```text
-FactionPanel
-ActionPoints
-HeroDeckCount
-DrawPileCount
-DiscardPileCount
-TotalCardCount
-ReservedSpecialResource
-```
+  四个含义继续靠：
 
-允许显示：
+  - 新手教程首次说明
+  - Hover Tooltip
+  - 后续玩家记忆
 
-- 我方 / 敌方阵营徽记；
-- AP；
-- 英雄牌库数量；
-- 抽牌堆；
-- 弃牌堆；
-- 战术牌总数；
-- Boss 或章节特殊资源。
+  不要常驻文字。
 
-禁止：
+  ### 尺寸
 
-- 卡牌规则正文；
-- 英雄技能正文；
-- 完整战斗日志；
-- 大角色立绘；
-- 会向中央展开并遮挡 Battlefield 的面板。
+  每格建议：
 
-`ReservedSpecialResource` 无内容时隐藏内部元素，但左栏宽度不得改变。
+  ```text
+  56~64 px 高
+  72~84 px 宽
+  ```
 
----
+  整个 2×2 Dock 不应超过大约：
 
-# 5. Battlefield
+  ```text
+  170 × 120 px
+  ```
 
-## 5.1 固定 5v5
+  ### 视觉
 
-```text
-EnemySlots  = 5
-PlayerSlots = 5
-```
+  默认：
 
-两排必须使用完全相同的 X 坐标。
+  ```text
+  图标 + 数字
+  弱背景
+  ```
 
-## 5.2 槽位几何
+  Hover：
 
-```text
-SlotWidth  = 224 px
-SlotHeight = 228 px
-SlotGap    = 16 px
-```
+  ```text
+  背景稍亮
+  Tooltip 出现
+  ```
 
-敌方：
+  不要再像四个菜单按钮。
 
-```text
-E1 x=304
-E2 x=544
-E3 x=784
-E4 x=1024
-E5 x=1264
-y=172
-```
+  ------
 
-我方：
+  ## 左侧中间
 
-```text
-P1 x=304
-P2 x=544
-P3 x=784
-P4 x=1024
-P5 x=1264
-y=476
-```
+  **什么都不放。**
 
-## 5.3 Battlefield 优先级
+  而且最关键：
 
-`Battlefield` 是全屏最高视觉优先级区域。
+  > `LeftSidebar` 本身不要再有明显实心 Panel 背景。
 
-禁止：
+  背景图直接延伸进去。
 
-- 左右栏覆盖英雄；
-- 手牌覆盖关键 HP / 状态；
-- 详情面板侵入战场；
-- 长文本常驻悬浮在角色上方。
+  这样这部分不是：
 
-允许：
+  > “空 UI”
 
-- 攻击轨迹；
-- 粒子；
-- 伤害数字；
-- 技能演出；
-- 选择 / 目标高亮。
+  而是：
 
-这些动态内容进入 `Battlefield_FXSafeZone`。
+  > **负空间 / 环境展示区**
 
-## 5.4 BattleSlot 组件
+  以后场景背景、美术光效、天气、环境粒子都可以在这里显示。
 
-每个战位使用独立 `BattleSlot.tscn`：
+  ------
 
-```text
-BattleSlot : Control
-├─ Platform
-├─ CharacterAnchor
-│  └─ CharacterSprite / AnimatedSprite2D
-├─ HpBar
-├─ HpText
-├─ ClassIcon
-├─ StatusIconContainer
-├─ PassiveCardSlot
-├─ SelectionHighlight
-├─ TargetHighlight
-└─ InteractionArea
-```
+  # 3. 顶部 HUD
 
-正式角色：
+  顶部最终只保留：
 
-```text
-画布 128×160 px
-主体 <=112×144 px
-透明 PNG
-Bottom Center
-统一虚拟地面基准线
-```
+  ```text
+  左：训练场 · 第1回合
+  中：当前操作提示
+  右：战斗日志 / 设置
+  ```
 
-`TrainingArena` / `BattleController` 不允许直接管理角色图片内部像素偏移、状态图标排列、HP 条具体样式等组件细节。
+  例如：
 
-## 5.5 被动伏牌
+  ```text
+  训练场 · 第1回合
+  
+              选择英雄并部署到我方空位
+  
+                                        战斗日志   设置
+  ```
 
-每名已部署英雄拥有 1 个被动槽。
+  ## 删除
 
-显示：
+  顶部独立：
 
-```text
-完整卡背
-严格 3:4
-目标视觉尺寸约 72×96 px
-```
+  ```text
+  AP 5/5
+  ```
 
-不得替换成普通 Buff 图标。
+  因为 AP 后面会并入“结束回合”。
 
-## 5.6 状态图标
+  这样能再减少一次信息重复。
 
-- 固定在统一位置；
-- 建议常显最多 4 个；
-- 超出后显示 `+N`；
-- 不允许围绕角色随机散布。
+  ------
 
----
+  # 4. AP + 结束回合合并
 
-# 6. HandArea
+  这是我最建议你做的最后一个“大改动”。
 
-基准：
+  删除现在普通长方形：
 
-```text
-x=264 y=796 w=1280 h=268
-```
+  ```text
+  结束回合
+  ```
 
-支持 1~8 张手牌。
+  改成一个**圆形 / 环形主控件**。
 
-## 6.1 动态扇形算法
+  例如：
 
-```text
-n = hand.Count
-center = (n - 1) / 2.0
-d = index - center
-```
+  ```text
+        ╭───────╮
+       ╱   2/3   ╲
+      │    AP     │
+      │  结束回合  │
+       ╲         ╱
+        ╰───────╯
+  ```
 
-推荐旋转：
+  ## 控件表达两件事
 
-```text
-rotation_deg = clamp(d * 4.0, -12.0, 12.0)
-```
+  ### 中央数字
 
-推荐纵向弧度：
+  ```text
+  2 / 3
+  ```
 
-```text
-y_offset = d * d * 3.5
-```
+  表示剩余 AP。
 
-建议基础间距：
+  ### 外圈
 
-```text
-1~4 张：180~210 px
-5~6 张：150~175 px
-7~8 张：118~145 px
-```
+  表示 AP 比例：
 
-必须根据 `HandArea` 当前宽度动态收缩，禁止只写死 5 张卡的位置。
+  ```text
+  3 AP → 满环
+  2 AP → 2/3 环
+  1 AP → 1/3 环
+  0 AP → 空环
+  ```
 
-## 6.2 Hover
+  正式美术时非常容易做出战斗感。
 
-```text
-rotation -> 0 deg
-position.y -= 18 px
-scale -> 1.05
-z_index -> 当前最高
-```
+  ------
 
-邻牌向两侧排开约：
+  ## 状态规则
 
-```text
-18~36 px
-```
+  ### AP > 0
 
-禁止 Hover 后在鼠标旁再弹出一张大型卡。
+  普通状态：
 
-## 6.3 Drag
+  ```text
+  AP 2/3
+  结束回合
+  ```
 
-拖拽时：
+  不抢眼。
 
-```text
-rotation -> 0 deg
-保持 3:4
-z_index = top
-```
+  ### AP = 0
 
-并且：
+  控件高亮：
 
-- 合法目标高亮；
-- 非法区域弱化；
-- 取消时平滑回位；
-- 出牌成功播放出牌动画。
+  ```text
+  AP 0/3
+  结束回合
+  ```
 
----
+  轻微脉冲。
 
-# 7. RightSidebar
+  表达：
 
-右栏采用**状态切换**，不是永久说明栏。
+  > “你大概率该结束回合了。”
 
-## 7.1 状态机
+  ### 当前没有任何合法行动
 
-推荐：
+  即便 AP > 0，也可以：
 
-```csharp
-enum RightPanelMode
-{
-    CommanderOverview,
-    CardDetail,
-    HeroDetail,
-    EnemyDetail
-}
-```
+  ```text
+  结束回合环高亮
+  ```
 
-默认：
+  这比弹提示：
 
-```text
-CommanderOverview
-```
+  > “当前没有可执行操作”
 
-## 7.2 CommanderOverview
+  信息熵低很多。
 
-默认显示：
+  ------
 
-```text
-我方玩家 / 指挥官
-VS
-敌方玩家 / 首领
-```
+  # 5. 删除“取消选择”常驻按钮
 
-每个角色块只保留：
+  彻底删除：
 
-- 头像 / 半身像；
-- 名称；
-- 等级 / 身份；
-- 阵营；
-- 1~2 条短状态摘要。
+  ```text
+  取消选择
+  ```
 
-禁止在默认态塞完整技能说明和长 Buff 列表。
+  改成交互规则：
 
-## 7.3 DetailView
+  ```text
+  Esc
+  右键空白
+  再次点击当前对象
+  点击其他对象
+  ```
 
-右键：
+  全部都可以取消/切换选择。
 
-```text
-卡牌 -> CardDetail
-英雄 -> HeroDetail
-敌人 -> EnemyDetail
-```
+  顶部当前提示可以在第一次教程时告诉玩家：
 
-`DetailView` 与 `CommanderOverview` 必须完全同位：
+  ```text
+  Esc 或右键空白可取消选择
+  ```
 
-```text
-x=1568 y=136 w=320 h=500
-```
+  之后不再显示。
 
-因此切换详情时：
+  ### 原则
 
-- 不改变 RightSidebar 宽度；
-- 不推动 Battlefield；
-- 不触发 HandArea 重排。
+  > **纠错动作不应该占一个常驻大按钮。**
 
-### CardDetail
+  ------
 
-```text
-卡名
-费用
-类型
-目标
-完整效果
-关键词解释
-```
+  # 6. 删除“使用英雄技能”常驻按钮
 
-### HeroDetail
+  也不再放：
 
-```text
-英雄名
-职业
-HP / ATK
-技能
-被动
-队长能力
-状态
-```
+  ```text
+  使用英雄技能
+  ```
 
-### EnemyDetail
+  这种全局按钮。
 
-```text
-名称
-职业 / 类型
-HP / ATK
-状态
-已公开意图
-已公开技能
-```
+  技能是**英雄上下文行为**。
 
-## 7.4 锁定逻辑
+  ------
 
-Hover：只做轻量视觉高亮。  
-右键：锁定详情。
+  ## 推荐交互
 
-详情保持直到：
+  ### 单击我方英雄
 
-- 右键另一个对象；
-- 关闭详情；
-- 点击取消选择；
-- 场景主动关闭。
+  进入：
 
----
+  ```text
+  Selected
+  ```
 
-# 8. Right Command Area
+  显示：
 
-固定按钮：
+  - 选中高亮
+  - 可攻击目标
+  - 右栏 Hero Detail
 
-```text
-UseHeroSkill     x=1568 y=676 w=320 h=92
-CancelSelection x=1568 y=784 w=320 h=92
-EndTurn          x=1568 y=892 w=320 h=156
-```
+  同时在英雄附近出现一个小型上下文动作：
 
-规则：
+  ```text
+  ◉ 技能
+  ```
 
-- 永远固定；
-- 不被详情内容撑开；
-- 不因右栏模式切换而移动；
-- `EndTurn` 是主要流程按钮，层级高于普通辅助按钮。
+  或者：
 
----
+  ```text
+  [技能]
+  ```
 
-# 9. Godot 推荐节点树
+  大小只需要约：
 
-```text
-BattleUI : Control
-├─ BackgroundLayer : Control
-│  └─ BattleBackground : TextureRect
-├─ TopBar : MarginContainer
-│  └─ TopBarContent
-│     ├─ StageInfo
-│     ├─ PhaseInfo
-│     ├─ ActionPointDisplay
-│     ├─ BattleLogButton
-│     └─ SettingsButton
-├─ LeftSidebar : PanelContainer
-│  └─ MarginContainer
-│     └─ VBoxContainer
-│        ├─ FactionPanel
-│        ├─ ActionPointPanel
-│        ├─ HeroDeckPanel
-│        ├─ DrawPilePanel
-│        ├─ DiscardPilePanel
-│        ├─ TotalCardsPanel
-│        └─ ReservedPanel
-├─ Battlefield : Control
-│  ├─ EnemySlots : Control
-│  │  ├─ EnemySlot01 : BattleSlot
-│  │  ├─ EnemySlot02 : BattleSlot
-│  │  ├─ EnemySlot03 : BattleSlot
-│  │  ├─ EnemySlot04 : BattleSlot
-│  │  └─ EnemySlot05 : BattleSlot
-│  ├─ PlayerSlots : Control
-│  │  ├─ PlayerSlot01 : BattleSlot
-│  │  ├─ PlayerSlot02 : BattleSlot
-│  │  ├─ PlayerSlot03 : BattleSlot
-│  │  ├─ PlayerSlot04 : BattleSlot
-│  │  └─ PlayerSlot05 : BattleSlot
-│  └─ BattleFxLayer : Control
-├─ HandArea : Control
-│  └─ HandFanController : Control
-└─ RightSidebar : PanelContainer
-   └─ MarginContainer
-      └─ VBoxContainer
-         ├─ ContentStack : Control
-         │  ├─ CommanderOverview
-         │  └─ DetailView
-         └─ CommandArea
-            ├─ HeroSkillButton
-            ├─ CancelButton
-            └─ EndTurnButton
-```
+  ```text
+  72 × 32
+  ```
 
----
+  不是大按钮。
 
-# 10. 响应式规则
+  ------
 
-Master：
+  ### 技能不可用
 
-```text
-1920×1080
-```
+  不要显示：
 
-同为 16:9 时必须验证：
+  ```text
+  技能（冷却2回合）
+  ```
 
-```text
-2560×1440
-1600×900
-1366×768
-1280×720
-```
+  这种常驻内容。
 
-原则：
+  直接：
 
-- 优先整体比例缩放；
-- 使用 Anchor / Container 维持相对结构；
-- 左右栏不能因为文本变长自动撑宽；
-- Slot 不允许无限横向拉伸；
-- 卡牌永远保持 3:4；
-- 角色 Bottom Center 不漂移。
+  ```text
+  技能图标灰掉
+  ```
 
-低于 1280×720 时需要专项适配，不在本 Master 的强制范围内。
+  Hover：
 
----
+  ```text
+  冷却剩余2回合
+  ```
 
-# 11. Z 层级建议
+  ------
 
-```text
-0   Background
-10  Battlefield Platforms
-20  Characters
-30  HP / Status / Passive
-40  Battlefield Selection FX
-50  Hand Cards
-60  Dragging Card
-70  Left / Right / Top HUD
-80  Context UI
-90  Modal
-100 Debug Overlay
-```
+  ### 如果一个英雄有两个技能
 
----
+  点：
 
-# 12. 输入规则
+  ```text
+  技能
+  ```
 
-### 左键
+  后出现：
 
-```text
-选择
-确认
-拖拽
-使用
-选择攻击目标
-```
+  ```text
+  技能1
+  技能2
+  ```
 
-### 右键
+  的小型上下文菜单。
 
-```text
-查看 / 锁定详情
-```
+  不要把两个技能永远挂在主 UI 上。
 
-### Esc
+  ------
 
-按优先级：
+  # 7. 右栏最终职责
 
-```text
-关闭 Modal
-关闭右栏详情锁定
-取消当前选择
-打开暂停 / 设置
-```
+  右栏建议最终只承担：
 
-一个 Esc 不得同时触发多层行为。
+  > **“我现在正在看什么？”**
 
----
+  而不是：
 
-# 13. 迁移阶段
+  > “所有操作按钮都往这里塞。”
 
-## UI-1：静态布局
+  ------
 
-只做：
+  ## 默认状态
 
-- TopBar；
-- LeftSidebar；
-- Battlefield 空区域；
-- HandArea 空区域；
-- RightSidebar；
-- 响应式 Anchor / Offset。
+  显示：
 
-禁止修改：
+  ```text
+  敌方指挥官
+  敌方手牌
+  
+  VS
+  
+  我方指挥官
+  我方状态
+  ```
 
-- BattleState；
-- CardResolver；
-- Lua；
-- 英雄技能；
-- AI；
-- 胜负规则。
+  右栏顺序保持：
 
-## UI-2：BattleSlot
+  ```text
+  敌上
+  我下
+  ```
 
-实现：
+  ------
 
-- 10 个 `BattleSlot`；
-- CharacterAnchor；
-- HP；
-- 状态；
-- 伏牌；
-- 选择 / 目标高亮。
+  ## 选中卡牌
 
-## UI-3：HandFan
+  右栏自动切成：
 
-实现：
+  ```text
+  卡牌插画/名字
+  
+  费用
+  类型
+  
+  规则
+  关键词
+  ```
 
-- 扇形；
-- Hover；
-- 排开；
-- Drag；
-- 回位。
+  ------
 
-## UI-4：RightPanel
+  ## 选中我方英雄
 
-实现：
+  显示：
 
-```text
-CommanderOverview
-<->
-CardDetail / HeroDetail / EnemyDetail
-```
+  ```text
+  英雄
+  HP
+  攻击
+  职业
+  星级
+  状态
+  技能
+  被动
+  ```
 
-## UI-5：接入真实数据
+  详细信息都进入这里。
 
-最后再接：
+  ------
 
-- BattleState；
-- DeckState；
-- CardData；
-- HeroData；
-- BattleEvent。
+  ## 选中敌方英雄
 
----
+  只显示公开信息：
 
-# 14. Coding Agent 强制约束
+  ```text
+  名字
+  HP
+  攻击（若规则公开）
+  职业/星级
+  公开状态
+  ```
 
-1. `BattleUILayoutSpec.md` 是布局权威源。  
-2. `battle_ui_master_1920x1080.svg` 是几何参考。  
-3. 高保真参考 PNG 只用于视觉风格。  
-4. 不允许把整张 SVG / PNG 作为不可交互背景代替 UI。  
-5. 使用 Godot 原生 `Control` / `Container`。  
-6. 如果当前任务仅为布局，禁止修改战斗规则。  
-7. Battlefield 不得被左右栏或手牌常驻覆盖。  
-8. RightSidebar 切换详情时不能改变中央布局尺寸。  
-9. 手牌必须动态扇形计算，不允许只硬编码五张牌。  
-10. 完成后必须提供节点树、实际截图和规格偏差报告。
+  继续禁止完整技能、隐藏被动、队长能力泄露。
 
----
+  ------
 
-# 15. 可直接给 Codex / Trae 的 Prompt
+  # 8. 右栏中间的大 VS
 
-```text
-任务：按照 Battle UI Master 规格重构 TrainingArena 的战斗 UI。
+  现在这个：
 
-权威输入：
-1. BattleUILayoutSpec.md —— 布局与交互规则唯一权威源。
-2. battle_ui_master_1920x1080.svg —— 1920×1080 几何位置参考。
-3. 高保真参考 PNG —— 只用于视觉层级和美术风格参考。
+  ```text
+  VS
+  ```
 
-本轮仅处理 UI 静态布局与响应式结构。
+  视觉权重仍然偏大。
 
-禁止：
-- 修改 BattleState；
-- 修改卡牌规则；
-- 修改 Lua；
-- 修改英雄技能；
-- 修改 AI；
-- 修改胜负条件；
-- 将整个 SVG/PNG 作为不可交互背景图代替 Godot UI。
+  建议改成：
 
-要求：
-- 使用 Godot 原生 Control / Container。
-- 基准分辨率 1920×1080。
-- 同比例 1600×900、1366×768、1280×720 不崩。
-- TopBar 轻量化。
-- LeftSidebar 为稳定资源栏。
-- Battlefield 为最高视觉优先级。
-- 5 个敌方槽与 5 个我方槽使用相同 X 坐标。
-- HandArea 预留动态扇形手牌。
-- RightSidebar 默认显示双方玩家/指挥官，右键后切换详情；切换不得改变布局尺寸。
-- 不添加规格外的新功能。
+  ```text
+  ──── VS ────
+  ```
 
-完成后：
-1. 运行项目；
-2. 输出实际节点树；
-3. 截取 1920×1080 截图；
-4. 截取 1280×720 截图；
-5. 对照 SVG 检查主要区域尺寸与比例；
-6. 报告所有与规格存在的偏差。
-```
+  或者干脆：
 
----
+  ```text
+  ────────────
+  ```
 
-# 16. Master 验收标准
+  只承担分割作用。
 
-## 1920×1080
+  因为：
 
-- [ ] TopBar 高约 64 px；
-- [ ] LeftSidebar 宽 240 px；
-- [ ] RightSidebar 宽 352 px；
-- [ ] CenterColumn 宽 1280 px；
-- [ ] Battlefield 高约 700 px；
-- [ ] HandArea 高约 268 px；
-- [ ] 5 个敌方位水平对齐；
-- [ ] 5 个我方位水平对齐；
-- [ ] 两排 Slot 使用相同 X；
-- [ ] 角色主体不被常驻 UI 遮挡；
-- [ ] 手牌不覆盖关键 HP / 状态；
-- [ ] 右栏详情切换不影响中央区域。
+  ```text
+  战场已经告诉玩家谁对谁
+  左上也告诉玩家谁对谁
+  ```
 
-## 响应式
+  第三次强调 `VS` 没太大必要。
 
-- [ ] 1600×900 不重叠；
-- [ ] 1366×768 不重叠；
-- [ ] 1280×720 不重叠；
-- [ ] 卡牌始终 3:4；
-- [ ] 左右栏不会因文本撑宽；
-- [ ] BattleSlot 的 Bottom Center 不漂移。
+  ------
 
-## 交互
+  # 9. 战位再做一次文字减法
 
-- [ ] Hover 卡牌上浮；
-- [ ] Hover 卡牌恢复为 0°；
-- [ ] 邻牌排开；
-- [ ] Drag 保持 3:4；
-- [ ] 右键详情显示在固定右栏；
-- [ ] 关闭详情恢复 CommanderOverview。
+  正式灰盒冻结前，我还会再删一点。
 
----
+  ## 敌方空位
 
-# 17. 当前不在 Master 范围内
+  现在：
 
-本规格暂不冻结：
+  ```text
+  空位
+  等待敌方部署
+  ```
 
-- UI 最终字体；
-- 卡框最终花纹；
-- 最终职业色；
-- 稀有度外框；
-- 具体战斗背景；
-- 双方玩家头像最终美术；
-- 动画曲线精确时长；
-- 手机竖屏；
-- 非 16:9 的完整重排；
-- PvP 专用额外 HUD。
+  最终建议只保留：
+
+  ```text
+  空位
+  ```
+
+  甚至正式美术后可以不写字。
+
+  ------
+
+  ## 我方空位
+
+  现在：
+
+  ```text
+  +
+  空位
+  等待部署
+  ```
+
+  最终：
+
+  ```text
+  +
+  ```
+
+  或者：
+
+  ```text
+  +
+  空位
+  ```
+
+  就够。
+
+  顶部提示已经会告诉：
+
+  > “选择英雄并部署到我方空位。”
+
+  不需要每一个战位再重复五次：
+
+  > 等待部署。
+
+  ------
+
+  # 10. 手牌最终灰盒状态
+
+  手牌结构现在不要再大改。
+
+  只保证六个交互状态：
+
+  | 状态         | 表现             |
+  | ------------ | ---------------- |
+  | Normal       | 正常卡牌         |
+  | Hover        | 上浮、回正、放大 |
+  | Selected     | 明显选中         |
+  | Unaffordable | 弱化             |
+  | Dragging     | 拖拽预览         |
+  | Valid Target | 战场目标高亮     |
+
+  卡牌本身仍然：
+
+  ```text
+  插画
+  +
+  极少常驻信息
+  ```
+
+  详细规则继续走右栏。
+
+  这是你现在降低信息熵最重要的一步之一。
+
+  ------
+
+  # 11. 敌方手牌继续极简
+
+  建议最终只表现：
+
+  ```text
+  ◆ ◆ ◆ ◆
+  ```
+
+  甚至：
+
+  ```text
+  ◆ ×4
+  ```
+
+  而不是显示很小的真实卡背。
+
+  因为玩家只需要知道：
+
+  > 敌人有几张牌。
+
+  不需要辨认每张卡背。
+
+  ------
+
+  # 12. 战斗 HUD 不再增加常驻元素
+
+  灰盒冻结之后，以下东西禁止再加入主界面：
+
+  ```text
+  常驻攻击按钮
+  常驻技能按钮
+  取消选择按钮
+  额外 AP 显示
+  职业完整文字
+  EXP
+  完整卡牌规则
+  操作教程
+  完整敌方技能
+  大面积战斗说明
+  ```
+
+  新功能优先考虑：
+
+  ```text
+  图标
+  状态
+  Hover
+  右栏
+  上下文动作
+  顶部短提示
+  ```
+
+  而不是加新面板。
+
+  ------
+
+  # 13. 最终信息层级
+
+  整个界面应该形成非常明确的 5 层：
+
+  ### L1 战场
+
+  最重要。
+
+  ```text
+  人物
+  目标
+  攻击
+  技能
+  状态变化
+  ```
+
+  ------
+
+  ### L2 手牌
+
+  玩家当前可以做什么。
+
+  ------
+
+  ### L3 回合环
+
+  ```text
+  AP
+  结束回合
+  ```
+
+  唯一常驻主操作。
+
+  ------
+
+  ### L4 上下文详情
+
+  右栏。
+
+  用户主动看才获得详细信息。
+
+  ------
+
+  ### L5 辅助 HUD
+
+  左上阵营、左下资源、日志、设置。
+
+  视觉权重最低。
+
+  ------
+
+  # 14. Codex 下一轮建议只做这一包
+
+  直接给它：
+
+  ```text
+  Battle UI Graybox Final Compact Pass
+  
+  范围严格限定 UI，不修改战斗规则、卡牌规则、Lua、
+  BattleState、AI 或被动逻辑。
+  
+  1. LeftSidebar 改为透明 HUD rail。
+  2. FactionPanel 压缩至约 120px，高度方向统一为：
+     敌方 ↑
+     VS
+     我方 ↓
+  3. 资源区保持 2×2 符号 Dock，
+     单格约 56~64px 高，
+     默认仅图标+数字，保留 Tooltip。
+  4. 将资源 Dock 固定于左下，中间留空透出 BattleBackground。
+  5. 删除顶部独立 AP。
+  6. 删除 CancelButton 常驻 UI；
+     Esc、右键空白、重复点击负责取消选择。
+  7. 删除 SkillButton 常驻 UI；
+     技能改为选中我方英雄后的上下文动作。
+  8. EndTurnButton 改成圆形/环形 TurnControl：
+     中心显示 AP current/max，
+     同时承担结束回合。
+  9. AP=0 或无合法行动时，
+     TurnControl 进入提示高亮状态。
+  10. 弱化 CommanderOverview 中央 VS。
+  11. 空战位删除“等待部署/等待敌方部署”等重复说明。
+  12. 不修改战位尺寸、HandArea、128×160 CharacterCanvas。
+  ```
+
+  ------
+
+  # 15. 必须补的 UI Smoke
+
+  这次收口以后建议至少固定这些断言：
+
+  ```text
+  EnemyCommander Y < PlayerCommander Y
+  Faction Enemy Y < Player Y
+  
+  LeftSidebar 中间区域无遮挡实心 Panel
+  
+  AP 不再存在第二个常驻 Label
+  
+  CancelButton 不再存在
+  
+  SkillButton 不再作为常驻主控件
+  
+  TurnControl 显示当前 AP
+  
+  AP 归零后 TurnControl 进入提示状态
+  
+  Esc 可以取消选择
+  
+  右键空白可以取消选择
+  
+  选择英雄后技能上下文动作出现
+  
+  取消英雄选择后技能动作消失
+  
+  四档窗口：
+  1920×1080
+  1600×900
+  1366×768
+  1280×720
+  全部 PASS
+  ```
+
+  ------
+
+  # 16. 灰盒冻结标准
+
+  当下面这些全部满足，就不要再动大布局：
+
+  > **中央战场是视觉主体；左侧只剩两个悬浮 HUD；右栏只负责上下文信息；底部没有一排固定操作按钮；全局唯一主动作是“AP + 结束回合”回合环；所有其他操作由卡牌、英雄和目标自身产生。**
+
+  到这个程度以后，就可以正式把 Battle UI 标成：
+
+  # `Battle UI Graybox v1.0 — Layout Frozen`
+
+  之后再觉得“这里空”“那里单调”，**优先通过背景、美术、粒子、人物动画、战位皮肤解决，而不是继续加 UI。**
+
+  这会是我目前最推荐的最终收口版本。

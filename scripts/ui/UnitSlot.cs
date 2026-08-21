@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 public partial class UnitSlot : Control
 {
     [Signal] public delegate void SlotChosenEventHandler(UnitSlot slot);
+    [Signal] public delegate void SkillRequestedEventHandler(UnitSlot slot);
     public event Action<UnitSlot>? DetailRequested;
     public event Action<UnitSlot, CardInstance>? CardDropped;
 
@@ -27,6 +28,7 @@ public partial class UnitSlot : Control
     private Control _selectionHighlight = null!;
     private Control _targetHighlight = null!;
     private Button _interactionArea = null!;
+    private Button _contextSkillButton = null!;
     private bool _interactionEnabled = true;
 
     public override void _Ready()
@@ -42,8 +44,10 @@ public partial class UnitSlot : Control
         _selectionHighlight = GetNode<Control>("%SelectionHighlight");
         _targetHighlight = GetNode<Control>("%TargetHighlight");
         _interactionArea = GetNode<Button>("%InteractionArea");
+        _contextSkillButton = GetNode<Button>("%ContextSkillButton");
         _interactionArea.Pressed += () => EmitSignal(SignalName.SlotChosen, this);
         _interactionArea.GuiInput += OnInteractionInput;
+        _contextSkillButton.Pressed += () => EmitSignal(SignalName.SkillRequested, this);
         Refresh();
     }
 
@@ -55,6 +59,7 @@ public partial class UnitSlot : Control
         if (!IsNodeReady()) return;
         _interactionArea.Disabled = !enabled || (Unit == null && Side == "enemy");
         _interactionArea.MouseFilter = enabled ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
+        if (!enabled) _contextSkillButton.Visible = false;
     }
     public void SetUnit(UnitState? value) { Unit = value; _preview = ""; Refresh(); }
     public void SetActionPreview(string value) { _preview = value; Refresh(); }
@@ -62,7 +67,17 @@ public partial class UnitSlot : Control
     public bool SetPassive(CardInstance card) { if (PassiveCard != null || Unit == null) return false; PassiveCard = card; Refresh(); return true; }
     public CardInstance? RemovePassive() { var card = PassiveCard; PassiveCard = null; Refresh(); return card; }
     public void ClearPassive() { PassiveCard = null; Refresh(); }
-    public void SetSelected(bool value) { if (IsNodeReady()) _selectionHighlight.Visible = value; }
+    public void SetSelected(bool value)
+    {
+        if (!IsNodeReady()) return;
+        _selectionHighlight.Visible = value;
+        _contextSkillButton.Visible = value && _interactionEnabled && Side == "ally" && Unit?.Alive == true;
+        if (_contextSkillButton.Visible)
+        {
+            _contextSkillButton.Disabled = Unit!.Cooldown > 0;
+            _contextSkillButton.TooltipText = Unit.Cooldown > 0 ? $"技能冷却剩余 {Unit.Cooldown} 回合" : "使用英雄技能";
+        }
+    }
 
     public void Refresh()
     {
@@ -83,7 +98,7 @@ public partial class UnitSlot : Control
         if (empty)
         {
             _portraitPlaceholder.Text = Side == "ally" ? "＋\n空位" : "空位";
-            _info.Text = Side == "ally" ? "等待部署" : "等待敌方部署";
+            _info.Text = "";
             _classIcon.Text = "";
             _status.Text = "";
             Modulate = Colors.White;

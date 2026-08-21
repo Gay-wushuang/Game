@@ -8,14 +8,14 @@ public partial class TrainingArena : Control
 {
     [Export] public TrainingContent content { get; set; } = null!;
     private PackedScene _slotScene = null!, _cardScene = null!;
-    private Label _status = null!, _apText = null!; private HandFan _hand = null!; private BattleRightSidebar _rightSidebar = null!;
+    private Label _status = null!; private HandFan _hand = null!; private BattleRightSidebar _rightSidebar = null!; private TurnControl _turnControl = null!;
     private readonly DeckState _deck = new(), _aiDeck = new();
     private BattleState _battle = null!; private CardResolver _cardResolver = null!; private readonly PassiveTriggerResolver _passiveResolver = new();
     private readonly List<UnitSlot> _allies = [], _enemies = [];
     private readonly List<HeroCardInstance> _heroBag = [], _aiHeroBag = [];
     private readonly List<string> _logs = [];
     private HeroCardInstance? _pendingHero; private CardInstance? _pendingCard; private UnitSlot? _pendingStarSlot;
-    private int _pendingCardTarget = -1, _allyIndex = -1, _enemyIndex = -1, _ap = 3, _turn = 1, _pendingStarCost;
+    private int _pendingCardTarget = -1, _allyIndex = -1, _enemyIndex = -1, _ap = BattleState.DefaultActionPoints, _turn = 1, _pendingStarCost;
     private string _leaderId = "", _freeCardId = ""; private int _leaderTurns; private bool _cancelNextEnemyEffect;
     private readonly List<(string Kind, object Target, UnitSlot? Slot)> _testTargets = [];
 
@@ -25,13 +25,19 @@ public partial class TrainingArena : Control
         _battle = new(_deck, _aiDeck, 20260817); _cardResolver = new();
         ValidateCardScripts();
         _slotScene = GD.Load<PackedScene>("res://scenes/components/unit_slot.tscn"); _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn");
-        _status = GetNode<Label>("%Status"); _apText = GetNode<Label>("%ActionPoints"); _hand = GetNode<HandFan>("%Hand"); _rightSidebar = GetNode<BattleRightSidebar>("%ContentHost");
+        _status = GetNode<Label>("%Status"); _hand = GetNode<HandFan>("%Hand"); _rightSidebar = GetNode<BattleRightSidebar>("%ContentHost"); _turnControl = GetNode<TurnControl>("%TurnControl");
         _battle.Events.Subscribe(BattleEvent.BattleEnded, HandleBattleEnd);
         ConnectControls(); CreateSlots(); ResetTraining();
     }
     public override void _ExitTree() => _cardResolver?.Dispose();
     public override void _UnhandledInput(InputEvent input)
     {
+        if (input is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right })
+        {
+            if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) CancelSelection();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (input is not InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) return;
         if (_rightSidebar.ShowingDetail) { _rightSidebar.ShowCommanderOverview(); GetViewport().SetInputAsHandled(); return; }
         if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) { CancelSelection(); GetViewport().SetInputAsHandled(); }
@@ -44,9 +50,10 @@ public partial class TrainingArena : Control
     private T N<T>(string name) where T : Node => GetNode<T>('%' + name);
     private void ConnectControls()
     {
+        N<Control>("Battlefield").GuiInput += HandleBattlefieldBlankInput;
         N<Button>("HeroBag").Pressed += OpenHeroBag; N<Button>("DrawPile").Pressed += () => ShowPile("抽牌堆", _deck.DrawPile);
         N<Button>("DiscardPile").Pressed += () => ShowPile("弃牌堆", _deck.DiscardPile); N<Button>("CatalogButton").Pressed += ShowCatalog;
-        N<Button>("SkillButton").Pressed += OpenSkillDialog; N<Button>("CancelButton").Pressed += () => CancelSelection(); N<Button>("EndTurnButton").Pressed += async () => await EndTurn();
+        N<Button>("EndTurnButton").Pressed += async () => await EndTurn();
         N<Button>("LogButton").Pressed += () => N<AcceptDialog>("LogDialog").PopupCenteredRatio(.72f); N<Button>("SettingsButton").Pressed += () => N<AcceptDialog>("SettingsDialog").PopupCenteredRatio(.56f);
         N<Button>("ResetButton").Pressed += () => { N<AcceptDialog>("SettingsDialog").Hide(); ResetTraining(); };
         N<CheckButton>("DummyMode").Toggled += _ => ResetTraining(); N<CheckButton>("TestMode").Toggled += TestModeToggled;
@@ -54,15 +61,21 @@ public partial class TrainingArena : Control
         N<Button>("ApplyTestValues").Pressed += ApplyTestValues; N<AcceptDialog>("StarChoiceDialog").Confirmed += () => ApplyStarChoice(true); N<AcceptDialog>("StarChoiceDialog").Canceled += () => ApplyStarChoice(false);
         N<Button>("ReloadLuaButton").Pressed += ReloadCardScripts;
     }
+    private void HandleBattlefieldBlankInput(InputEvent input)
+    {
+        if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right }) return;
+        if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) CancelSelection();
+        AcceptEvent();
+    }
     private void CreateSlots()
     {
-        for (var i = 0; i < 5; i++) { var enemy = _slotScene.Instantiate<UnitSlot>(); enemy.Side = "enemy"; enemy.SlotIndex = i; enemy.SlotChosen += EnemyChosen; enemy.DetailRequested += ShowUnitDetail; enemy.CardDropped += OnCardDropped; N<HBoxContainer>("EnemyRow").AddChild(enemy); _enemies.Add(enemy); var ally = _slotScene.Instantiate<UnitSlot>(); ally.Side = "ally"; ally.SlotIndex = i; ally.SlotChosen += AllyChosen; ally.DetailRequested += ShowUnitDetail; ally.CardDropped += OnCardDropped; N<HBoxContainer>("AllyRow").AddChild(ally); _allies.Add(ally); }
+        for (var i = 0; i < 5; i++) { var enemy = _slotScene.Instantiate<UnitSlot>(); enemy.Side = "enemy"; enemy.SlotIndex = i; enemy.SlotChosen += EnemyChosen; enemy.DetailRequested += ShowUnitDetail; enemy.CardDropped += OnCardDropped; N<HBoxContainer>("EnemyRow").AddChild(enemy); _enemies.Add(enemy); var ally = _slotScene.Instantiate<UnitSlot>(); ally.Side = "ally"; ally.SlotIndex = i; ally.SlotChosen += AllyChosen; ally.DetailRequested += ShowUnitDetail; ally.CardDropped += OnCardDropped; ally.SkillRequested += ContextSkillRequested; N<HBoxContainer>("AllyRow").AddChild(ally); _allies.Add(ally); }
     }
     public void ResetTraining()
     {
         _heroBag.Clear(); _aiHeroBag.Clear(); foreach (var h in content.heroes) { _heroBag.Add(new(h)); _aiHeroBag.Add(new(h, "ai")); }
         _battle.ResetRandom(); _battle.ClearSlotUnits(); _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai"); _aiDeck.Draw(4);
-        _ap = 3; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = 3; _battle.EnemyActionPoints = 3; _battle.Passives.Clear(); _battle.ResetOutcome();
+        _ap = BattleState.DefaultActionPoints; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = BattleState.DefaultActionPoints; _battle.EnemyActionPoints = BattleState.DefaultActionPoints; _battle.Passives.Clear(); _battle.ResetOutcome();
         _battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count);
         _logs.Clear(); _leaderId = _freeCardId = ""; _leaderTurns = 0; _cancelNextEnemyEffect = false; N<Label>("Title").Text = "训练场 · 第 1 回合";
         EnableAllBattleControls();
@@ -85,7 +98,7 @@ public partial class TrainingArena : Control
     }
     private CardExecutionContext CardContext(CardInstance card, UnitState? source = null, UnitState? target = null, bool ai = false)
     {
-        SynchronizeBattleState(); if (ai) _battle.EnemyActionPoints = 3; else _battle.PlayerActionPoints = _ap;
+        SynchronizeBattleState(); if (ai) _battle.EnemyActionPoints = BattleState.DefaultActionPoints; else _battle.PlayerActionPoints = _ap;
         return new() { State = _battle, Card = card, OwnerDeck = ai ? _aiDeck : _deck, OpponentDeck = ai ? _deck : _aiDeck, Source = source, Target = target, Log = AddLog };
     }
     private static UnitState FromMonster(MonsterDefinition d) => new() { Definition = d, Name = d.display_name, Type = d.TypeName(), Hp = d.max_hp, MaxHp = d.max_hp, Attack = d.attack, Star = 1, RetaliationRatio = d.retaliation_ratio };
@@ -102,7 +115,8 @@ public partial class TrainingArena : Control
         if (_pendingHero != null) { if (slot.Unit?.Alive == true) { _status.Text = "该站位已有存活英雄"; return; } var hero = _pendingHero; slot.SetUnit(hero.Deploy()); _battle.SetSlotUnit("player", slot.SlotIndex, slot.Unit); _heroBag.Remove(hero); _battle.DecrementReserveHero("player"); _ap--; if (_leaderId == "") { _leaderId = hero.Definition.id.ToString(); _leaderTurns = hero.Definition.CustomValue("leader_duration", 0).AsInt32(); ApplyLeaderBonus(); } else if (_leaderId == "hero_role_1" && (_leaderTurns > 0 || LeaderIsStarTwo())) { slot.Unit!.MaxHp += 50; slot.Unit.Hp += 50; } AddLog($"[color=75d7ff]部署[/color] {hero.Definition.display_name} 进入我方 {slot.SlotIndex + 1} 号位。"); _pendingHero = null; _allyIndex = slot.SlotIndex; RefreshAll(); await slot.PlayDeployAnimation(); return; }
         if (slot.Unit?.Alive != true) return;
         if (_pendingCard?.Definition.card_kind == CardDefinition.CardKind.Passive) { PlacePassive(slot); return; }
-        _allyIndex = slot.SlotIndex; _enemyIndex = -1; N<Button>("SkillButton").Disabled = slot.Unit.Cooldown > 0;
+        if (_pendingCard == null && _allyIndex == slot.SlotIndex && _enemyIndex < 0) { CancelSelection(); return; }
+        _allyIndex = slot.SlotIndex; _enemyIndex = -1;
         if (_pendingCard != null) { if (_pendingCardTarget == slot.SlotIndex) await UseCard(slot); else PreviewCard(slot); } else _status.Text = $"已选择 {slot.Unit.Name}；请选择敌方目标"; RefreshSelection();
     }
     private async void EnemyChosen(UnitSlot slot) { if (_battle.IsFinished) return; if (slot.Unit?.Alive != true) return; if (_pendingCard?.Definition.target_kind is CardDefinition.TargetKind.Enemy or CardDefinition.TargetKind.AllyEnemyPair) { if (_pendingCard.Definition.target_kind == CardDefinition.TargetKind.AllyEnemyPair && (_allyIndex < 0 || _allies[_allyIndex].Unit?.Alive != true)) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) await UseEnemyCard(slot); else PreviewEnemyCard(slot); return; } if (_allyIndex < 0 || _allies[_allyIndex].Unit == null) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) { await ConfirmAttack(); return; } _enemyIndex = slot.SlotIndex; UpdatePreview(); RefreshSelection(); }
@@ -249,7 +263,7 @@ public partial class TrainingArena : Control
         await TriggerPassive(slots, deck, "ACTION_POINTS_ZERO", new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = ownerId });
     }
     public void DrawOne() { if (_battle.IsFinished) return; if (_deck.Hand.Count >= 5) { _status.Text = "手牌已满"; return; } var result = _deck.Draw(); _status.Text = result.Count == 0 ? "没有可抽的牌" : $"抽到「{result[0].Definition.display_name}」"; RefreshAll(); }
-    private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _ap = 3 + _battle.PlayerNextTurnBonus; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } _battle.PlayerActionPoints = _ap;
+    private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _ap = BattleState.DefaultActionPoints + _battle.PlayerNextTurnBonus; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } _battle.PlayerActionPoints = _ap;
         // 检查 AP 是否为 0，触发 ACTION_POINTS_ZERO 事件
         if (_ap == 0) await CheckActionPointsZero("player"); AssignFreeCard(); if (_deck.Hand.Count < 5) {
             // 发布 BEFORE_DRAW 事件，让对方被动锦囊有机会阻止
@@ -286,7 +300,7 @@ public partial class TrainingArena : Control
         if (_battle.IsFinished) return;
         if (N<CheckButton>("DummyMode").ButtonPressed) { AddLog("[color=999999]稻草人模式[/color] 敌方跳过全部行动。"); return; }
         if (await TriggerPassive(_allies, _deck, "ENEMY_BATTLE_PHASE_STARTED")) { AddLog("[color=99bbff]被动锦囊[/color] 敌方战斗阶段被跳过。"); return; }
-        var aiAp = 3 + _battle.EnemyNextTurnBonus; _battle.EnemyNextTurnBonus = 0; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
+        var aiAp = BattleState.DefaultActionPoints + _battle.EnemyNextTurnBonus; _battle.EnemyNextTurnBonus = 0; if (_turn <= 4 && _aiHeroBag.Count > 0) aiAp -= await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
         // 检查 AI AP 是否为 0，触发 ACTION_POINTS_ZERO 事件
         if (aiAp == 0) await CheckActionPointsZero("ai");
         for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_battle.IsFinished) return; if (_aiDeck.Hand.Count < 5)
@@ -421,7 +435,6 @@ public partial class TrainingArena : Control
     private void DisableAllBattleControls()
     {
         N<Button>("HeroBag").Disabled = true;
-        N<Button>("SkillButton").Disabled = true;
         N<Button>("EndTurnButton").Disabled = true;
         N<Button>("CatalogButton").Disabled = true;
         foreach (var tile in _hand.GetChildren().OfType<CardTile>())
@@ -433,7 +446,6 @@ public partial class TrainingArena : Control
     private void EnableAllBattleControls()
     {
         N<Button>("HeroBag").Disabled = false;
-        N<Button>("SkillButton").Disabled = false;
         N<Button>("EndTurnButton").Disabled = false;
         N<Button>("CatalogButton").Disabled = false;
         foreach (var tile in _hand.GetChildren().OfType<CardTile>())
@@ -454,6 +466,14 @@ public partial class TrainingArena : Control
         var list = N<VBoxContainer>("SkillList"); Clear(list); var d = (HeroDefinition)u.Definition; var texts = new List<string> { d.skill_1_text }; if (!string.IsNullOrEmpty(d.skill_2_text)) texts.Add(d.skill_2_text); for (var i = 0; i < texts.Count; i++) { var index = i; var b = new Button { Text = $"技能 {i + 1}\n{texts[i]}", SizeFlagsVertical = SizeFlags.ExpandFill }; b.Pressed += () => ExecuteSkill(index); list.AddChild(b); }
         N<AcceptDialog>("SkillDialog").PopupCenteredRatio(.58f);
     }
+    private void ContextSkillRequested(UnitSlot slot)
+    {
+        if (_battle.IsFinished || slot.Unit?.Alive != true || slot.Side != "ally") return;
+        _allyIndex = slot.SlotIndex;
+        _enemyIndex = -1;
+        RefreshSelection();
+        OpenSkillDialog();
+    }
     public void ExecuteSkill(int skill)
     {
         if (_battle.IsFinished) return;
@@ -465,9 +485,17 @@ public partial class TrainingArena : Control
     private void TickStatuses() { if (_leaderTurns > 0) _leaderTurns--; foreach (var s in _allies.Where(s => s.Unit != null)) { var u = s.Unit!; u.Cooldown = Math.Max(0, u.Cooldown - 1); u.SkillTurns = Math.Max(0, u.SkillTurns - 1); u.TauntTurns = Math.Max(0, u.TauntTurns - 1); if (u.LinkTurns > 0) { if (u.LinkedEnemy >= 0 && _enemies[u.LinkedEnemy].Unit != null) { u.Attack = Math.Max(0, u.Attack - 1); _enemies[u.LinkedEnemy].Unit!.Attack = Math.Max(0, _enemies[u.LinkedEnemy].Unit!.Attack - 1); } u.LinkTurns--; } } foreach (var s in _enemies.Where(s => s.Unit != null)) { var u = s.Unit!; if (u.DebuffTurns > 0 && --u.DebuffTurns == 0) { u.Attack += u.AttackRestore; u.AttackRestore = 0; } } }
     public void RefreshAll()
     {
-        _apText.Text = $"AP {_ap}/3"; N<Button>("HeroBag").Text = $"♛　{_heroBag.Count}"; N<Button>("HeroBag").TooltipText = $"英雄牌库\n剩余 {_heroBag.Count}"; N<Button>("DrawPile").Text = $"▣　{_deck.DrawPile.Count}"; N<Button>("DrawPile").TooltipText = $"抽牌堆\n当前 {_deck.DrawPile.Count} 张"; N<Button>("DiscardPile").Text = $"▨　{_deck.DiscardPile.Count}"; N<Button>("DiscardPile").TooltipText = $"弃牌堆\n当前 {_deck.DiscardPile.Count} 张"; N<Button>("CatalogButton").Text = $"◇　{content.cards.Count}"; N<Button>("CatalogButton").TooltipText = $"锦囊总卡包\n共 {content.cards.Count} 张";
+        _turnControl.SetActionPoints(_ap, BattleState.DefaultActionPoints, _ap <= 0 || !HasObviousLegalAction()); N<Button>("HeroBag").Text = $"♛　{_heroBag.Count}"; N<Button>("HeroBag").TooltipText = $"♛ 英雄牌库 · 剩余{_heroBag.Count}"; N<Button>("DrawPile").Text = $"▣　{_deck.DrawPile.Count}"; N<Button>("DrawPile").TooltipText = $"▣ 抽牌堆 · {_deck.DrawPile.Count}"; N<Button>("DiscardPile").Text = $"▨　{_deck.DiscardPile.Count}"; N<Button>("DiscardPile").TooltipText = $"▨ 弃牌堆 · {_deck.DiscardPile.Count}"; N<Button>("CatalogButton").Text = $"◇　{content.cards.Count}"; N<Button>("CatalogButton").TooltipText = $"◇ 锦囊总览 · {content.cards.Count}";
         Clear(_hand); foreach (var card in _deck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); _hand.AddChild(tile); tile.Setup(card); tile.CardChosen += ChooseCard; tile.DetailRequested += ShowCardDetail; _hand.RegisterCard(tile); }
         _hand.CallDeferred(HandFan.MethodName.ArrangeCards, false); RefreshEnemyHand(); RefreshSelection(); if (_battle.IsFinished) DisableAllBattleControls();
+    }
+    private bool HasObviousLegalAction()
+    {
+        if (_battle.IsFinished || _ap <= 0) return false;
+        if (_heroBag.Count > 0 && _allies.Any(slot => slot.Unit?.Alive != true)) return true;
+        if (_allies.Any(slot => slot.Unit?.Alive == true) && _enemies.Any(slot => slot.Unit?.Alive == true)) return true;
+        if (_deck.Hand.Any(card => EffectiveCost(card) <= _ap)) return true;
+        return _allies.Any(slot => slot.Unit is { Alive: true, Cooldown: <= 0 });
     }
     private void RefreshEnemyHand() { var row = N<HBoxContainer>("EnemyHand"); Clear(row); foreach (var card in _aiDeck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); row.AddChild(tile); tile.Setup(card, true, true); tile.CustomMinimumSize = new(20, 32); tile.MouseFilter = MouseFilterEnum.Ignore; } }
     private static void Clear(Node node) { foreach (var child in node.GetChildren()) { node.RemoveChild(child); child.Free(); } }
