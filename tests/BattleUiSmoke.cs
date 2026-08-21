@@ -43,17 +43,38 @@ public partial class BattleUiSmoke : Node
         for (var index = 0; index < 5; index++) Check(Mathf.IsEqualApprox(allies[index].GlobalPosition.X, enemies[index].GlobalPosition.X), $"第{index + 1}列敌我槽未对齐");
 
         var rightPanel = arena.GetNode<BattleRightSidebar>("%ContentHost");
+        var detailText = arena.GetNode<RichTextLabel>("%DetailText");
+        var rightClick = new InputEventMouseButton { ButtonIndex = MouseButton.Right, Pressed = true };
         var firstCard = arena.GetNode<HandFan>("%Hand").GetChildren().OfType<CardTile>().First();
-        firstCard.RequestDetail(); await Frame();
+        firstCard.EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
         Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CardDetail, "卡牌详情未进入固定右栏");
         arena.GetNode<Button>("%CancelButton").EmitSignal(Button.SignalName.Pressed); await Frame();
         Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "取消选择未恢复指挥官总览");
 
-        var dummyMode = arena.GetNode<CheckButton>("%DummyMode"); dummyMode.ButtonPressed = true; arena.ResetTraining(); await Frame();
-        enemies[0].RequestDetail(); await Frame();
+        enemies[0].SetUnit(new HeroCardInstance(arena.content.heroes[1], "ai").Deploy());
+        enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
         Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.EnemyDetail, "敌人右键详情未进入固定右栏");
-        allies[0].SetUnit(new HeroCardInstance(arena.content.heroes[0]).Deploy()); allies[0].RequestDetail(); await Frame();
+        var enemyDefinition = arena.content.heroes[1];
+        Check(!detailText.Text.Contains(enemyDefinition.skill_1_text) && !detailText.Text.Contains(enemyDefinition.passive_text) && !detailText.Text.Contains(enemyDefinition.leader_bonus_text), "EnemyDetail 泄露了敌方完整技能、被动或队长能力");
+        allies[0].SetUnit(new HeroCardInstance(arena.content.heroes[0]).Deploy());
+        allies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
         Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.HeroDetail, "我方英雄右键详情未进入固定右栏");
+        Check(detailText.Text.Contains(arena.content.heroes[0].skill_1_text), "HeroDetail 没有显示我方已知技能");
+
+        var allyCard = new CardInstance(arena.content.cards.First(card => card.target_kind == CardDefinition.TargetKind.AllyHero));
+        var dragTile = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn").Instantiate<CardTile>(); AddChild(dragTile); dragTile.Setup(allyCard); await Frame();
+        var dropped = false; allies[0].CardDropped += (_, card) => dropped = card == allyCard;
+        dragTile.ForceDrag(dragTile.GetInstanceId(), new Button { CustomMinimumSize = new Vector2(144, 192) });
+        var dragData = dragTile.GetViewport().GuiGetDragData();
+        Check(allies[0]._CanDropData(Vector2.Zero, dragData), "合法锦囊拖拽目标未被识别");
+        allies[0]._DropData(Vector2.Zero, dragData); await Frame();
+        Check(dropped, "Drag/Drop 回调没有把卡牌交给合法战位");
+        enemies[0].SetInteractionEnabled(false);
+        enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.HeroDetail, "禁用战斗交互后敌方战位仍响应右键");
+        Check(!enemies[0]._CanDropData(Vector2.Zero, dragData), "禁用战斗交互后敌方战位仍接收拖放");
+        dragTile.GetViewport().GuiCancelDrag();
+        dragTile.QueueFree();
 
         var fan = new HandFan { Size = new Vector2(1280, 268) }; AddChild(fan); await Frame();
         foreach (var count in new[] { 1, 2, 4, 5, 6, 8 })

@@ -427,7 +427,7 @@ public partial class TrainingArena : Control
         foreach (var tile in _hand.GetChildren().OfType<CardTile>())
             tile.MouseFilter = MouseFilterEnum.Ignore;
         foreach (var slot in _allies.Concat(_enemies))
-            slot.MouseFilter = MouseFilterEnum.Ignore;
+            slot.SetInteractionEnabled(false);
     }
 
     private void EnableAllBattleControls()
@@ -439,7 +439,7 @@ public partial class TrainingArena : Control
         foreach (var tile in _hand.GetChildren().OfType<CardTile>())
             tile.MouseFilter = MouseFilterEnum.Stop;
         foreach (var slot in _allies.Concat(_enemies))
-            slot.MouseFilter = MouseFilterEnum.Stop;
+            slot.SetInteractionEnabled(true);
     }
     private async void DeferredCheckEnemyEmptySlots() => await CheckEnemyEmptySlots();
     private void ApplyLeaderBonus() { if (_leaderId == "hero_role_1") foreach (var s in _allies.Where(s => s.Unit != null)) { s.Unit!.MaxHp += 50; s.Unit.Hp += 50; s.Refresh(); } else if (_leaderId == "hero_role_3") AssignFreeCard(); AddLog("[color=ffee88]队长[/color] 第一名部署英雄成为队长，队长加成开始生效。"); }
@@ -467,7 +467,7 @@ public partial class TrainingArena : Control
     {
         _apText.Text = $"AP {_ap}/3"; N<Label>("LeftApText").Text = $"◆　AP　{_ap}/3"; N<Button>("HeroBag").Text = $"♛　{_heroBag.Count}"; N<Button>("HeroBag").TooltipText = $"英雄牌库\n剩余 {_heroBag.Count}"; N<Button>("DrawPile").Text = $"▣　{_deck.DrawPile.Count}"; N<Button>("DrawPile").TooltipText = $"抽牌堆\n当前 {_deck.DrawPile.Count} 张"; N<Button>("DiscardPile").Text = $"▨　{_deck.DiscardPile.Count}"; N<Button>("DiscardPile").TooltipText = $"弃牌堆\n当前 {_deck.DiscardPile.Count} 张"; N<Button>("CatalogButton").Text = $"◇　{content.cards.Count}"; N<Button>("CatalogButton").TooltipText = $"锦囊总卡包\n共 {content.cards.Count} 张";
         Clear(_hand); foreach (var card in _deck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); _hand.AddChild(tile); tile.Setup(card); tile.CardChosen += ChooseCard; tile.DetailRequested += ShowCardDetail; _hand.RegisterCard(tile); }
-        _hand.CallDeferred(HandFan.MethodName.ArrangeCards, false); RefreshEnemyHand(); RefreshSelection();
+        _hand.CallDeferred(HandFan.MethodName.ArrangeCards, false); RefreshEnemyHand(); RefreshSelection(); if (_battle.IsFinished) DisableAllBattleControls();
     }
     private void RefreshEnemyHand() { var row = N<HBoxContainer>("EnemyHand"); Clear(row); foreach (var card in _aiDeck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); row.AddChild(tile); tile.Setup(card, true, true); tile.CustomMinimumSize = new(20, 32); tile.MouseFilter = MouseFilterEnum.Ignore; } }
     private static void Clear(Node node) { foreach (var child in node.GetChildren()) { node.RemoveChild(child); child.Free(); } }

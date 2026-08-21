@@ -20,12 +20,14 @@ public partial class UnitSlot : Control
     private Label _portraitPlaceholder = null!;
     private ProgressBar _hpBar = null!;
     private Label _hpText = null!;
+    private Label _classIcon = null!;
     private Label _info = null!;
     private Label _status = null!;
     private Control _passiveBack = null!;
     private Control _selectionHighlight = null!;
     private Control _targetHighlight = null!;
     private Button _interactionArea = null!;
+    private bool _interactionEnabled = true;
 
     public override void _Ready()
     {
@@ -33,6 +35,7 @@ public partial class UnitSlot : Control
         _portraitPlaceholder = GetNode<Label>("%CharacterPlaceholder");
         _hpBar = GetNode<ProgressBar>("%HpBar");
         _hpText = GetNode<Label>("%HpText");
+        _classIcon = GetNode<Label>("%ClassIcon");
         _info = GetNode<Label>("%UnitInfo");
         _status = GetNode<Label>("%StatusIcons");
         _passiveBack = GetNode<Control>("%PassiveCardSlot");
@@ -46,6 +49,13 @@ public partial class UnitSlot : Control
 
     public void Activate() => EmitSignal(SignalName.SlotChosen, this);
     public void RequestDetail() { if (Unit != null) DetailRequested?.Invoke(this); }
+    public void SetInteractionEnabled(bool enabled)
+    {
+        _interactionEnabled = enabled;
+        if (!IsNodeReady()) return;
+        _interactionArea.Disabled = !enabled || (Unit == null && Side == "enemy");
+        _interactionArea.MouseFilter = enabled ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
+    }
     public void SetUnit(UnitState? value) { Unit = value; _preview = ""; Refresh(); }
     public void SetActionPreview(string value) { _preview = value; Refresh(); }
     public void ClearActionPreview() { _preview = ""; if (IsNodeReady()) _targetHighlight.Visible = false; Refresh(); }
@@ -62,16 +72,19 @@ public partial class UnitSlot : Control
         _portraitPlaceholder.Visible = empty || Unit!.Definition.artwork == null;
         _hpBar.Visible = !empty;
         _hpText.Visible = !empty;
+        _classIcon.Visible = !empty;
         _status.Visible = !empty;
         _passiveBack.Visible = !empty && PassiveCard != null;
         _targetHighlight.Visible = !string.IsNullOrEmpty(_preview);
-        _interactionArea.Disabled = empty && Side == "enemy";
+        _interactionArea.Disabled = !_interactionEnabled || (empty && Side == "enemy");
+        _interactionArea.MouseFilter = _interactionEnabled ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
         _interactionArea.TooltipText = empty ? (Side == "ally" ? "选择英雄牌后点击这里部署" : "") : Unit!.Definition.description;
 
         if (empty)
         {
             _portraitPlaceholder.Text = Side == "ally" ? "＋\n空位" : "空位";
             _info.Text = Side == "ally" ? "等待部署" : "等待敌方部署";
+            _classIcon.Text = "";
             _status.Text = "";
             Modulate = Colors.White;
             return;
@@ -83,13 +96,16 @@ public partial class UnitSlot : Control
         _hpBar.MaxValue = Math.Max(1, unit.MaxHp);
         _hpBar.Value = Math.Clamp(unit.Hp, 0, unit.MaxHp);
         _hpText.Text = $"HP {unit.Hp}/{unit.MaxHp}";
-        var identity = unit.Number > 0 && unit.Number.ToString() != unit.Name ? $"{unit.Number} · {unit.Name}" : unit.Name;
+        _classIcon.Text = $"{ClassMark(unit.Type)}　★{unit.Star}";
         _info.Text = unit.Alive
-            ? $"{identity}　{unit.Type} ★{unit.Star}\nATK {unit.Attack}　EXP {unit.Exp}/{unit.ExpToStar}" + (string.IsNullOrEmpty(_preview) ? "" : $"\n预计：{_preview}")
+            ? (string.IsNullOrEmpty(_preview) ? "" : $"预计：{_preview}")
             : $"{unit.Name}　已击破\n{(Side == "ally" ? "可重新部署" : "等待AI部署")}";
+        _interactionArea.TooltipText = $"{unit.Name} · {unit.Type}\nHP {unit.Hp}/{unit.MaxHp}　ATK {unit.Attack}　EXP {unit.Exp}/{unit.ExpToStar}\n右键查看详情";
         _status.Text = StatusSummary(unit);
         Modulate = unit.Alive ? Colors.White : Color.FromHtml("727986");
     }
+
+    private static string ClassMark(string type) => type switch { "先锋" => "盾", "刺客" => "刃", "斥候" => "羽", "祭司" => "律", _ => "◇" };
 
     private static string StatusSummary(UnitState unit)
     {
@@ -106,14 +122,14 @@ public partial class UnitSlot : Control
 
     private void OnInteractionInput(InputEvent input)
     {
-        if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } || Unit == null) return;
+        if (!_interactionEnabled || input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } || Unit == null) return;
         _interactionArea.AcceptEvent();
         DetailRequested?.Invoke(this);
     }
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)
     {
-        return GodotObject.InstanceFromId(data.AsUInt64()) is CardTile { Card: not null } tile && CanAcceptCard(tile.Card);
+        return _interactionEnabled && GodotObject.InstanceFromId(data.AsUInt64()) is CardTile { Card: not null } tile && CanAcceptCard(tile.Card);
     }
 
     public override void _DropData(Vector2 atPosition, Variant data)

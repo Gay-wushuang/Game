@@ -42,11 +42,26 @@ public partial class BattleRightSidebar : Control
 
     public void ShowUnit(UnitState unit, bool enemy)
     {
-        var definition = unit.Definition as HeroDefinition;
-        var details = definition == null
-            ? $"[b]类型[/b]　{unit.Type}\n[b]HP[/b]　{unit.Hp} / {unit.MaxHp}\n[b]攻击[/b]　{unit.Attack}\n[b]状态[/b]　{BuildStatus(unit)}\n\n[b]已公开意图[/b]　暂无\n[b]已公开技能[/b]\n{unit.Definition.description}"
-            : $"[b]职业[/b]　{unit.Type}\n[b]HP[/b]　{unit.Hp} / {unit.MaxHp}\n[b]攻击[/b]　{unit.Attack}\n[b]星级[/b]　★{unit.Star}\n[b]EXP[/b]　{unit.Exp} / {unit.ExpToStar}\n[b]状态[/b]　{BuildStatus(unit)}\n\n[b]技能[/b]\n{definition.skill_1_text}\n{definition.skill_2_text}\n\n[b]被动[/b]\n{definition.passive_text}\n\n[b]队长能力[/b]\n{definition.leader_bonus_text}";
-        ShowDetail(enemy ? RightPanelMode.EnemyDetail : RightPanelMode.HeroDetail, unit.Name, details);
+        if (enemy) ShowEnemyDetail(unit);
+        else ShowHeroDetail(unit);
+    }
+
+    private void ShowEnemyDetail(UnitState unit)
+    {
+        ShowDetail(RightPanelMode.EnemyDetail, unit.Name,
+            $"[b]职业 / 类型[/b]　{unit.Type}\n[b]HP[/b]　{unit.Hp} / {unit.MaxHp}\n[b]攻击[/b]　{unit.Attack}\n[b]公开状态[/b]　{BuildStatus(unit)}\n\n[b]公开意图[/b]　暂无\n\n[b]已发动 / 已知技能[/b]　暂无公开信息");
+    }
+
+    private void ShowHeroDetail(UnitState unit)
+    {
+        if (unit.Definition is not HeroDefinition definition)
+        {
+            ShowDetail(RightPanelMode.HeroDetail, unit.Name,
+                $"[b]类型[/b]　{unit.Type}\n[b]HP[/b]　{unit.Hp} / {unit.MaxHp}\n[b]攻击[/b]　{unit.Attack}\n[b]状态[/b]　{BuildStatus(unit)}");
+            return;
+        }
+        ShowDetail(RightPanelMode.HeroDetail, unit.Name,
+            $"[b]职业[/b]　{unit.Type}\n[b]HP[/b]　{unit.Hp} / {unit.MaxHp}\n[b]攻击[/b]　{unit.Attack}\n[b]星级[/b]　★{unit.Star}\n[b]EXP[/b]　{unit.Exp} / {unit.ExpToStar}\n[b]状态[/b]　{BuildStatus(unit)}\n\n[b]技能[/b]\n{definition.skill_1_text}\n{definition.skill_2_text}\n\n[b]被动[/b]\n{definition.passive_text}\n\n[b]队长能力[/b]\n{definition.leader_bonus_text}");
     }
 
     private void ShowDetail(RightPanelMode mode, string title, string bbcode)
