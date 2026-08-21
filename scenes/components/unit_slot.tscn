@@ -96,7 +96,23 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="CharacterSprite" type="TextureRect" parent="CharacterAnchor"]
+[node name="CharacterCanvas" type="Control" parent="CharacterAnchor"]
+custom_minimum_size = Vector2(128, 160)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -64.0
+offset_top = -160.0
+offset_right = 64.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+pivot_offset = Vector2(64, 160)
+
+[node name="CharacterSprite" type="TextureRect" parent="CharacterAnchor/CharacterCanvas"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -108,7 +124,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="CharacterPlaceholder" type="Label" parent="CharacterAnchor"]
+[node name="CharacterPlaceholder" type="Label" parent="CharacterAnchor/CharacterCanvas"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -122,6 +138,17 @@ theme_override_font_sizes/font_size = 18
 text = "＋\n空位"
 horizontal_alignment = 1
 vertical_alignment = 2
+
+[node name="ClassIcon" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 82.0
+offset_bottom = 32.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 12
+text = "盾　★1"
 
 [node name="HpBar" type="ProgressBar" parent="."]
 unique_name_in_owner = true
@@ -165,13 +192,13 @@ anchors_preset = 12
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = -31.0
+offset_top = -30.0
 offset_right = -8.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 theme_override_font_sizes/font_size = 12
-text = "等待部署"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 text_overrun_behavior = 3
@@ -190,6 +217,17 @@ grow_horizontal = 0
 mouse_filter = 2
 theme_override_font_sizes/font_size = 12
 horizontal_alignment = 2
+
+[node name="ContextSkillButton" type="Button" parent="."]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(72, 32)
+layout_mode = 1
+offset_left = 8.0
+offset_top = 38.0
+offset_right = 80.0
+offset_bottom = 70.0
+text = "◉ 技能"
 
 [node name="PassiveCardSlot" type="PanelContainer" parent="."]
 unique_name_in_owner = true
