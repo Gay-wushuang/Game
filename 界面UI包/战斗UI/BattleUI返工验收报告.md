@@ -24,7 +24,6 @@ TrainingArena : Control
 │        ├─ LeftSidebar : PanelContainer
 │        │  └─ LeftContent
 │        │     ├─ FactionPanel
-│        │     ├─ LeftApPanel
 │        │     ├─ Piles
 │        │     └─ ReservedPanel（无内容时隐藏）
 │        ├─ CenterColumn
@@ -67,10 +66,11 @@ UnitSlot : Control
 
 ## 已完成
 
-- 1920×1080 逻辑画布与 240 / 1280 / 352 三栏 Master 几何。
+- 1920×1080 逻辑画布；根据实机精修反馈，将三栏从 Master 初稿的 240 / 1280 / 352 调整为 240 / 1328 / 304，降低右栏视觉重量。
 - Top HUD 改为轻量 `MarginContainer`，不再使用全宽厚重面板。
 - 独立 `BackgroundLayer` 与 `BattleFxLayer`。
-- 固定 320×500 的右栏内容宿主及 `CommanderOverview/CardDetail/HeroDetail/EnemyDetail` 状态机。
+- 固定 280×500 的右栏内容宿主及 `CommanderOverview/CardDetail/HeroDetail/EnemyDetail` 状态机；三个操作按钮同步压低高度。
+- AP 只在顶部显示，左侧不再重复；右栏指挥官顺序为敌方在上、我方在下，与战场上下排映射一致。
 - 卡牌、英雄、敌人详情统一进入右栏；关闭、取消和 Esc 恢复默认总览。
 - 删除常规卡牌详情 `AcceptDialog` 路径；业务弹窗保持原职责。
 - 10 个战位共用同一组件，统一全槽左键、右键、拖放输入。

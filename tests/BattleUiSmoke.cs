@@ -32,8 +32,8 @@ public partial class BattleUiSmoke : Node
         Check(Mathf.IsEqualApprox(root.Size.X, 1888), "1920 Master 安全区宽度错误");
         Check(Mathf.IsEqualApprox(top.Size.Y, 64), "TopBar 不是64px");
         Check(Mathf.IsEqualApprox(left.Size.X, 240), "LeftSidebar 不是240px");
-        Check(Mathf.IsEqualApprox(center.Size.X, 1280), "CenterColumn 不是1280px");
-        Check(Mathf.IsEqualApprox(right.Size.X, 352), "RightSidebar 不是352px");
+        Check(Mathf.IsEqualApprox(center.Size.X, 1328), "CenterColumn 不是1328px");
+        Check(Mathf.IsEqualApprox(right.Size.X, 304), "RightSidebar 不是304px");
         Check(Mathf.IsEqualApprox(battlefield.Size.Y, 700), $"Battlefield 不是700px，实际 {battlefield.Size.Y}");
         Check(Mathf.IsEqualApprox(handArea.Size.Y, 268), $"HandArea 不是268px，实际 {handArea.Size.Y}");
 

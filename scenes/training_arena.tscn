@@ -129,16 +129,6 @@ text = "◇\n我方\n\nVS\n\n敌方\n◆"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LeftApPanel" type="PanelContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 84)
-[node name="LeftApText" type="Label" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/LeftApPanel"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "◆　AP　3/3"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="Piles" type="VBoxContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -270,13 +260,13 @@ script = ExtResource("3")
 
 [node name="RightSidebar" type="PanelContainer" parent="Margin/Root/MainRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(352, 0)
+custom_minimum_size = Vector2(304, 0)
 
 [node name="RightMargin" type="MarginContainer" parent="Margin/Root/MainRow/RightSidebar"]
 layout_mode = 2
-theme_override_constants/margin_left = 16
+theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 16
+theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 16
 
 [node name="RightContent" type="VBoxContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin"]
@@ -286,7 +276,7 @@ theme_override_constants/separation = 16
 [node name="ContentHost" type="Control" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(320, 500)
+custom_minimum_size = Vector2(280, 500)
 script = ExtResource("4")
 
 [node name="CommanderOverview" type="PanelContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost"]
@@ -302,19 +292,6 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PlayerCommander" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost/CommanderOverview/CommanderContent"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "我方指挥官\n训练场测试员\n状态：正常"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Versus" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost/CommanderOverview/CommanderContent"]
-layout_mode = 2
-text = "VS"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
-
 [node name="EnemyCommander" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost/CommanderOverview/CommanderContent"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -328,6 +305,19 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 48)
 theme_override_constants/separation = 2
 alignment = 1
+
+[node name="Versus" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost/CommanderOverview/CommanderContent"]
+layout_mode = 2
+text = "VS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="PlayerCommander" type="Label" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost/CommanderOverview/CommanderContent"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "我方指挥官\n训练场测试员\n状态：正常"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="DetailView" type="PanelContainer" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/ContentHost"]
 unique_name_in_owner = true
@@ -387,20 +377,20 @@ theme_override_constants/separation = 16
 [node name="SkillButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(320, 92)
+custom_minimum_size = Vector2(280, 68)
 text = "使用英雄技能"
 disabled = true
 
 [node name="CancelButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(320, 92)
+custom_minimum_size = Vector2(280, 60)
 text = "取消选择"
 
 [node name="EndTurnButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(320, 156)
+custom_minimum_size = Vector2(280, 104)
 text = "结束回合"
 
 [node name="HeroBagDialog" type="AcceptDialog" parent="."]
