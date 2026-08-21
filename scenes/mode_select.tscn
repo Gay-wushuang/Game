@@ -1,0 +1,62 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/ModeSelect.cs" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/ui/mode_select.svg" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/components/hot_button.tscn" id="3_btn"]
+[ext_resource type="PackedScene" path="res://scenes/components/player_bar.tscn" id="4_bar"]
+
+[node name="ModeSelect" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Bg" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="BackButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 45.0
+offset_top = 60.0
+offset_right = 270.0
+offset_bottom = 132.0
+
+[node name="StoryButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 120.0
+offset_top = 210.0
+offset_right = 450.0
+offset_bottom = 915.0
+
+[node name="ChallengeButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 570.0
+offset_top = 210.0
+offset_right = 900.0
+offset_bottom = 915.0
+
+[node name="ArenaButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 1020.0
+offset_top = 210.0
+offset_right = 1350.0
+offset_bottom = 915.0
+
+[node name="PvpButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 1470.0
+offset_top = 210.0
+offset_right = 1800.0
+offset_bottom = 915.0
+
+[node name="PlayerBar" parent="." instance=ExtResource("4_bar")]
