@@ -1,0 +1,122 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PrepareUi.cs" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/prepare_ui.svg" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/components/hot_button.tscn" id="3_btn"]
+[ext_resource type="PackedScene" path="res://scenes/components/player_bar.tscn" id="4_bar"]
+
+[sub_resource type="StyleBoxFlat" id="SelectedStyle"]
+bg_color = Color(1, 1, 1, 0.12)
+
+[node name="PrepareUi" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Bg" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="BackButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 60.0
+offset_top = 840.0
+offset_right = 210.0
+offset_bottom = 906.0
+
+[node name="PrevButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 210.0
+offset_top = 840.0
+offset_right = 360.0
+offset_bottom = 906.0
+
+[node name="NextButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 360.0
+offset_top = 840.0
+offset_right = 510.0
+offset_bottom = 906.0
+
+[node name="StartButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 510.0
+offset_top = 840.0
+offset_right = 660.0
+offset_bottom = 906.0
+
+[node name="Card1" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 746.0
+offset_top = 108.0
+offset_right = 1001.0
+offset_bottom = 468.0
+
+[node name="Card2" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 1024.0
+offset_top = 108.0
+offset_right = 1279.0
+offset_bottom = 468.0
+
+[node name="Card3" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 1301.0
+offset_top = 108.0
+offset_right = 1556.0
+offset_bottom = 468.0
+
+[node name="Card4" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 1579.0
+offset_top = 108.0
+offset_right = 1834.0
+offset_bottom = 468.0
+
+[node name="Card5" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 746.0
+offset_top = 498.0
+offset_right = 1001.0
+offset_bottom = 858.0
+
+[node name="Card6" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 1024.0
+offset_top = 498.0
+offset_right = 1279.0
+offset_bottom = 858.0
+
+[node name="Card7" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 1301.0
+offset_top = 498.0
+offset_right = 1556.0
+offset_bottom = 858.0
+
+[node name="Card8" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+toggle_mode = true
+offset_left = 1579.0
+offset_top = 498.0
+offset_right = 1834.0
+offset_bottom = 858.0
+
+[node name="PlayerBar" parent="." instance=ExtResource("4_bar")]

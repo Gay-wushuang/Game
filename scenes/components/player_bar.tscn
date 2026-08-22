@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PlayerBar.cs" id="1"]
+
+[sub_resource type="StyleBoxEmpty" id="EmptyStyle"]
+
+[sub_resource type="StyleBoxFlat" id="HoverStyle"]
+bg_color = Color(1, 1, 1, 0.08)
+
+[sub_resource type="StyleBoxFlat" id="PressedStyle"]
+bg_color = Color(1, 1, 1, 0.12)
+
+[node name="PlayerBar" type="Control"]
+custom_minimum_size = Vector2(1920, 120)
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -120.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="SettingsButton" type="Button" parent="."]
+unique_name_in_owner = true
+offset_left = 1803.0
+offset_top = 3.0
+offset_right = 1920.0
+offset_bottom = 120.0
+focus_mode = 0
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/disabled = SubResource("EmptyStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")

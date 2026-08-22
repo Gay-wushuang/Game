@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3]
+
+[sub_resource type="StyleBoxEmpty" id="EmptyStyle"]
+
+[sub_resource type="StyleBoxFlat" id="HoverStyle"]
+bg_color = Color(1, 1, 1, 0.08)
+
+[sub_resource type="StyleBoxFlat" id="PressedStyle"]
+bg_color = Color(1, 1, 1, 0.12)
+
+[node name="HotButton" type="Button"]
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")

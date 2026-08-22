@@ -1,0 +1,99 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/MainMenu.cs" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu_ui.svg" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/components/player_bar.tscn" id="3_bar"]
+
+[sub_resource type="StyleBoxEmpty" id="EmptyStyle"]
+
+[sub_resource type="StyleBoxFlat" id="HoverStyle"]
+bg_color = Color(1, 1, 1, 0.08)
+
+[sub_resource type="StyleBoxFlat" id="PressedStyle"]
+bg_color = Color(1, 1, 1, 0.12)
+
+[node name="MainMenu" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Bg" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="StartButton" type="Button" parent="."]
+unique_name_in_owner = true
+offset_left = 120.0
+offset_top = 330.0
+offset_right = 630.0
+offset_bottom = 411.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")
+
+[node name="RecruitButton" type="Button" parent="."]
+unique_name_in_owner = true
+offset_left = 120.0
+offset_top = 435.0
+offset_right = 630.0
+offset_bottom = 516.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")
+
+[node name="LabButton" type="Button" parent="."]
+unique_name_in_owner = true
+offset_left = 120.0
+offset_top = 540.0
+offset_right = 630.0
+offset_bottom = 621.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")
+
+[node name="PrepareButton" type="Button" parent="."]
+unique_name_in_owner = true
+offset_left = 120.0
+offset_top = 645.0
+offset_right = 630.0
+offset_bottom = 726.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")
+
+[node name="ExitButton" type="Button" parent="."]
+unique_name_in_owner = true
+offset_left = 120.0
+offset_top = 750.0
+offset_right = 630.0
+offset_bottom = 831.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/hover = SubResource("HoverStyle")
+theme_override_styles/pressed = SubResource("PressedStyle")
+theme_override_styles/focus = SubResource("EmptyStyle")
+
+[node name="PlayerBar" parent="." instance=ExtResource("3_bar")]

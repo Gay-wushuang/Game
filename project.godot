@@ -11,9 +11,14 @@ config_version=5
 [application]
 
 config/name="法则演进 · 训练场"
-run/main_scene="res://scenes/training_arena.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+SceneRouter="*res://scripts/ui/SceneRouter.cs"
+SystemNotice="*res://scenes/components/system_notice.tscn"
 
 [display]
 
@@ -27,6 +32,10 @@ window/stretch/aspect="expand"
 [dotnet]
 
 project/assembly_name="RuleEvolution"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
 
 [gui]
 
