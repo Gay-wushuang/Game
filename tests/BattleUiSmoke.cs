@@ -85,6 +85,17 @@ public partial class BattleUiSmoke : Node
 
         var turnControl = arena.GetNode<TurnControl>("%TurnControl");
         Check(turnControl.Current == BattleState.DefaultActionPoints && turnControl.Maximum == BattleState.DefaultActionPoints && !turnControl.Suggested, "TurnControl没有显示默认5点AP或错误进入提示态");
+        Check(turnControl.Size == new Vector2(168, 168) && turnControl.LitSegments == 16, "TurnControl尺寸或满AP亮格不正确");
+        turnControl.SetActionPoints(3, 5, false); Check(turnControl.LitSegments == 10 && arena.GetNode<Label>("%ActionPoints").Text == "AP 3/5", "3/5应显示10格及动态文本");
+        turnControl.SetActionPoints(5, 7, false); Check(turnControl.LitSegments == 11 && arena.GetNode<Label>("%ActionPoints").Text == "AP 5/7", "5/7应显示11格及动态上限");
+        turnControl.SetActionPoints(0, 5, true); await Frame();
+        var suggestedOverlay = arena.GetNode<TextureRect>("%SuggestedOverlay");
+        Check(turnControl.LitSegments == 0 && turnControl.Suggested && turnControl.Current == 0 && turnControl.Maximum == 5, "Suggested不应篡改AP且0/5应为0格");
+        Check(suggestedOverlay.Visible, "0 AP Suggested应通过独立低频提示层表达，不能强行点亮AP格");
+        turnControl.SetDisabled(true); await Frame();
+        Check(arena.GetNode<Button>("%EndTurnButton").Disabled && !suggestedOverlay.Visible && turnControl.Modulate.A < 1f, "Disabled应优先于Suggested，并禁用按钮、隐藏提示态及降低整体亮度");
+        turnControl.SetDisabled(false);
+        turnControl.SetActionPoints(BattleState.DefaultActionPoints, BattleState.DefaultActionPoints, false);
         SetPrivate(arena, "_ap", 0); arena.RefreshAll(); await Frame();
         Check(turnControl.Current == 0 && turnControl.Suggested, "AP归零后TurnControl没有进入提示态");
         SetPrivate(arena, "_ap", BattleState.DefaultActionPoints); arena.RefreshAll(); await Frame();
@@ -92,7 +103,7 @@ public partial class BattleUiSmoke : Node
         var allyCard = new CardInstance(arena.content.cards.First(card => card.target_kind == CardDefinition.TargetKind.AllyHero));
         var dragTile = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn").Instantiate<CardTile>(); AddChild(dragTile); dragTile.Setup(allyCard); await Frame();
         var dropped = false; allies[0].CardDropped += (_, card) => dropped = card == allyCard;
-        dragTile.ForceDrag(dragTile.GetInstanceId(), new Button { CustomMinimumSize = new Vector2(144, 192) });
+        dragTile.ForceDrag(dragTile.GetInstanceId(), new Button { CustomMinimumSize = CardTile.NativeSize });
         var dragData = dragTile.GetViewport().GuiGetDragData();
         Check(allies[0]._CanDropData(Vector2.Zero, dragData), "合法锦囊拖拽目标未被识别");
         allies[0]._DropData(Vector2.Zero, dragData); await Frame();
@@ -114,16 +125,26 @@ public partial class BattleUiSmoke : Node
             await Frame(); fan.ArrangeCards(); await Frame();
             var cards = fan.GetChildren().OfType<Control>().ToArray();
             Check(cards.Length == count, $"{count}张手牌布局数量错误");
+            Check(cards.All(card => card.Size.IsEqualApprox(HandFan.NormalCardSize)), $"{count}张手牌未保持168×224正式显示尺寸");
             Check(cards.All(card => Mathf.IsEqualApprox(card.Size.X / card.Size.Y, .75f)), $"{count}张手牌未保持3:4");
             Check(cards.All(card => card.Position.X >= 0 && card.Position.X + card.Size.X <= fan.Size.X + .5f), $"{count}张手牌越出HandArea");
             if (count > 1) Check(cards.First().Rotation < cards.Last().Rotation, $"{count}张手牌没有形成扇形旋转");
         }
         var hoverCard = fan.GetChild<Control>(3); hoverCard.EmitSignal(Control.SignalName.MouseEntered); await Delay(.2);
-        Check(Mathf.IsEqualApprox(hoverCard.Rotation, 0, .01f) && hoverCard.Scale.X > 1, "Hover未回正并放大卡牌");
+        Check(Mathf.IsEqualApprox(hoverCard.Rotation, 0, .01f) && Mathf.IsEqualApprox(hoverCard.Scale.X, HandFan.HoverScale, .01f), "Hover未回正并放大到约180×240");
         hoverCard.EmitSignal(Control.SignalName.MouseExited); await Delay(.2);
         Check(Mathf.IsEqualApprox(hoverCard.Scale.X, 1, .01f), "Hover结束后卡牌未平滑回位");
 
+        var battle = (BattleState)GetPrivate(arena, "_battle")!;
+        battle.SetReserveHeroCount("player", 0);
+        battle.SetReserveHeroCount("ai", 0);
+        battle.PlayerUnits.Clear();
+        battle.EnemyUnits.Clear();
+        battle.EvaluateOutcome(); await Frame();
+        Check(battle.IsFinished && arena.GetNode<Button>("%EndTurnButton").Disabled && !suggestedOverlay.Visible, "BattleEnded后TurnControl仍接受输入或保留Suggested提示态");
+
         fan.QueueFree(); viewport.QueueFree(); await Frame();
     }
+    private static object? GetPrivate(object target, string name) => target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(target);
     private static void SetPrivate(object target, string name, object value) => target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(target, value);
 }

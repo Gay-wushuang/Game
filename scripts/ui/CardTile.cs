@@ -2,6 +2,7 @@ using Godot;
 
 public partial class CardTile : Button
 {
+    public static readonly Vector2 NativeSize = new(168, 224);
     public event System.Action<CardInstance>? CardChosen;
     public event System.Action<CardInstance>? DetailRequested;
     public CardInstance Card { get; private set; } = null!;
@@ -11,7 +12,7 @@ public partial class CardTile : Button
         Card = value; _faceDown = showBack; SizeFlagsHorizontal = SizeFlags.ExpandFill; SizeFlagsVertical = SizeFlags.ExpandFill;
         ClipText = true; TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         if (showBack) { Text = small ? "◆" : "◆\n卡背"; TooltipText = "敌方手牌"; }
-        else { var kind = Card.Definition.card_kind == CardDefinition.CardKind.Passive ? "被动" : "主动"; _baseText = $"AP {Card.CurrentCost()}\n\n{Card.Definition.display_name}\n\n{kind}"; Text = _baseText; TooltipText = "右键查看完整卡牌详情"; }
+        else { var kind = Card.Definition.card_kind == CardDefinition.CardKind.Passive ? "被动" : "主动"; var cooldown = Card.CooldownRemaining > 0 ? $"\n冷却 {Card.CooldownRemaining}" : ""; _baseText = $"AP {Card.CurrentCost()}\n\n{Card.Definition.display_name}\n\n{kind}{cooldown}"; Text = _baseText; Disabled = Card.CooldownRemaining > 0; TooltipText = Disabled ? $"冷却剩余 {Card.CooldownRemaining} 回合，暂时不能打出" : "右键查看完整卡牌详情"; }
     }
     public override void _Ready() { Pressed += () => CardChosen?.Invoke(Card); GuiInput += OnGuiInput; }
     public void RequestDetail() { if (!_faceDown) DetailRequested?.Invoke(Card); }
@@ -21,7 +22,7 @@ public partial class CardTile : Button
         var preview = new Button
         {
             Text = _baseText,
-            CustomMinimumSize = new Vector2(144, 192),
+            CustomMinimumSize = NativeSize,
             MouseFilter = MouseFilterEnum.Ignore,
             Rotation = 0,
             Scale = Vector2.One

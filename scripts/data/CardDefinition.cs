@@ -4,7 +4,7 @@ using Godot;
 public partial class CardDefinition : ContentDefinition
 {
     public enum CardKind { Active, Passive }
-    public enum TargetKind { SelfHero, AllyHero, Enemy, AnyUnit, AllyEnemyPair, SetSlot, None }
+    public enum TargetKind { SelfHero, AllyHero, Enemy, AnyUnit, AllyEnemyPair, AllEnemies, SelectCards, SetGate, SetSlot, None }
     public enum BuiltinEffect { Heal, AddAttack, AddExp, Damage, Custom, StarUp, StealCard, CancelEnemyDraw }
     [ExportCategory("卡牌规则")]
     [Export] public CardKind card_kind { get; set; }
@@ -18,6 +18,7 @@ public partial class CardDefinition : ContentDefinition
     [Export] public string design_code { get; set; } = "";
     [Export] public string cost_mode { get; set; } = "FIXED";
     [Export(PropertyHint.Range, "1,5,1")] public int rarity { get; set; } = 1;
+    [Export(PropertyHint.Range, "0,20,1")] public int cooldown_turns { get; set; }
     [Export] public string handler_key { get; set; } = "";
     [Export(PropertyHint.Enum, "LUA")] public string logic_mode { get; set; } = "LUA";
     [Export(PropertyHint.File, "*.lua")] public string lua_script { get; set; } = "";

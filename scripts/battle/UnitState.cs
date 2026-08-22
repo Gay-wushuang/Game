@@ -21,11 +21,21 @@ public sealed class UnitState
     public float ShieldRatio { get; set; }
     public int ShieldTurns { get; set; }
     public int GrudgeStacks { get; set; }
+    public int GrudgeAttackPenaltyPerStack { get; set; }
     public int CeasefireTurns { get; set; }
     public float DamageTakenMultiplier { get; set; } = 1f;
     public int LinkedEnemy { get; set; } = -1;
+    public bool HasAttackedThisTurn { get; set; }
+    public bool DeathHandled { get; set; }
+    public bool CountsForOutcome { get; set; } = true;
+    public bool TriggersHeroDeath { get; set; } = true;
+    public bool CanAttack { get; set; } = true;
+    public bool CanRetaliate { get; set; } = true;
+    public bool CardTargetable { get; set; } = true;
+    public int ExtraAttacksRemaining { get; set; }
+    public int ShieldPoints { get; set; }
     public bool Alive => Hp > 0;
-    public string Id => Definition.id.ToString();
+    public string Id => Definition?.id.ToString() ?? "summon_rabbit";
 
     // 临时效果原始值跟踪：首次临时修改时记录，恢复时使用，避免嵌套后恢复到中间状态。
     public string? OriginalType { get; set; }

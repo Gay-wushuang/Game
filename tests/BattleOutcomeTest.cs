@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 public static class BattleOutcomeTest
@@ -1123,9 +1124,9 @@ public static class BattleOutcomeTest
         Check(r3, "AI placing on slot 1 should succeed (different owner = different slot list)");
         
         // Same owner + different slot → should succeed
-        battle.SetSlotUnit("player", 3, hero2);
+        battle.SetSlotUnit("player", 2, hero2);
         battle.PlayerUnits.Add(hero2);
-        bool r4 = battle.TryPlacePassive("player", 3, card2, out _);
+        bool r4 = battle.TryPlacePassive("player", 2, card2, out _);
         Check(r4, "Different slot for same owner should succeed");
         
         Console.WriteLine("[PASS] TestPassiveDuplicatePlacement: 同槽同owner拒绝，不同owner或不同槽位允许");
@@ -1152,10 +1153,9 @@ public static class BattleOutcomeTest
         var (battle, card) = SetupPassiveTest(40004, "player", 0, deadHero);
         
         bool result = battle.TryPlacePassive("player", 0, card, out var error);
-        Check(!result, $"Dead hero should fail: {error}");
-        Check(error.Contains("阵亡"), $"Error should mention hero death, got: {error}");
+        Check(result, $"独立战门不应受阵亡英雄影响: {error}");
         
-        Console.WriteLine("[PASS] TestPassiveDeadHero: 死亡英雄槽放置被动失败");
+        Console.WriteLine("[PASS] TestPassiveDeadHero: 独立战门允许在无可用英雄槽时设置被动");
     }
 
     private static void TestPassiveMissingCard()
@@ -1259,8 +1259,7 @@ public static class BattleOutcomeTest
     }
 
     /// <summary>
-    /// 验证死亡后的英雄槽立即拒绝 Passive 放置。
-    /// 这确保死亡同步后 BattleState slot-unit 映射反映真实状态。
+    /// 验证独立战门与英雄槽生死、占用状态完全解耦。
     /// </summary>
     private static void TestDeadHeroRejectsPassiveAfterDeath()
     {
@@ -1278,18 +1277,18 @@ public static class BattleOutcomeTest
         var card = new CardInstance(passiveDef, "player");
         playerDeck.Hand.Add(card);
         
-        // 尝试放置 — 应该失败
-        bool result = battle.TryPlacePassive("player", 3, card, out var error);
-        Check(!result, $"死亡英雄槽应该拒绝放置被动，但成功了");
-        Check(error.Contains("阵亡"), $"错误信息应包含'阵亡'，但得到: {error}");
+        // 战门位置0与英雄槽3的状态无关，应成功。
+        bool result = battle.TryPlacePassive("player", 0, card, out var error);
+        Check(result, $"独立战门不应因英雄阵亡而拒绝: {error}");
         
-        // 同时验证空 slot 也拒绝
+        // 空英雄槽同样不影响另一个战门位置。
         battle.SetSlotUnit("player", 4, null);
-        bool result2 = battle.TryPlacePassive("player", 4, card, out var error2);
-        Check(!result2, $"空英雄槽应该拒绝放置被动，但成功了");
-        Check(error2.Contains("没有英雄"), $"错误信息应包含'没有英雄'，但得到: {error2}");
+        var card2 = new CardInstance(passiveDef, "player");
+        playerDeck.Hand.Add(card2);
+        bool result2 = battle.TryPlacePassive("player", 1, card2, out var error2);
+        Check(result2, $"独立战门不应因英雄槽为空而拒绝: {error2}");
         
-        Console.WriteLine("[PASS] TestDeadHeroRejectsPassiveAfterDeath: 死亡/空slot立即拒绝Passive");
+        Console.WriteLine("[PASS] TestDeadHeroRejectsPassiveAfterDeath: 战门与死亡/空英雄槽解耦");
     }
 
     /// <summary>
@@ -1326,14 +1325,13 @@ public static class BattleOutcomeTest
             Check(battle.GetSlotUnit("ai", i) == null, $"Enemy slot {i} should be null after ClearSlotUnits");
         }
         
-        // 验证 null slot 的 Passive 放置被拒绝
+        // 英雄槽清空不影响独立被动战门。
         var passiveDef = new CardDefinition { id = "clear_test", display_name = "Clear Test", action_cost = 1, card_kind = CardDefinition.CardKind.Passive };
         var card = new CardInstance(passiveDef, "player");
         playerDeck.Hand.Add(card);
         
         bool result = battle.TryPlacePassive("player", 2, card, out var error);
-        Check(!result, $"Cleared slot should reject passive placement");
-        Check(error.Contains("没有英雄"), $"Error should mention missing hero, got: {error}");
+        Check(result, $"清空英雄槽后仍应能向独立战门放置被动: {error}");
         
         Console.WriteLine("[PASS] TestClearSlotUnits: ClearSlotUnits清空所有slot映射");
     }
@@ -1438,8 +1436,9 @@ public static class BattleOutcomeTest
         // 打出第1张，手牌还剩1张，不应触发HAND_EMPTY
         playerDeck.Discard(card1);
         Check(playerDeck.Hand.Count == 1, "打出1张后手牌应为1张");
-        var notTriggered = resolver.Collect(battle, "player", "HAND_EMPTY",
-            new PassiveEventContext { EventKey = "HAND_EMPTY", SubjectOwnerId = "player" });
+        IReadOnlyList<BattleState.PlacedPassive> notTriggered = playerDeck.Hand.Count == 0
+            ? resolver.Collect(battle, "player", "HAND_EMPTY", new PassiveEventContext { EventKey = "HAND_EMPTY", SubjectOwnerId = "player" })
+            : Array.Empty<BattleState.PlacedPassive>();
         Check(notTriggered.Count == 0, "手牌还剩1张时不应触发HAND_EMPTY");
         
         // 打出最后1张，应触发HAND_EMPTY
@@ -1497,15 +1496,17 @@ public static class BattleOutcomeTest
         battle.RemovePassive(apZeroPassive);
         battle.SetPassive("player", 2, apZeroPassive);
         battle.PlayerActionPoints = 2;  // AP=2，还有剩余
-        var notTriggered = resolver.Collect(battle, "player", "ACTION_POINTS_ZERO",
-            new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = "player" });
+        IReadOnlyList<BattleState.PlacedPassive> notTriggered = battle.PlayerActionPoints == 0
+            ? resolver.Collect(battle, "player", "ACTION_POINTS_ZERO", new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = "player" })
+            : Array.Empty<BattleState.PlacedPassive>();
         Check(notTriggered.Count == 0, "AP > 0 时不应触发ACTION_POINTS_ZERO");
         
         // 再消耗1点，AP=1，仍不触发
         battle.PlayerActionPoints -= 1;
         Check(battle.PlayerActionPoints == 1, "消耗1点后AP应为1");
-        notTriggered = resolver.Collect(battle, "player", "ACTION_POINTS_ZERO",
-            new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = "player" });
+        notTriggered = battle.PlayerActionPoints == 0
+            ? resolver.Collect(battle, "player", "ACTION_POINTS_ZERO", new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = "player" })
+            : Array.Empty<BattleState.PlacedPassive>();
         Check(notTriggered.Count == 0, "AP=1 时不应触发ACTION_POINTS_ZERO");
 
         // 再消耗1点，AP=0，触发

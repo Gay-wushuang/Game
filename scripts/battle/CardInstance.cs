@@ -10,10 +10,14 @@ public sealed class CardInstance
     public int RuntimeCostOverride { get; set; } = -1;
     public bool ReturnToOriginalOwnerDiscardAtTurnEnd { get; set; }
     public bool ExileAtTurnEnd { get; set; }
+    public bool IsTemporaryCopy { get; set; }
+    public int CooldownRemaining { get; set; }
+    public bool EmergencyUsed { get; set; }
     public CardInstance(CardDefinition definition, string owner = "player") { Definition = definition; OwnerId = owner; OriginalOwnerId = owner; }
     public int CurrentCost(int currentAp = 3, int maxAp = 3)
     {
-        var baseCost = Definition.cost_mode switch { "ALL_CURRENT" => currentAp, "MAX_AP" => maxAp, _ => Definition.action_cost };
+        var baseCost = Definition.cost_mode switch { "ALL_CURRENT" or "VARIABLE_AP" => currentAp, "MAX_AP" => maxAp, _ => Definition.action_cost };
         return RuntimeCostOverride >= 0 ? RuntimeCostOverride : System.Math.Max(0, baseCost + RuntimeCostModifier);
     }
+    public bool CanPlay => CooldownRemaining <= 0;
 }

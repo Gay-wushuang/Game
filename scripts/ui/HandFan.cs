@@ -3,6 +3,8 @@ using System;
 
 public partial class HandFan : Control
 {
+    public static readonly Vector2 NormalCardSize = new(168, 224);
+    public const float HoverScale = 15f / 14f;
     private int _selected = -1;
     private int _hovered = -1;
 
@@ -30,7 +32,7 @@ public partial class HandFan : Control
         if (count == 0) { _hovered = -1; return; }
         if (_hovered >= count) _hovered = -1;
 
-        var height = Mathf.Min(Size.Y * .84f, 232f);
+        var height = Mathf.Min(NormalCardSize.Y, Size.Y);
         var width = height * .75f;
         var desiredSpread = count switch { <= 1 => 0f, <= 4 => width * .98f, <= 6 => width * .8f, _ => width * .63f };
         var spread = count <= 1 ? 0 : Mathf.Min(desiredSpread, (Size.X - width - 24f) / (count - 1));
@@ -46,9 +48,10 @@ public partial class HandFan : Control
             if (_hovered >= 0) x += index < _hovered ? -28f : index > _hovered ? 28f : 0f;
             else if (_selected >= 0) x += index < _selected ? -18f : index > _selected ? 18f : 0f;
             var active = index == _hovered || (_hovered < 0 && index == _selected);
-            var y = 8f + distance * distance * 3.5f - (active ? 18f : 0f);
+            var curvedOffset = Mathf.Min(20f, distance * distance * 1.6f);
+            var y = active ? 8f : 8f + curvedOffset;
             var rotation = active ? 0f : Mathf.DegToRad(Mathf.Clamp(distance * 4f, -12f, 12f));
-            var scale = index == _hovered ? new Vector2(1.05f, 1.05f) : Vector2.One;
+            var scale = index == _hovered ? new Vector2(HoverScale, HoverScale) : Vector2.One;
             var position = new Vector2(x, y);
             var size = new Vector2(width, height);
             card.PivotOffset = size / 2f;

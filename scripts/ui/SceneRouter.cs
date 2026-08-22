@@ -83,6 +83,7 @@ public partial class SceneRouter : Node
 
     private void ChangeTo(string scenePath)
     {
+        AudioManager.Instance?.PlaySfx(GameSfx.ComicWhoosh);
         CurrentScenePath = scenePath;
         GetTree().ChangeSceneToFile(scenePath);
     }

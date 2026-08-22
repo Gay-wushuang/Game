@@ -1,10 +1,17 @@
-[gd_scene format=3 uid="uid://bdbvm06lr2634"]
+[gd_scene load_steps=10 format=3 uid="uid://bdbvm06lr2634"]
 
 [ext_resource type="Script" uid="uid://ttrlojf0jvv3" path="res://scripts/TrainingArena.cs" id="1"]
 [ext_resource type="Resource" path="res://data/training_content.tres" id="2"]
 [ext_resource type="Script" uid="uid://cqtw01fixb6xs" path="res://scripts/ui/HandFan.cs" id="3"]
 [ext_resource type="Script" uid="uid://deku36pnp0m80" path="res://scripts/ui/BattleRightSidebar.cs" id="4"]
 [ext_resource type="Script" uid="uid://c1t8v4ijbmavi" path="res://scripts/ui/TurnControl.cs" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/PassiveGate.cs" id="6"]
+[ext_resource type="Texture2D" path="res://assets/ui/battle/turn/turn_base.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/ui/battle/turn/ap_ring_mask.png" id="8"]
+[ext_resource type="Shader" path="res://assets/ui/battle/turn/ap_ring.gdshader" id="9"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ap_ring"]
+shader = ExtResource("9")
 
 [node name="TrainingArena" type="Control" unique_id=1310928227]
 layout_mode = 3
@@ -126,9 +133,12 @@ VS
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LeftRailSpacer" type="Control" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent" unique_id=166595401]
+[node name="PassiveGate" type="PanelContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent" unique_id=166595401]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 size_flags_vertical = 3
+script = ExtResource("6")
 
 [node name="Piles" type="GridContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent" unique_id=784574255]
 layout_mode = 2
@@ -164,18 +174,6 @@ custom_minimum_size = Vector2(78, 56)
 layout_mode = 2
 tooltip_text = "◇ 锦囊总览 · 30"
 text = "◇　30"
-
-[node name="ReservedPanel" type="PanelContainer" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent" unique_id=1025236192]
-visible = false
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-
-[node name="ReservedText" type="Label" parent="Margin/Root/MainRow/LeftSidebar/LeftMargin/LeftContent/ReservedPanel" unique_id=509053099]
-modulate = Color(1, 1, 1, 0.45)
-layout_mode = 2
-text = "特殊资源预留"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="CenterColumn" type="VBoxContainer" parent="Margin/Root/MainRow" unique_id=1160991793]
 layout_mode = 2
@@ -372,6 +370,50 @@ custom_minimum_size = Vector2(168, 168)
 layout_mode = 2
 size_flags_horizontal = 4
 script = ExtResource("5")
+
+[node name="BaseTexture" type="TextureRect" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea/TurnControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ApLightLayer" type="TextureRect" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea/TurnControl"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_ap_ring")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("8")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SuggestedOverlay" type="TextureRect" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea/TurnControl"]
+unique_name_in_owner = true
+visible = false
+modulate = Color(1, 0.78, 0.3, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="EndTurnButton" type="Button" parent="Margin/Root/MainRow/RightSidebar/RightMargin/RightContent/CommandArea/TurnControl" unique_id=1846995753]
 unique_name_in_owner = true

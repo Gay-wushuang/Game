@@ -18,7 +18,12 @@ config/icon="res://icon.svg"
 [autoload]
 
 SceneRouter="*res://scripts/ui/SceneRouter.cs"
+AudioManager="*res://scripts/audio/AudioManager.cs"
 SystemNotice="*res://scenes/components/system_notice.tscn"
+
+[audio]
+
+default_bus_layout="res://default_bus_layout.tres"
 
 [display]
 

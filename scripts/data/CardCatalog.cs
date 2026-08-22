@@ -5,7 +5,7 @@ using System.Text.Json;
 
 public static class CardCatalog
 {
-    public const int V1ExpectedCount = 30;
+    public const int V2ExpectedCount = 30;
 
     public static Godot.Collections.Array<CardDefinition> Load(string path = "res://data/generated/cards.generated.json")
     {
@@ -49,6 +49,7 @@ public static class CardCatalog
             target_key = targetKey,
             target_kind = ParseTarget(targetKey),
             rarity = row.GetProperty("rarity").GetInt32(),
+            cooldown_turns = row.TryGetProperty("cooldown", out var cooldown) ? cooldown.GetInt32() : 0,
             handler_key = handler,
             logic_mode = row.TryGetProperty("logic_mode", out var logicMode) ? logicMode.GetString() ?? "LUA" : "LUA",
             lua_script = row.TryGetProperty("lua_script", out var luaScript) ? luaScript.GetString() ?? "" : "",
@@ -66,6 +67,9 @@ public static class CardCatalog
         "SELECTED_ENEMY" => CardDefinition.TargetKind.Enemy,
         "ALLY_ENEMY_PAIR" => CardDefinition.TargetKind.AllyEnemyPair,
         "ANY_UNIT" => CardDefinition.TargetKind.AnyUnit,
+        "ALL_ENEMIES" => CardDefinition.TargetKind.AllEnemies,
+        "SELECT_CARDS" => CardDefinition.TargetKind.SelectCards,
+        "SET_GATE" => CardDefinition.TargetKind.SetGate,
         "SET_SLOT" => CardDefinition.TargetKind.SetSlot,
         _ => CardDefinition.TargetKind.None,
     };

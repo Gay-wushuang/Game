@@ -12,6 +12,7 @@
 /.codex_doc_review/
 *.log
 /.local/
+/.tmp/
 /outputs/
 __pycache__/
 /addons/lua-gdextension/*

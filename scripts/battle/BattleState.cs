@@ -4,6 +4,7 @@ using System.Linq;
 
 public sealed class BattleState
 {
+    public const int PassiveGateCapacity = 3;
     public const int DefaultActionPoints = 5;
     public sealed record PlacedPassive(string OwnerId, int SlotIndex, CardInstance Card);
     private sealed record ScheduledAction(int DueTurn, Action Action);
@@ -20,6 +21,10 @@ public sealed class BattleState
     public int EnemyActionPoints { get; set; } = DefaultActionPoints;
     public int PlayerNextTurnBonus { get; set; }
     public int EnemyNextTurnBonus { get; set; }
+    public int? PlayerNextTurnActionPointsOverride { get; set; }
+    public int? EnemyNextTurnActionPointsOverride { get; set; }
+    public bool PlayerZeroNextTurnActionPoints { get; set; }
+    public bool EnemyZeroNextTurnActionPoints { get; set; }
     public int PlayerReserveHeroCount { get; private set; }
     public int EnemyReserveHeroCount { get; private set; }
     public List<PlacedPassive> Passives { get; } = [];
@@ -61,8 +66,8 @@ public sealed class BattleState
     {
         if (IsFinished) return Outcome;
         
-        bool playerAlive = PlayerUnits.Any(x => x.Alive) || PlayerReserveHeroCount > 0;
-        bool enemyAlive = EnemyUnits.Any(x => x.Alive) || EnemyReserveHeroCount > 0;
+        bool playerAlive = PlayerUnits.Any(x => x.Alive && x.CountsForOutcome) || PlayerReserveHeroCount > 0;
+        bool enemyAlive = EnemyUnits.Any(x => x.Alive && x.CountsForOutcome) || EnemyReserveHeroCount > 0;
         
         if (!playerAlive && !enemyAlive)
         {
@@ -167,8 +172,16 @@ public sealed class BattleState
 
     internal bool SetPassive(string ownerId, int slotIndex, CardInstance card)
     {
-        if (Passives.Exists(placed => placed.OwnerId == ownerId && placed.SlotIndex == slotIndex)) return false;
+        if (slotIndex < 0 || slotIndex >= PassiveGateCapacity || Passives.Count(placed => placed.OwnerId == ownerId) >= PassiveGateCapacity || Passives.Exists(placed => placed.OwnerId == ownerId && placed.SlotIndex == slotIndex)) return false;
         Passives.Add(new(ownerId, slotIndex, card)); return true;
+    }
+
+    public int NextPassiveGateIndex(string ownerId)
+    {
+        var used = Passives.Where(placed => placed.OwnerId == ownerId).Select(placed => placed.SlotIndex).ToHashSet();
+        var index = 0;
+        while (used.Contains(index)) index++;
+        return index < PassiveGateCapacity ? index : -1;
     }
 
     /// <summary>
@@ -186,16 +199,10 @@ public sealed class BattleState
         var deck = (ownerId == "player") ? PlayerDeck : EnemyDeck;
         if (!deck.Hand.Contains(card)) { error = "锦囊不在手牌中"; return false; }
         
-        // 验证Slot索引有效
-        if (slotIndex < 0 || slotIndex >= 5) { error = "英雄槽索引无效"; return false; }
-        
-        // 验证目标英雄存在且Alive
-        var unit = GetSlotUnit(ownerId, slotIndex);
-        if (unit == null) { error = "该英雄槽没有英雄"; return false; }
-        if (!unit.Alive) { error = "该英雄已经阵亡，无法设置被动锦囊"; return false; }
-        
-        // 验证该槽无已有Passive
-        if (Passives.Exists(placed => placed.OwnerId == ownerId && placed.SlotIndex == slotIndex)) { error = "该英雄槽已经设置了一张被动锦囊"; return false; }
+        // 被动牌使用独立战门。slotIndex 是战门内稳定的放置顺序，不再指向英雄槽。
+        if (slotIndex < 0 || slotIndex >= PassiveGateCapacity) { error = $"战门最多放置 {PassiveGateCapacity} 张伏牌"; return false; }
+        if (Passives.Count(placed => placed.OwnerId == ownerId) >= PassiveGateCapacity) { error = $"战门最多放置 {PassiveGateCapacity} 张伏牌"; return false; }
+        if (Passives.Exists(placed => placed.OwnerId == ownerId && placed.SlotIndex == slotIndex)) { error = "该战门位置已被占用"; return false; }
         
         // 所有验证通过，提交状态
         Passives.Add(new(ownerId, slotIndex, card));
@@ -209,6 +216,7 @@ public sealed class BattleState
         => TryPlacePassive(ownerId, slotIndex, card, out _);
 
     public void RemovePassive(CardInstance card) => Passives.RemoveAll(placed => placed.Card == card);
+    public bool PreventsDiscard(string ownerId) => Passives.Any(placed => placed.OwnerId == ownerId && placed.Card.Definition.handler_key == "PREVENT_DISCARD");
     public IEnumerable<PlacedPassive> MatchingPassives(string ownerId, string eventKey) => Passives.FindAll(placed => placed.OwnerId == ownerId && Array.Exists(placed.Card.Definition.trigger_keys, key => key == eventKey));
     public void Schedule(int turns, Action action) => _scheduled.Add(new(Turn + Math.Max(1, turns), action));
     public void AdvanceTurn()

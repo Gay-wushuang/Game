@@ -13,7 +13,6 @@ public partial class UnitSlot : Control
     public string Side { get; set; } = "ally";
     public int SlotIndex { get; set; }
     public UnitState? Unit { get; private set; }
-    public CardInstance? PassiveCard { get; private set; }
     public string DisplayText => _info.Text;
 
     private string _preview = "";
@@ -24,7 +23,6 @@ public partial class UnitSlot : Control
     private Label _classIcon = null!;
     private Label _info = null!;
     private Label _status = null!;
-    private Control _passiveBack = null!;
     private Control _selectionHighlight = null!;
     private Control _targetHighlight = null!;
     private Button _interactionArea = null!;
@@ -40,7 +38,6 @@ public partial class UnitSlot : Control
         _classIcon = GetNode<Label>("%ClassIcon");
         _info = GetNode<Label>("%UnitInfo");
         _status = GetNode<Label>("%StatusIcons");
-        _passiveBack = GetNode<Control>("%PassiveCardSlot");
         _selectionHighlight = GetNode<Control>("%SelectionHighlight");
         _targetHighlight = GetNode<Control>("%TargetHighlight");
         _interactionArea = GetNode<Button>("%InteractionArea");
@@ -64,9 +61,6 @@ public partial class UnitSlot : Control
     public void SetUnit(UnitState? value) { Unit = value; _preview = ""; Refresh(); }
     public void SetActionPreview(string value) { _preview = value; Refresh(); }
     public void ClearActionPreview() { _preview = ""; if (IsNodeReady()) _targetHighlight.Visible = false; Refresh(); }
-    public bool SetPassive(CardInstance card) { if (PassiveCard != null || Unit == null) return false; PassiveCard = card; Refresh(); return true; }
-    public CardInstance? RemovePassive() { var card = PassiveCard; PassiveCard = null; Refresh(); return card; }
-    public void ClearPassive() { PassiveCard = null; Refresh(); }
     public void SetSelected(bool value)
     {
         if (!IsNodeReady()) return;
@@ -89,7 +83,6 @@ public partial class UnitSlot : Control
         _hpText.Visible = !empty;
         _classIcon.Visible = !empty;
         _status.Visible = !empty;
-        _passiveBack.Visible = !empty && PassiveCard != null;
         _targetHighlight.Visible = !string.IsNullOrEmpty(_preview);
         _interactionArea.Disabled = !_interactionEnabled || (empty && Side == "enemy");
         _interactionArea.MouseFilter = _interactionEnabled ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
