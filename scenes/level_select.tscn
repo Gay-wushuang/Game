@@ -153,3 +153,32 @@ offset_right = 1813.0
 offset_bottom = 949.0
 
 [node name="PlayerBar" parent="." instance=ExtResource("4_bar")]
+
+[node name="SaveHint" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 998.0
+offset_top = 655.0
+offset_right = 1815.0
+offset_bottom = 698.0
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+
+[node name="AbandonButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 1425.0
+offset_top = 970.0
+offset_right = 1815.0
+offset_bottom = 1034.0
+text = "放弃当前对局"
+
+[node name="DeleteConfirm" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "永久删除存档"
+ok_button_text = "确定删除"
+cancel_button_text = "取消"
+
+[node name="LoadConfirm" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "读取存档"
+ok_button_text = "放弃并读取"
+cancel_button_text = "取消"

@@ -69,9 +69,8 @@ public partial class CardTile : Button
     }
     public void SetActionPreview(string target, string result)
     {
-        if (_faceDown) return;
-        if (HasFormalVisual()) TooltipText = $"{target}\n预计：{result}";
-        else Text = $"{_baseText}\n\n→ {target}\n预计：{result}";
+        // Action previews are displayed by the battlefield context UI. Keeping
+        // this hook avoids coupling callers to the card visual implementation.
     }
     public void ClearActionPreview()
     {

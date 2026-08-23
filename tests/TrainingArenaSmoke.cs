@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 public partial class TrainingArenaSmoke : Node
@@ -15,12 +16,19 @@ public partial class TrainingArenaSmoke : Node
     private async Task Run()
     {
         BattleOutcomeTest.Run();
+
+		var catalog = CardCatalog.Load(); var selectedIds = catalog.Where(card => card.card_kind == CardDefinition.CardKind.Active).Take(10).Concat(catalog.Where(card => card.card_kind == CardDefinition.CardKind.Passive).Take(5)).Select(card => card.id.ToString()).ToList();
+		GameSaveManager.SelectedDeckIds.Clear(); GameSaveManager.SelectedDeckIds.AddRange(selectedIds);
+		var prepare = GD.Load<PackedScene>("res://scenes/prepare_ui.tscn").Instantiate<PrepareUi>(); AddChild(prepare); await Frame(); await Frame();
+		Check(prepare.GetNode<Label>("%DeckCount").Text.Contains("主动 10/10") && prepare.GetNode<Label>("%DeckCount").Text.Contains("被动 5/5"), "备战页没有显示10主动/5被动计数"); Check(prepare.GetNode<GridContainer>("%CardGrid").GetChildCount() == 8, "备战页每页没有展示8张真实卡牌"); prepare.QueueFree(); await Frame();
+		var levelSelect = GD.Load<PackedScene>("res://scenes/level_select.tscn").Instantiate<LevelSelect>(); AddChild(levelSelect); await Frame(); Check(levelSelect.GetNode<Button>("Save1Save").Text == "读取" && levelSelect.GetNode<ConfirmationDialog>("%DeleteConfirm") != null, "存档槽没有改为读取/删除及二次确认"); levelSelect.QueueFree(); await Frame();
         
         var arena = GD.Load<PackedScene>("res://scenes/training_arena.tscn").Instantiate<TrainingArena>(); AddChild(arena); await Frame(); await Frame();
         Check(arena.content.heroes.Count == 4, "必须加载4张英雄资源"); Check(arena.content.heroes[1].character_number == 2, "刺客编号必须为2");
         arena.GetNode<CheckButton>("%TestMode").ButtonPressed = true; arena.GetNode<Button>("%OpenTestEditor").EmitSignal(Button.SignalName.Pressed); await Frame(); arena.GetNode<OptionButton>("%Category").Select(2); arena.GetNode<OptionButton>("%Category").EmitSignal(OptionButton.SignalName.ItemSelected, 2); await Frame(); var heroTargets = arena.GetNode<OptionButton>("%Target"); Check(heroTargets.GetItemText(0) == "1 · 铁卫 · 先锋", "先锋必须显示编号、名称和职业"); Check(heroTargets.GetItemText(1) == "2 · 训练用木桩 · 刺客", "刺客必须同时显示编号、名称和职业"); Check(heroTargets.GetItemText(2) == "3 · 风羽 · 斥候", "斥候必须显示编号、名称和职业"); Check(heroTargets.GetItemText(3) == "4 · 律祷 · 祭司", "祭司必须显示编号、名称和职业"); arena.GetNode<AcceptDialog>("%TestEditorDialog").Hide();
         Check(arena.content.cards.Count == 30 && arena.content.cards.Select(c => c.id.ToString()).Distinct().Count() == 30, "规范化后的30张锦囊未完整加载");
         Check(arena.content.cards.Count(c => c.card_kind == CardDefinition.CardKind.Active) == 15 && arena.content.cards.Count(c => c.card_kind == CardDefinition.CardKind.Passive) == 15, "主动/被动锦囊分类错误");
+		var initialDeck = arena.CaptureSave(); Check(initialDeck.SelectedDeckIds.Count == 15 && initialDeck.PlayerDeck.Draw.Count + initialDeck.PlayerDeck.Hand.Count == 15, "对局没有使用备战选择的15张锦囊"); Check(JsonSerializer.Deserialize<BattleSave>(JsonSerializer.Serialize(initialDeck))?.Turn == 1, "对局存档无法完成JSON往返");
         Check(arena.content.cards.All(c => c.logic_mode == "LUA") && arena.content.cards.Select(c => c.lua_script).Distinct().Count() == 30, "30张卡没有全部使用独立Lua入口");
         CardSemanticValidator.Validate(arena.content.cards);
         using (var resolver = new CardResolver()) { Check(resolver.LuaAvailable, "Lua GDExtension未加载"); Check(resolver.ValidateSandboxIsolation(out var isolationError), "Lua沙盒隔离失败：" + isolationError); }

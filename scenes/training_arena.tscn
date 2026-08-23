@@ -554,6 +554,16 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "重置训练"
 
+[node name="SaveManagerButton" type="Button" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "存档管理"
+
+[node name="SaveExitButton" type="Button" parent="SettingsDialog/Settings"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "保存并退出"
+
 [node name="TestEditorDialog" type="AcceptDialog" parent="." unique_id=905354935]
 unique_name_in_owner = true
 title = "测试数据编辑器"

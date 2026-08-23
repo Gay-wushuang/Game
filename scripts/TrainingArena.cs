@@ -28,6 +28,7 @@ public partial class TrainingArena : Control
 		_status = GetNode<Label>("%Status"); _hand = GetNode<HandFan>("%Hand"); _rightSidebar = GetNode<BattleRightSidebar>("%ContentHost"); _turnControl = GetNode<TurnControl>("%TurnControl"); _passiveGate = GetNode<PassiveGate>("%PassiveGate"); _passiveGate.DetailRequested += ShowCardDetail;
 		_battle.Events.Subscribe(BattleEvent.BattleEnded, HandleBattleEnd);
 		ConnectControls(); CreateSlots(); ResetTraining();
+		if (GameSaveManager.Instance.ConsumePendingLoad() is { } pendingSave) RestoreSave(pendingSave);
 		if (DisplayServer.GetName() != "headless") { AudioManager.Instance?.PlayBattleMusic(); AudioManager.Instance?.PlaySfx(GameSfx.Horn); }
 	}
 	public override void _ExitTree() => _cardResolver?.Dispose();
@@ -62,6 +63,8 @@ public partial class TrainingArena : Control
 		N<Button>("OpenTestEditor").Pressed += OpenTestEditor; N<OptionButton>("Category").ItemSelected += i => LoadTestCategory((int)i); N<OptionButton>("Target").ItemSelected += i => LoadTestTarget((int)i);
 		N<Button>("ApplyTestValues").Pressed += ApplyTestValues; N<AcceptDialog>("StarChoiceDialog").Confirmed += () => ApplyStarChoice(true); N<AcceptDialog>("StarChoiceDialog").Canceled += () => ApplyStarChoice(false);
 		N<Button>("ReloadLuaButton").Pressed += ReloadCardScripts;
+		N<Button>("SaveExitButton").Pressed += SaveAndExit;
+		N<Button>("SaveManagerButton").Pressed += OpenSaveManager;
 	}
 	private void HandleBattlefieldBlankInput(InputEvent input)
 	{
@@ -76,7 +79,7 @@ public partial class TrainingArena : Control
 	public void ResetTraining()
 	{
 		_heroBag.Clear(); _aiHeroBag.Clear(); foreach (var h in content.heroes) { _heroBag.Add(new(h)); _aiHeroBag.Add(new(h, "ai")); }
-		_battle.ResetRandom(); _battle.ClearSlotUnits(); _deck.Setup(content.cards, "player"); _deck.Draw(4); _aiDeck.Setup(content.cards, "ai");
+		_battle.ResetRandom(); _battle.ClearSlotUnits(); var selectedDeck = ResolveSelectedDeck(); _deck.Setup(selectedDeck, "player"); _deck.Draw(4); _aiDeck.Setup(selectedDeck, "ai");
 		AudioManager.Instance?.PlaySfx(GameSfx.Shuffle);
 		_ap = BattleState.DefaultActionPoints; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = BattleState.DefaultActionPoints; _battle.EnemyActionPoints = BattleState.DefaultActionPoints; _battle.PlayerNextTurnBonus = 0; _battle.EnemyNextTurnBonus = 0; _battle.PlayerNextTurnActionPointsOverride = null; _battle.EnemyNextTurnActionPointsOverride = null; _battle.Passives.Clear(); _battle.ResetOutcome();
 		_battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count);
@@ -87,6 +90,54 @@ public partial class TrainingArena : Control
 		SynchronizeBattleState();
 		CancelSelection(false); AddLog($"[color=75d7ff]系统[/color] {(N<CheckButton>("DummyMode").ButtonPressed ? "三职业稻草人就位" : "AI持有4张英雄牌")}，双方开局各抽取4张锦囊。"); _status.Text = "打开英雄卡包，选择英雄并部署到我方空位"; RefreshAll();
 	}
+	private List<CardDefinition> ResolveSelectedDeck()
+	{
+		var selected = content.cards.Where(card => GameSaveManager.SelectedDeckIds.Contains(card.id.ToString())).ToList();
+		if (selected.Count(card => card.card_kind == CardDefinition.CardKind.Active) == 10 && selected.Count(card => card.card_kind == CardDefinition.CardKind.Passive) == 5) return selected;
+		return content.cards.Where(card => card.card_kind == CardDefinition.CardKind.Active).Take(10).Concat(content.cards.Where(card => card.card_kind == CardDefinition.CardKind.Passive).Take(5)).ToList();
+	}
+	private void SaveAndExit()
+	{
+		var manager = GameSaveManager.Instance; var save = CaptureSave(); var empty = manager.FirstEmptySlot();
+		N<AcceptDialog>("SettingsDialog").Hide();
+		if (empty > 0) { manager.Write(empty, save); SystemNotice.Instance.Show($"已保存到存档 {empty}"); SceneRouter.Instance.GoTo(SceneRouter.Scenes.MainMenu); return; }
+		manager.PendingSave = save; manager.SavingBecauseFull = true; SceneRouter.Instance.GoTo(SceneRouter.Scenes.LevelSelect);
+	}
+	private void OpenSaveManager()
+	{
+		GameSaveManager.Instance.PendingSave = CaptureSave(); GameSaveManager.Instance.SavingBecauseFull = false;
+		N<AcceptDialog>("SettingsDialog").Hide(); SceneRouter.Instance.GoTo(SceneRouter.Scenes.LevelSelect);
+	}
+	public BattleSave CaptureSave()
+	{
+		return new BattleSave { Turn = _turn, ActionPoints = _ap, PlayerDeployedThisTurn = _playerDeployedThisTurn, EnemyDeployedThisTurn = _aiDeployedThisTurn, EnemyActionPoints = _battle.EnemyActionPoints, PlayerNextTurnBonus = _battle.PlayerNextTurnBonus, EnemyNextTurnBonus = _battle.EnemyNextTurnBonus, PlayerNextTurnActionPointsOverride = _battle.PlayerNextTurnActionPointsOverride, EnemyNextTurnActionPointsOverride = _battle.EnemyNextTurnActionPointsOverride, PlayerZeroNextTurnActionPoints = _battle.PlayerZeroNextTurnActionPoints, EnemyZeroNextTurnActionPoints = _battle.EnemyZeroNextTurnActionPoints, LeaderId = _leaderId, LeaderTurns = _leaderTurns, FreeCardId = _freeCardId, CancelNextEnemyEffect = _cancelNextEnemyEffect,
+			SelectedDeckIds = ResolveSelectedDeck().Select(card => card.id.ToString()).ToList(), PlayerHeroBagIds = _heroBag.Select(hero => hero.Definition.id.ToString()).ToList(), EnemyHeroBagIds = _aiHeroBag.Select(hero => hero.Definition.id.ToString()).ToList(),
+			PlayerSlots = _allies.Select(slot => SaveUnit(slot.Unit)).ToList(), EnemySlots = _enemies.Select(slot => SaveUnit(slot.Unit)).ToList(), PlayerDeck = SaveDeck(_deck), EnemyDeck = SaveDeck(_aiDeck),
+			Passives = _battle.Passives.Select(placed => new PassiveSave { OwnerId = placed.OwnerId, SlotIndex = placed.SlotIndex, Card = SaveCard(placed.Card) }).ToList() };
+	}
+	private void RestoreSave(BattleSave save)
+	{
+		GameSaveManager.SelectedDeckIds.Clear(); GameSaveManager.SelectedDeckIds.AddRange(save.SelectedDeckIds);
+		_turn = save.Turn; _ap = save.ActionPoints; _playerDeployedThisTurn = save.PlayerDeployedThisTurn; _aiDeployedThisTurn = save.EnemyDeployedThisTurn; _leaderId = save.LeaderId; _leaderTurns = save.LeaderTurns; _freeCardId = save.FreeCardId; _cancelNextEnemyEffect = save.CancelNextEnemyEffect; _battle.Turn = _turn; _battle.PlayerActionPoints = _ap; _battle.EnemyActionPoints = save.EnemyActionPoints; _battle.PlayerNextTurnBonus = save.PlayerNextTurnBonus; _battle.EnemyNextTurnBonus = save.EnemyNextTurnBonus; _battle.PlayerNextTurnActionPointsOverride = save.PlayerNextTurnActionPointsOverride; _battle.EnemyNextTurnActionPointsOverride = save.EnemyNextTurnActionPointsOverride; _battle.PlayerZeroNextTurnActionPoints = save.PlayerZeroNextTurnActionPoints; _battle.EnemyZeroNextTurnActionPoints = save.EnemyZeroNextTurnActionPoints; _battle.Passives.Clear();
+		_heroBag.Clear(); foreach (var id in save.PlayerHeroBagIds) if (FindHero(id) is { } hero) _heroBag.Add(new(hero));
+		_aiHeroBag.Clear(); foreach (var id in save.EnemyHeroBagIds) if (FindHero(id) is { } hero) _aiHeroBag.Add(new(hero, "ai"));
+		RestoreDeck(_deck, save.PlayerDeck); RestoreDeck(_aiDeck, save.EnemyDeck);
+		for (var i = 0; i < _allies.Count; i++) _allies[i].SetUnit(i < save.PlayerSlots.Count ? LoadUnit(save.PlayerSlots[i]) : null);
+		for (var i = 0; i < _enemies.Count; i++) _enemies[i].SetUnit(i < save.EnemySlots.Count ? LoadUnit(save.EnemySlots[i]) : null);
+		foreach (var passive in save.Passives) { var card = LoadCard(passive.Card); var deck = passive.OwnerId == "player" ? _deck : _aiDeck; deck.Hand.Add(card); if (_battle.TryPlacePassive(passive.OwnerId, passive.SlotIndex, card)) deck.SetPassive(card); }
+		_battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count); N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; SynchronizeBattleState(); CancelSelection(false); _status.Text = "对局存档已读取"; RefreshAll();
+	}
+	private static DeckSave SaveDeck(DeckState deck) => new() { Draw = deck.DrawPile.Select(SaveCard).ToList(), Hand = deck.Hand.Select(SaveCard).ToList(), Discard = deck.DiscardPile.Select(SaveCard).ToList(), Exile = deck.ExilePile.Select(SaveCard).ToList() };
+	private static CardSave SaveCard(CardInstance card) => new() { Id = card.Definition.id.ToString(), OwnerId = card.OwnerId, OriginalOwnerId = card.OriginalOwnerId, CostModifier = card.RuntimeCostModifier, CostOverride = card.RuntimeCostOverride, Cooldown = card.CooldownRemaining, Temporary = card.IsTemporaryCopy, ExileAtTurnEnd = card.ExileAtTurnEnd, ReturnToOriginalOwnerDiscardAtTurnEnd = card.ReturnToOriginalOwnerDiscardAtTurnEnd, EmergencyUsed = card.EmergencyUsed };
+	private CardInstance LoadCard(CardSave save) { var definition = content.cards.First(card => card.id.ToString() == save.Id); return new(definition, save.OwnerId, save.OriginalOwnerId) { RuntimeCostModifier = save.CostModifier, RuntimeCostOverride = save.CostOverride, CooldownRemaining = save.Cooldown, IsTemporaryCopy = save.Temporary, ExileAtTurnEnd = save.ExileAtTurnEnd, ReturnToOriginalOwnerDiscardAtTurnEnd = save.ReturnToOriginalOwnerDiscardAtTurnEnd, EmergencyUsed = save.EmergencyUsed }; }
+	private void RestoreDeck(DeckState deck, DeckSave save) { deck.DrawPile.Clear(); deck.Hand.Clear(); deck.DiscardPile.Clear(); deck.ExilePile.Clear(); deck.DrawPile.AddRange(save.Draw.Select(LoadCard)); deck.Hand.AddRange(save.Hand.Select(LoadCard)); deck.DiscardPile.AddRange(save.Discard.Select(LoadCard)); deck.ExilePile.AddRange(save.Exile.Select(LoadCard)); }
+	private static UnitSave? SaveUnit(UnitState? unit) => unit == null ? null : new() { DefinitionId = unit.Id, Name = unit.Name, Type = unit.Type, Hp = unit.Hp, MaxHp = unit.MaxHp, Attack = unit.Attack, Exp = unit.Exp, Star = unit.Star, HasAttacked = unit.HasAttackedThisTurn, SkillTurns = unit.SkillTurns, TauntTurns = unit.TauntTurns, DebuffTurns = unit.DebuffTurns, ShieldRatio = unit.ShieldRatio, ShieldTurns = unit.ShieldTurns, FreeSelfCards = unit.FreeSelfCards, AttackRestore = unit.AttackRestore, LinkTurns = unit.LinkTurns, GrudgeStacks = unit.GrudgeStacks, GrudgeAttackPenaltyPerStack = unit.GrudgeAttackPenaltyPerStack, CeasefireTurns = unit.CeasefireTurns, DamageTakenMultiplier = unit.DamageTakenMultiplier, LinkedEnemy = unit.LinkedEnemy, DeathHandled = unit.DeathHandled, ExtraAttacksRemaining = unit.ExtraAttacksRemaining, ShieldPoints = unit.ShieldPoints };
+	private UnitState? LoadUnit(UnitSave? save)
+	{
+		if (save == null) return null; ContentDefinition? definition = FindHero(save.DefinitionId); definition ??= content.monsters.FirstOrDefault(monster => monster.id.ToString() == save.DefinitionId); if (definition == null) return null;
+		return new UnitState { Definition = definition, Name = save.Name, Type = save.Type, Hp = save.Hp, MaxHp = save.MaxHp, Attack = save.Attack, Exp = save.Exp, Star = save.Star, HasAttackedThisTurn = save.HasAttacked, SkillTurns = save.SkillTurns, TauntTurns = save.TauntTurns, DebuffTurns = save.DebuffTurns, ShieldRatio = save.ShieldRatio, ShieldTurns = save.ShieldTurns, FreeSelfCards = save.FreeSelfCards, AttackRestore = save.AttackRestore, LinkTurns = save.LinkTurns, GrudgeStacks = save.GrudgeStacks, GrudgeAttackPenaltyPerStack = save.GrudgeAttackPenaltyPerStack, CeasefireTurns = save.CeasefireTurns, DamageTakenMultiplier = save.DamageTakenMultiplier, LinkedEnemy = save.LinkedEnemy, DeathHandled = save.DeathHandled, ExtraAttacksRemaining = save.ExtraAttacksRemaining, ShieldPoints = save.ShieldPoints };
+	}
+	private HeroDefinition? FindHero(string id) => content.heroes.FirstOrDefault(hero => hero.id.ToString() == id);
 	private static void s_set(UnitSlot s, UnitState? u) => s.SetUnit(u);
 	private void SynchronizeBattleState()
 	{
@@ -144,7 +195,7 @@ public partial class TrainingArena : Control
 			_status.Text = $"被动锦囊「{card.Definition.display_name}」已预览；再次点击该牌设置到战门";
 			return;
 		}
-		if (card.Definition.target_kind is CardDefinition.TargetKind.None or CardDefinition.TargetKind.AllEnemies or CardDefinition.TargetKind.SelectCards) { if (_pendingCard == card && _pendingCardTarget == -2) await UseNoTargetCard(card); else { PrepareCardSelection(card, -2); var i = _deck.Hand.IndexOf(card); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview("结算预览", NoTargetPreview(card)); _status.Text = $"{card.Definition.display_name}效果已写入卡面；再次点击该牌确认"; } return; }
+		if (card.Definition.target_kind is CardDefinition.TargetKind.None or CardDefinition.TargetKind.AllEnemies or CardDefinition.TargetKind.SelectCards) { if (_pendingCard == card && _pendingCardTarget == -2) await UseNoTargetCard(card); else { PrepareCardSelection(card, -2); _status.Text = $"{card.Definition.display_name}：{NoTargetPreview(card)}；再次点击该牌确认"; } return; }
 		var hasFreeSelfTarget = card.Definition.target_kind == CardDefinition.TargetKind.AllyHero && _allies.Any(slot => slot.Unit is { Alive: true, Id: "hero_role_3", Star: >= 5, FreeSelfCards: > 0 });
 		if (EffectiveCost(card) > _ap && !hasFreeSelfTarget) { _status.Text = "行动点不足"; return; }
 		PrepareCardSelection(card, -1); _status.Text = card.Definition.target_kind == CardDefinition.TargetKind.Enemy ? $"锦囊「{card.Definition.display_name}」：请选择敌方英雄预览效果" : $"锦囊「{card.Definition.display_name}」：请选择我方英雄预览效果";
