@@ -4,30 +4,40 @@ using System.Linq;
 
 public partial class PrepareUi : Control
 {
-    private const int PageSize = 8;
     private readonly HashSet<string> _selected = [];
     private Godot.Collections.Array<CardDefinition> _cards = [];
+    private Godot.Collections.Array<HeroDefinition> _heroes = [];
     private PackedScene _cardScene = null!;
     private GridContainer _grid = null!;
-    private int _page;
+    private ScrollContainer _scroll = null!;
+    private int _category = 1;
+    private static readonly string[] CategoryNames = ["英雄卡", "主动锦囊", "被动锦囊"];
 
     public override void _Ready()
     {
-        _cards = CardCatalog.Load(); _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn"); _grid = GetNode<GridContainer>("%CardGrid");
+        _cards = CardCatalog.Load(); _heroes = GD.Load<TrainingContent>("res://data/training_content.tres").heroes; _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn"); _grid = GetNode<GridContainer>("%CardGrid"); _scroll = GetNode<ScrollContainer>("%CardScroll");
         foreach (var id in GameSaveManager.SelectedDeckIds) _selected.Add(id);
-        GetNode<Button>("%BackButton").Pressed += () => SceneRouter.Instance.Back(); GetNode<Button>("%PrevButton").Pressed += () => ChangePage(-1); GetNode<Button>("%NextButton").Pressed += () => ChangePage(1); GetNode<Button>("%StartButton").Pressed += OnStartPressed;
+        GetNode<Button>("%BackButton").Pressed += () => SceneRouter.Instance.Back(); GetNode<Button>("%PrevButton").Pressed += () => ChangeCategory(-1); GetNode<Button>("%NextButton").Pressed += () => ChangeCategory(1); GetNode<Button>("%StartButton").Pressed += OnStartPressed;
         RefreshCards();
     }
 
-    private void ChangePage(int delta) { _page = Mathf.Clamp(_page + delta, 0, (_cards.Count - 1) / PageSize); RefreshCards(); }
+    private void ChangeCategory(int delta) { _category = Mathf.PosMod(_category + delta, CategoryNames.Length); RefreshCards(); }
     private void RefreshCards()
     {
         foreach (var child in _grid.GetChildren()) child.QueueFree();
-        foreach (var definition in _cards.Skip(_page * PageSize).Take(PageSize))
+        if (_category == 0)
         {
-            var card = new CardInstance(definition); var tile = _cardScene.Instantiate<CardTile>(); _grid.AddChild(tile); tile.Setup(card); tile.CustomMinimumSize = CardTile.NativeSize; tile.ToggleMode = true; tile.SetPressedNoSignal(_selected.Contains(definition.id.ToString())); ApplySelectionStyle(tile, tile.ButtonPressed); tile.CardChosen += _ => ToggleCard(definition, tile);
+            foreach (var definition in _heroes)
+            {
+                var hero = new HeroCardInstance(definition); var tile = new Button { CustomMinimumSize = new Vector2(255, 340), Text = $"{definition.character_number} · {definition.display_name}\n{definition.TypeName()}\n\nHP {hero.State.MaxHp}\nATK {hero.State.Attack}\n★{hero.State.Star}", TooltipText = definition.description, MouseDefaultCursorShape = CursorShape.PointingHand };
+                _grid.AddChild(tile);
+            }
         }
-        GetNode<Button>("%PrevButton").Disabled = _page == 0; GetNode<Button>("%NextButton").Disabled = (_page + 1) * PageSize >= _cards.Count; UpdateCount();
+        else foreach (var definition in _cards.Where(card => card.card_kind == (_category == 1 ? CardDefinition.CardKind.Active : CardDefinition.CardKind.Passive)))
+        {
+            var card = new CardInstance(definition); var tile = _cardScene.Instantiate<CardTile>(); _grid.AddChild(tile); tile.Setup(card); tile.Flat = false; tile.CustomMinimumSize = new Vector2(255, 340); tile.ToggleMode = true; tile.SetPressedNoSignal(_selected.Contains(definition.id.ToString())); ApplySelectionStyle(tile, tile.ButtonPressed); tile.CardChosen += _ => ToggleCard(definition, tile);
+        }
+        _scroll.SetDeferred(ScrollContainer.PropertyName.ScrollVertical, 0); UpdateCount();
     }
     private void ToggleCard(CardDefinition definition, CardTile tile)
     {
@@ -46,7 +56,7 @@ public partial class PrepareUi : Control
     private int Count(CardDefinition.CardKind kind) => _cards.Count(card => card.card_kind == kind && _selected.Contains(card.id.ToString()));
     private void UpdateCount()
     {
-        var active = Count(CardDefinition.CardKind.Active); var passive = Count(CardDefinition.CardKind.Passive); GetNode<Label>("%DeckCount").Text = $"主动 {active}/10　被动 {passive}/5　（第 {_page + 1}/{(_cards.Count + PageSize - 1) / PageSize} 页）";
+        var active = Count(CardDefinition.CardKind.Active); var passive = Count(CardDefinition.CardKind.Passive); GetNode<Label>("%DeckCount").Text = $"{CategoryNames[_category]}　　主动 {active}/10　被动 {passive}/5";
         GetNode<Label>("%DeckValidation").Text = active == 10 && passive == 5 ? "牌组符合出战条件" : active < 10 ? $"主动锦囊还少 {10 - active} 张" : passive < 5 ? $"被动锦囊还少 {5 - passive} 张" : "牌组数量不符合要求";
     }
     private void OnStartPressed()

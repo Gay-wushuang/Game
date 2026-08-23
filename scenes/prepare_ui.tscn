@@ -129,30 +129,44 @@ offset_bottom = 858.0
 
 [node name="PlayerBar" parent="." instance=ExtResource("4_bar")]
 
-[node name="CardGrid" type="GridContainer" parent="."]
+[node name="CardPoolBackdrop" type="ColorRect" parent="."]
+offset_left = 746.0
+offset_top = 108.0
+offset_right = 1834.0
+offset_bottom = 858.0
+mouse_filter = 2
+color = Color(0.105, 0.125, 0.145, 1)
+
+[node name="CardScroll" type="ScrollContainer" parent="."]
 unique_name_in_owner = true
-offset_left = 850.0
-offset_top = 170.0
-offset_right = 1622.0
-offset_bottom = 650.0
-theme_override_constants/h_separation = 24
-theme_override_constants/v_separation = 24
+offset_left = 746.0
+offset_top = 108.0
+offset_right = 1834.0
+offset_bottom = 858.0
+horizontal_scroll_mode = 0
+
+[node name="CardGrid" type="GridContainer" parent="CardScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 23
+theme_override_constants/v_separation = 30
 columns = 4
 
 [node name="DeckCount" type="Label" parent="."]
 unique_name_in_owner = true
-offset_left = 850.0
-offset_top = 92.0
-offset_right = 1622.0
-offset_bottom = 132.0
+offset_left = 746.0
+offset_top = 65.0
+offset_right = 1834.0
+offset_bottom = 103.0
 theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 
 [node name="DeckValidation" type="Label" parent="."]
 unique_name_in_owner = true
-offset_left = 850.0
-offset_top = 690.0
-offset_right = 1622.0
-offset_bottom = 730.0
+offset_left = 746.0
+offset_top = 865.0
+offset_right = 1834.0
+offset_bottom = 905.0
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
