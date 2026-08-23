@@ -137,7 +137,7 @@ public partial class PassiveGate : PanelContainer
                 row.AddChild(tile);
                 tile.Setup(placed.Card);
                 ExpandedPlayerCard ??= tile;
-                tile.DetailRequested += card =>
+                tile.CardChosen += card =>
                 {
                     _expandedPanel.Hide();
                     DetailRequested?.Invoke(card);

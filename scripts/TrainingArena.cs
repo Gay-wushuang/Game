@@ -33,7 +33,7 @@ public partial class TrainingArena : Control
 	public override void _ExitTree() => _cardResolver?.Dispose();
 	public override void _UnhandledInput(InputEvent input)
 	{
-		if (input is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right })
+		if (input is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
 		{
 			if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) CancelSelection();
 			GetViewport().SetInputAsHandled();
@@ -52,9 +52,10 @@ public partial class TrainingArena : Control
 	private void ConnectControls()
 	{
 		N<Control>("Battlefield").GuiInput += HandleBattlefieldBlankInput;
+		N<Control>("Hand").GuiInput += HandleBattlefieldBlankInput;
 		N<Button>("HeroBag").Pressed += OpenHeroBag; N<Button>("DrawPile").Pressed += () => ShowPile("抽牌堆", _deck.DrawPile);
 		N<Button>("DiscardPile").Pressed += () => ShowPile("弃牌堆", _deck.DiscardPile); N<Button>("CatalogButton").Pressed += ShowCatalog;
-		N<Button>("EndTurnButton").Pressed += async () => { AudioManager.Instance?.PlaySfx(GameSfx.NextRound); await EndTurn(); };
+		N<Button>("EndTurnButton").Pressed += async () => await EndTurn();
 		N<Button>("LogButton").Pressed += () => N<AcceptDialog>("LogDialog").PopupCenteredRatio(.72f); N<Button>("SettingsButton").Pressed += () => N<AcceptDialog>("SettingsDialog").PopupCenteredRatio(.56f);
 		N<Button>("ResetButton").Pressed += () => { N<AcceptDialog>("SettingsDialog").Hide(); ResetTraining(); };
 		N<CheckButton>("DummyMode").Toggled += _ => ResetTraining(); N<CheckButton>("TestMode").Toggled += TestModeToggled;
@@ -64,13 +65,13 @@ public partial class TrainingArena : Control
 	}
 	private void HandleBattlefieldBlankInput(InputEvent input)
 	{
-		if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right }) return;
+		if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }) return;
 		if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) CancelSelection();
 		AcceptEvent();
 	}
 	private void CreateSlots()
 	{
-		for (var i = 0; i < 5; i++) { var enemy = _slotScene.Instantiate<UnitSlot>(); enemy.Side = "enemy"; enemy.SlotIndex = i; enemy.SlotChosen += EnemyChosen; enemy.DetailRequested += ShowUnitDetail; enemy.CardDropped += OnCardDropped; N<HBoxContainer>("EnemyRow").AddChild(enemy); _enemies.Add(enemy); var ally = _slotScene.Instantiate<UnitSlot>(); ally.Side = "ally"; ally.SlotIndex = i; ally.SlotChosen += AllyChosen; ally.DetailRequested += ShowUnitDetail; ally.CardDropped += OnCardDropped; ally.SkillRequested += ContextSkillRequested; N<HBoxContainer>("AllyRow").AddChild(ally); _allies.Add(ally); }
+		for (var i = 0; i < 5; i++) { var enemy = _slotScene.Instantiate<UnitSlot>(); enemy.Side = "enemy"; enemy.SlotIndex = i; enemy.SlotChosen += EnemyChosen; enemy.CardDropped += OnCardDropped; N<HBoxContainer>("EnemyRow").AddChild(enemy); _enemies.Add(enemy); var ally = _slotScene.Instantiate<UnitSlot>(); ally.Side = "ally"; ally.SlotIndex = i; ally.SlotChosen += AllyChosen; ally.CardDropped += OnCardDropped; ally.SkillRequested += ContextSkillRequested; N<HBoxContainer>("AllyRow").AddChild(ally); _allies.Add(ally); }
 	}
 	public void ResetTraining()
 	{
@@ -110,17 +111,18 @@ public partial class TrainingArena : Control
 		foreach (var hc in _heroBag) { var h = hc.Definition; var b = new Button { Text = $"{HeroIdentity(h)} · {h.TypeName()}　HP {h.max_hp}　攻击 {h.attack}\n{h.description}", SizeFlagsVertical = Control.SizeFlags.ExpandFill }; b.Pressed += () => SelectHero(hc); list.AddChild(b); }
 		N<AcceptDialog>("HeroBagDialog").PopupCenteredRatio(.62f);
 	}
-	public void SelectHero(HeroCardInstance hero) { if (_battle.IsFinished) return; if (_playerDeployedThisTurn) { _status.Text = "本回合已经部署过英雄，每回合最多上场1名"; return; } _pendingHero = hero; _pendingCard = null; N<AcceptDialog>("HeroBagDialog").Hide(); _status.Text = $"免费部署 {hero.Definition.display_name}：点击一个我方空位"; }
+	public void SelectHero(HeroCardInstance hero) { if (_battle.IsFinished) return; if (_playerDeployedThisTurn) { _status.Text = "本回合已经部署过英雄，每回合最多上场1名"; return; } CancelSelection(false); _pendingHero = hero; _rightSidebar.ShowUnit(hero.State, false); N<AcceptDialog>("HeroBagDialog").Hide(); _status.Text = $"免费部署 {hero.Definition.display_name}：点击一个我方空位"; }
 	private async void AllyChosen(UnitSlot slot)
 	{
 		if (_battle.IsFinished) return;
 		if (_pendingHero != null) { if (_playerDeployedThisTurn) { _status.Text = "本回合已经部署过英雄"; return; } if (slot.Unit?.Alive == true) { _status.Text = "该站位已有存活英雄"; return; } var hero = _pendingHero; slot.SetUnit(hero.Deploy()); _battle.SetSlotUnit("player", slot.SlotIndex, slot.Unit); _heroBag.Remove(hero); _battle.DecrementReserveHero("player"); _playerDeployedThisTurn = true; if (_leaderId == "") { _leaderId = hero.Definition.id.ToString(); _leaderTurns = hero.Definition.CustomValue("leader_duration", 0).AsInt32(); ApplyLeaderBonus(); } else if (_leaderId == "hero_role_1" && (_leaderTurns > 0 || LeaderIsStarTwo())) { slot.Unit!.MaxHp += 50; slot.Unit.Hp += 50; } AddLog($"[color=75d7ff]免费部署[/color] {hero.Definition.display_name} 进入我方 {slot.SlotIndex + 1} 号位（本回合部署次数已用）。"); _pendingHero = null; _allyIndex = -1; RefreshAll(); AudioManager.Instance?.PlaySfx(GameSfx.Advance); await slot.PlayDeployAnimation(); return; }
 		if (slot.Unit?.Alive != true) return;
+		ShowUnitDetail(slot);
 		if (_pendingCard == null && _allyIndex == slot.SlotIndex && _enemyIndex < 0) { CancelSelection(); return; }
 		_allyIndex = slot.SlotIndex; _enemyIndex = -1;
 		if (_pendingCard != null) { if (_pendingCardTarget == slot.SlotIndex) await UseCard(slot); else PreviewCard(slot); } else _status.Text = $"已选择 {slot.Unit.Name}；请选择敌方目标"; RefreshSelection();
 	}
-	private async void EnemyChosen(UnitSlot slot) { if (_battle.IsFinished) return; if (slot.Unit?.Alive != true) return; if (_pendingCard?.Definition.target_kind is CardDefinition.TargetKind.Enemy or CardDefinition.TargetKind.AllyEnemyPair) { if (!slot.Unit.CardTargetable) { _status.Text = "该召唤物不能成为锦囊目标"; return; } if (_pendingCard.Definition.target_kind == CardDefinition.TargetKind.AllyEnemyPair && (_allyIndex < 0 || _allies[_allyIndex].Unit?.Alive != true)) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) await UseEnemyCard(slot); else PreviewEnemyCard(slot); return; } if (_allyIndex < 0 || _allies[_allyIndex].Unit == null) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) { await ConfirmAttack(); return; } _enemyIndex = slot.SlotIndex; UpdatePreview(); RefreshSelection(); }
+	private async void EnemyChosen(UnitSlot slot) { if (_battle.IsFinished) return; if (slot.Unit?.Alive != true) return; ShowUnitDetail(slot); if (_pendingCard?.Definition.target_kind is CardDefinition.TargetKind.Enemy or CardDefinition.TargetKind.AllyEnemyPair) { if (!slot.Unit.CardTargetable) { _status.Text = "该召唤物不能成为锦囊目标"; return; } if (_pendingCard.Definition.target_kind == CardDefinition.TargetKind.AllyEnemyPair && (_allyIndex < 0 || _allies[_allyIndex].Unit?.Alive != true)) { _status.Text = "请先选择我方英雄"; return; } if (_enemyIndex == slot.SlotIndex) await UseEnemyCard(slot); else PreviewEnemyCard(slot); return; } if (_allyIndex < 0 || _allies[_allyIndex].Unit == null) { _status.Text = "已选择敌方英雄并同步详情；请先选择我方英雄进行攻击"; return; } if (_enemyIndex == slot.SlotIndex) { await ConfirmAttack(); return; } _enemyIndex = slot.SlotIndex; UpdatePreview(); RefreshSelection(); }
 	private void UpdatePreview() { var a = _allies[_allyIndex].Unit!; var d = _enemies[_enemyIndex].Unit!; var raw = BattleRules.CalculateRetaliation(a, d); var counter = raw; if (a.Id == "hero_role_2" && a.SkillTurns > 0) counter = Mathf.RoundToInt(counter * (a.Star >= 5 ? 1.2f : 1.4f)); var final = PreviewDamage(a, counter); var damage = BattleRules.CalculateAttackValue(a, d); _allies[_allyIndex].SetActionPreview($"HP {a.Hp} → {Math.Max(0, a.Hp - final)}（反伤）"); _enemies[_enemyIndex].SetActionPreview($"HP {d.Hp} → {Math.Max(0, d.Hp - damage)}（受击）"); _status.Text = $"{BattleRules.GetRelation(a.Type, d.Type)}：伤害 {damage}，反伤 {raw}→{final}；再次点击目标结算"; }
 	public async Task ConfirmAttack() { if (_battle.IsFinished) return; if (_allyIndex < 0 || _enemyIndex < 0 || _ap <= 0) return; var a = _allies[_allyIndex].Unit!; if (!a.CanAttack || a.HasAttackedThisTurn) { _status.Text = $"{a.Name} 本回合已经攻击过或不能攻击"; return; } var d = _enemies[_enemyIndex].Unit!; var counter = d.CanRetaliate ? BattleRules.CalculateRetaliation(a, d) : 0; var damage = BattleRules.CalculateAttackValue(a, d); await AnimateAttack(_allies[_allyIndex], _enemies[_enemyIndex]); if (await TriggerPassive(_enemies, _aiDeck, "BEFORE_DAMAGE")) damage = 0; d.Hp = Math.Max(0, d.Hp - damage); if (a.Id == "hero_role_2" && a.SkillTurns > 0) counter = Mathf.RoundToInt(counter * (a.Star >= 5 ? 1.2f : 1.4f)); if (await TriggerPassive(_allies, _deck, "BEFORE_DAMAGE", new PassiveEventContext { EventKey = "BEFORE_DAMAGE", AttackTarget = a, AttackTargetSlot = _allyIndex })) counter = 0; ApplyDamageToAlly(a, counter); GainExp(a, 2); if (a.ExtraAttacksRemaining > 0) a.ExtraAttacksRemaining--; else a.HasAttackedThisTurn = true; _ap--;
 		// 攻击消耗 AP 后检查 ACTION_POINTS_ZERO
@@ -130,12 +132,24 @@ public partial class TrainingArena : Control
 	{
 		if (_battle.IsFinished) return;
 		if (!card.CanPlay) { _status.Text = $"「{card.Definition.display_name}」冷却剩余 {card.CooldownRemaining} 回合"; return; }
-		foreach (var c in _hand.GetChildren().OfType<CardTile>()) c.ClearActionPreview(); if (card.Definition.card_kind == CardDefinition.CardKind.Passive) { if (EffectiveCost(card) > _ap) { _status.Text = "行动点不足"; return; } PlacePassive(card); return; }
-		if (card.Definition.target_kind is CardDefinition.TargetKind.None or CardDefinition.TargetKind.AllEnemies or CardDefinition.TargetKind.SelectCards) { if (_pendingCard == card && _pendingCardTarget == -2) await UseNoTargetCard(card); else { _pendingCard = card; _pendingCardTarget = -2; var i = _deck.Hand.IndexOf(card); _hand.SetSelected(i); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview("结算预览", NoTargetPreview(card)); _status.Text = $"{card.Definition.display_name}效果已写入卡面；再次点击该牌确认"; } return; }
+		ShowCardDetail(card);
+		foreach (var c in _hand.GetChildren().OfType<CardTile>()) c.ClearActionPreview();
+		if (card.Definition.card_kind == CardDefinition.CardKind.Passive)
+		{
+			if (EffectiveCost(card) > _ap) { _status.Text = "行动点不足"; return; }
+			if (_pendingCard == card && _pendingCardTarget == -3) { PlacePassive(card); return; }
+			PrepareCardSelection(card, -3);
+			var passiveIndex = _deck.Hand.IndexOf(card);
+			if (passiveIndex >= 0 && _hand.GetChild(passiveIndex) is CardTile passiveTile) passiveTile.SetActionPreview("战门", "背面设置；再次点击确认");
+			_status.Text = $"被动锦囊「{card.Definition.display_name}」已预览；再次点击该牌设置到战门";
+			return;
+		}
+		if (card.Definition.target_kind is CardDefinition.TargetKind.None or CardDefinition.TargetKind.AllEnemies or CardDefinition.TargetKind.SelectCards) { if (_pendingCard == card && _pendingCardTarget == -2) await UseNoTargetCard(card); else { PrepareCardSelection(card, -2); var i = _deck.Hand.IndexOf(card); if (i >= 0 && _hand.GetChild(i) is CardTile tile) tile.SetActionPreview("结算预览", NoTargetPreview(card)); _status.Text = $"{card.Definition.display_name}效果已写入卡面；再次点击该牌确认"; } return; }
 		var hasFreeSelfTarget = card.Definition.target_kind == CardDefinition.TargetKind.AllyHero && _allies.Any(slot => slot.Unit is { Alive: true, Id: "hero_role_3", Star: >= 5, FreeSelfCards: > 0 });
 		if (EffectiveCost(card) > _ap && !hasFreeSelfTarget) { _status.Text = "行动点不足"; return; }
-		_pendingCard = card; _pendingCardTarget = -1; _pendingHero = null; _enemyIndex = -1; _hand.SetSelected(_deck.Hand.IndexOf(card)); _status.Text = card.Definition.target_kind == CardDefinition.TargetKind.Enemy ? $"锦囊「{card.Definition.display_name}」：请选择敌方英雄预览效果" : $"锦囊「{card.Definition.display_name}」：请选择我方英雄预览效果";
+		PrepareCardSelection(card, -1); _status.Text = card.Definition.target_kind == CardDefinition.TargetKind.Enemy ? $"锦囊「{card.Definition.display_name}」：请选择敌方英雄预览效果" : $"锦囊「{card.Definition.display_name}」：请选择我方英雄预览效果";
 	}
+	private void PrepareCardSelection(CardInstance card, int targetState) { _pendingCard = card; _pendingCardTarget = targetState; _pendingHero = null; _allyIndex = _enemyIndex = -1; foreach (var slot in _allies.Concat(_enemies)) slot.ClearActionPreview(); _hand.SetSelected(_deck.Hand.IndexOf(card)); }
 	private async Task UseCard(UnitSlot slot)
 	{
 		if (_battle.IsFinished) return;
@@ -268,7 +282,9 @@ public partial class TrainingArena : Control
 		await TriggerPassive(slots, deck, "ACTION_POINTS_ZERO", new PassiveEventContext { EventKey = "ACTION_POINTS_ZERO", SubjectOwnerId = ownerId });
 	}
 	public void DrawOne() { if (_battle.IsFinished) return; if (_deck.Hand.Count >= DeckState.HandLimit) { _status.Text = $"手牌已满（上限 {DeckState.HandLimit} 张）"; return; } var result = _deck.Draw(); if (result.Count > 0) AudioManager.Instance?.PlaySfx(GameSfx.DrawCard); _status.Text = result.Count == 0 ? "没有可抽的牌" : $"抽到「{result[0].Definition.display_name}」"; RefreshAll(); }
-	private async Task EndTurn() { if (_battle.IsFinished) return; await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); TickGrudge(_allies); var discardProtected = _battle.PreventsDiscard("player"); var discarded = _deck.DiscardRemainingHand(discardProtected); AddLog(discardProtected ? "[color=75d7ff]神器2[/color] 未使用手牌被保留。" : $"[color=75d7ff]回合整理[/color] 未使用的 {discarded} 张手牌进入弃牌堆。"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _deck.TickCooldowns(); _aiDeck.TickCooldowns(); _playerDeployedThisTurn = false; foreach (var slot in _allies.Where(slot => slot.Unit != null)) { slot.Unit!.HasAttackedThisTurn = false; slot.Unit.ExtraAttacksRemaining = 0; } _ap = _battle.PlayerZeroNextTurnActionPoints ? 0 : (_battle.PlayerNextTurnActionPointsOverride ?? BattleState.DefaultActionPoints) + _battle.PlayerNextTurnBonus; _battle.PlayerZeroNextTurnActionPoints = false; _battle.PlayerNextTurnActionPointsOverride = null; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_TURN_STARTED"); await TriggerPassive(_allies, _deck, "NEXT_ALLY_TURN_STARTED"); await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } _battle.PlayerActionPoints = _ap;
+	public bool RequiresHeroDeployment() => !_playerDeployedThisTurn && _heroBag.Count > 0 && _allies.Any(slot => slot.Unit?.Alive != true);
+	private bool RequiresAiHeroDeployment() => !_aiDeployedThisTurn && _aiHeroBag.Count > 0 && _enemies.Any(slot => slot.Unit?.Alive != true);
+	private async Task EndTurn() { if (_battle.IsFinished) return; if (RequiresHeroDeployment()) { _status.Text = "本回合必须先部署一名英雄；英雄牌为空或战场已满时才可跳过"; return; } AudioManager.Instance?.PlaySfx(GameSfx.NextRound); await TriggerPassive(_allies, _deck, "ALLY_TURN_ENDED"); TickGrudge(_allies); var discardProtected = _battle.PreventsDiscard("player"); var discarded = _deck.DiscardRemainingHand(discardProtected); AddLog(discardProtected ? "[color=75d7ff]神器2[/color] 未使用手牌被保留。" : $"[color=75d7ff]回合整理[/color] 未使用的 {discarded} 张手牌进入弃牌堆。"); await EnemyPhase(); if (_battle.IsFinished) return; _battle.AdvanceTurn(); _turn = _battle.Turn; _deck.TickCooldowns(); _aiDeck.TickCooldowns(); _playerDeployedThisTurn = false; foreach (var slot in _allies.Where(slot => slot.Unit != null)) { slot.Unit!.HasAttackedThisTurn = false; slot.Unit.ExtraAttacksRemaining = 0; } _ap = _battle.PlayerZeroNextTurnActionPoints ? 0 : (_battle.PlayerNextTurnActionPointsOverride ?? BattleState.DefaultActionPoints) + _battle.PlayerNextTurnBonus; _battle.PlayerZeroNextTurnActionPoints = false; _battle.PlayerNextTurnActionPointsOverride = null; _battle.PlayerNextTurnBonus = 0; _battle.PlayerActionPoints = _ap; await TriggerPassive(_allies, _deck, "ALLY_TURN_STARTED"); await TriggerPassive(_allies, _deck, "NEXT_ALLY_TURN_STARTED"); await TriggerPassive(_allies, _deck, "ALLY_BATTLE_PHASE_STARTED"); TickStatuses(); foreach (var s in _allies.Where(s => s.Unit is { Alive: true, Id: "hero_role_3" })) { _ap++; if (s.Unit!.Star >= 5) s.Unit.FreeSelfCards = 2; } _battle.PlayerActionPoints = _ap;
 		// 检查 AP 是否为 0，触发 ACTION_POINTS_ZERO 事件
 		if (_ap == 0) await CheckActionPointsZero("player"); AssignFreeCard(); {
 			// 发布 BEFORE_DRAW 事件，让对方被动锦囊有机会阻止
@@ -298,7 +314,7 @@ public partial class TrainingArena : Control
 					await TriggerPassive(_enemies, _aiDeck, "HAND_EMPTY", new PassiveEventContext { EventKey = "HAND_EMPTY", SubjectOwnerId = "player" });
 			}
 		} N<Label>("Title").Text = $"训练场 · 第 {_turn} 回合"; AddLog($"[color=75d7ff]系统[/color] 第 {_turn} 回合开始。"); CancelSelection(false); _status.Text = "新回合：行动点恢复，自动抽牌"; RefreshAll(); }
-	private void CancelSelection(bool update = true) { _pendingHero = null; _pendingCard = null; _pendingCardTarget = _allyIndex = _enemyIndex = -1; _hand.SetSelected(-1); _rightSidebar.ShowCommanderOverview(); foreach (var s in _allies.Concat(_enemies)) s.ClearActionPreview(); if (update) _status.Text = "已取消选择"; RefreshSelection(); }
+	private void CancelSelection(bool update = true) { _pendingHero = null; _pendingCard = null; _pendingCardTarget = _allyIndex = _enemyIndex = -1; _hand.SetSelected(-1); foreach (var card in _hand.GetChildren().OfType<CardTile>()) card.ClearActionPreview(); _rightSidebar.ShowCommanderOverview(); foreach (var s in _allies.Concat(_enemies)) s.ClearActionPreview(); if (update) _status.Text = "已取消选择"; RefreshSelection(); }
 	private async Task EnemyPhase()
 	{
 		if (_battle.IsFinished) return;
@@ -307,8 +323,9 @@ public partial class TrainingArena : Control
 		if (!aiDrawBlocked) await TriggerPassive(_allies, _deck, "AFTER_DRAW", new PassiveEventContext { EventKey = "AFTER_DRAW", SubjectOwnerId = "ai" });
 		AddLog($"[color=ff8888]AI回合[/color] 抽取 {aiOpeningDraw.Count} 张新手牌。");
 		if (N<CheckButton>("DummyMode").ButtonPressed) { TickGrudge(_enemies); var protectedHand = _battle.PreventsDiscard("ai"); var unused = _aiDeck.DiscardRemainingHand(protectedHand); AddLog(protectedHand ? "[color=999999]稻草人模式[/color] 敌方跳过行动，神器2保留其手牌。" : $"[color=999999]稻草人模式[/color] 敌方跳过全部行动，{unused} 张未使用手牌进入弃牌堆。"); return; }
+		_aiDeployedThisTurn = false; foreach (var slot in _enemies.Where(slot => slot.Unit != null)) slot.Unit!.HasAttackedThisTurn = false; if (RequiresAiHeroDeployment()) await AiDeploy();
 		if (await TriggerPassive(_allies, _deck, "ENEMY_BATTLE_PHASE_STARTED")) { AddLog("[color=99bbff]被动锦囊[/color] 敌方战斗阶段被跳过。"); return; }
-		_aiDeployedThisTurn = false; foreach (var slot in _enemies.Where(slot => slot.Unit != null)) slot.Unit!.HasAttackedThisTurn = false; var aiAp = _battle.EnemyZeroNextTurnActionPoints ? 0 : (_battle.EnemyNextTurnActionPointsOverride ?? BattleState.DefaultActionPoints) + _battle.EnemyNextTurnBonus; _battle.EnemyZeroNextTurnActionPoints = false; _battle.EnemyNextTurnActionPointsOverride = null; _battle.EnemyNextTurnBonus = 0; _battle.EnemyActionPoints = aiAp; if (_turn <= 4 && _aiHeroBag.Count > 0) await AiDeploy(); var attacks = _turn <= 4 ? 1 : 2;
+		var aiAp = _battle.EnemyZeroNextTurnActionPoints ? 0 : (_battle.EnemyNextTurnActionPointsOverride ?? BattleState.DefaultActionPoints) + _battle.EnemyNextTurnBonus; _battle.EnemyZeroNextTurnActionPoints = false; _battle.EnemyNextTurnActionPointsOverride = null; _battle.EnemyNextTurnBonus = 0; _battle.EnemyActionPoints = aiAp; var attacks = _turn <= 4 ? 1 : 2;
 		// 检查 AI AP 是否为 0，触发 ACTION_POINTS_ZERO 事件
 		if (aiAp == 0) await CheckActionPointsZero("ai");
 		for (var i = 0; i < attacks && aiAp > 0 && !_battle.IsFinished; i++) if (await AiAttack()) aiAp--; if (aiAp > 0 && !_battle.IsFinished && await AiUseCard()) aiAp--; if (_battle.IsFinished) return;
@@ -501,8 +518,9 @@ public partial class TrainingArena : Control
 	public void RefreshAll()
 	{
 		_turnControl.SetActionPoints(_ap, BattleState.DefaultActionPoints, _ap <= 0 || !HasObviousLegalAction()); N<Button>("HeroBag").Text = $"♛　{_heroBag.Count}"; N<Button>("HeroBag").TooltipText = $"♛ 英雄牌库 · 剩余{_heroBag.Count}"; N<Button>("DrawPile").Text = $"▣　{_deck.DrawPile.Count}"; N<Button>("DrawPile").TooltipText = $"▣ 抽牌堆 · {_deck.DrawPile.Count}"; N<Button>("DiscardPile").Text = $"▨　{_deck.DiscardPile.Count}"; N<Button>("DiscardPile").TooltipText = $"▨ 弃牌堆 · {_deck.DiscardPile.Count}"; N<Button>("CatalogButton").Text = $"◇　{content.cards.Count}"; N<Button>("CatalogButton").TooltipText = $"◇ 锦囊总览 · {content.cards.Count}";
+		N<Button>("EndTurnButton").TooltipText = RequiresHeroDeployment() ? "本回合必须先部署一名英雄" : "结束当前回合";
 		_passiveGate.SetCards(_battle.Passives);
-		Clear(_hand); foreach (var card in _deck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); _hand.AddChild(tile); tile.Setup(card); tile.CardChosen += ChooseCard; tile.DetailRequested += ShowCardDetail; _hand.RegisterCard(tile); }
+		Clear(_hand); foreach (var card in _deck.Hand) { var tile = _cardScene.Instantiate<CardTile>(); _hand.AddChild(tile); tile.Setup(card); tile.CardChosen += ChooseCard; _hand.RegisterCard(tile); }
 		_hand.CallDeferred(HandFan.MethodName.ArrangeCards, false); RefreshEnemyHand(); RefreshSelection(); if (_battle.IsFinished) DisableAllBattleControls();
 	}
 	private bool HasObviousLegalAction()
@@ -519,7 +537,7 @@ public partial class TrainingArena : Control
 	private void RefreshSelection() { for (var i = 0; i < _allies.Count; i++) _allies[i].SetSelected(i == _allyIndex); for (var i = 0; i < _enemies.Count; i++) _enemies[i].SetSelected(i == _enemyIndex); }
 	private void ShowPile(string title, IEnumerable<CardInstance> cards) { PopulatePile(title, cards.ToList()); N<AcceptDialog>("PileDialog").PopupCenteredRatio(.65f); }
 	private void ShowCatalog() { PopulatePile("锦囊牌总卡包", content.cards.Select(c => new CardInstance(c, "catalog")).ToList()); N<AcceptDialog>("PileDialog").PopupCenteredRatio(.72f); }
-	private void PopulatePile(string title, List<CardInstance> cards) { var dialog = N<AcceptDialog>("PileDialog"); dialog.Title = $"{title}（{cards.Count}）"; var grid = N<GridContainer>("PileCards"); Clear(grid); foreach (var c in cards) { var tile = _cardScene.Instantiate<CardTile>(); grid.AddChild(tile); tile.Setup(c); tile.CustomMinimumSize = CardTile.NativeSize; tile.DetailRequested += ShowCardDetail; } }
+	private void PopulatePile(string title, List<CardInstance> cards) { var dialog = N<AcceptDialog>("PileDialog"); dialog.Title = $"{title}（{cards.Count}）"; var grid = N<GridContainer>("PileCards"); Clear(grid); foreach (var c in cards) { var tile = _cardScene.Instantiate<CardTile>(); grid.AddChild(tile); tile.Setup(c); tile.CustomMinimumSize = CardTile.NativeSize; tile.CardChosen += ShowCardDetail; } }
 	private void ShowCardDetail(CardInstance card) { var pile = N<AcceptDialog>("PileDialog"); if (pile.Visible) pile.Hide(); _rightSidebar.ShowCard(card); }
 	private void ShowUnitDetail(UnitSlot slot) { if (slot.Unit != null) _rightSidebar.ShowUnit(slot.Unit, slot.Side == "enemy"); }
 	private async void OnCardDropped(UnitSlot slot, CardInstance card)

@@ -24,7 +24,7 @@ public partial class CardTile : Button
             var cooldown = Card.CooldownRemaining > 0 ? $"\n冷却 {Card.CooldownRemaining}" : "";
             _baseText = $"AP {Card.CurrentCost()}\n\n{Card.Definition.display_name}\n\n{kind}{cooldown}";
             Disabled = Card.CooldownRemaining > 0;
-            TooltipText = Disabled ? $"冷却剩余 {Card.CooldownRemaining} 回合，暂时不能打出" : "右键查看完整卡牌详情";
+            TooltipText = Disabled ? $"冷却剩余 {Card.CooldownRemaining} 回合，暂时不能打出" : "左键选择并预览卡牌";
             if (LoadVisualScene(Card.Definition) is { } visualScene)
             {
                 Text = "";
@@ -38,7 +38,7 @@ public partial class CardTile : Button
         }
         if (GetParent() is HandFan fan) fan.ArrangeCards();
     }
-    public override void _Ready() { Pressed += () => CardChosen?.Invoke(Card); GuiInput += OnGuiInput; }
+    public override void _Ready() { Pressed += () => CardChosen?.Invoke(Card); }
     public void RequestDetail() { if (!_faceDown) DetailRequested?.Invoke(Card); }
     public override Variant _GetDragData(Vector2 atPosition)
     {
@@ -67,21 +67,30 @@ public partial class CardTile : Button
     {
         if (what == NotificationDragEnd && GetParent() is HandFan fan) fan.ArrangeCards(true);
     }
-    public void SetActionPreview(string target, string result) { if (!_faceDown) Text = $"{_baseText}\n\n→ {target}\n预计：{result}"; }
-    public void ClearActionPreview() { if (!_faceDown) Text = _baseText; }
-    private void OnGuiInput(InputEvent e)
+    public void SetActionPreview(string target, string result)
     {
-        if (e is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } || _faceDown) return;
-        AcceptEvent();
-        RequestDetail();
+        if (_faceDown) return;
+        if (HasFormalVisual()) TooltipText = $"{target}\n预计：{result}";
+        else Text = $"{_baseText}\n\n→ {target}\n预计：{result}";
     }
-
+    public void ClearActionPreview()
+    {
+        if (_faceDown) return;
+        Text = HasFormalVisual() ? "" : _baseText;
+        TooltipText = Disabled ? $"冷却剩余 {Card.CooldownRemaining} 回合，暂时不能打出" : "左键选择并预览卡牌";
+    }
     private static PackedScene? LoadVisualScene(CardDefinition definition)
     {
         var fileName = definition.id.ToString();
         if (fileName.StartsWith("card_", System.StringComparison.Ordinal)) fileName = fileName[5..];
         var path = $"res://scenes/ui/cards/cards/{fileName}.tscn";
         return ResourceLoader.Exists(path, "PackedScene") ? GD.Load<PackedScene>(path) : null;
+    }
+
+    private bool HasFormalVisual()
+    {
+        foreach (var child in GetChildren()) if (child is CardVisual) return true;
+        return false;
     }
 
     private static void CenterVisual(CardVisual visual)

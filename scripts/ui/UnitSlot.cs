@@ -43,7 +43,6 @@ public partial class UnitSlot : Control
         _interactionArea = GetNode<Button>("%InteractionArea");
         _contextSkillButton = GetNode<Button>("%ContextSkillButton");
         _interactionArea.Pressed += () => EmitSignal(SignalName.SlotChosen, this);
-        _interactionArea.GuiInput += OnInteractionInput;
         _contextSkillButton.Pressed += () => EmitSignal(SignalName.SkillRequested, this);
         Refresh();
     }
@@ -55,7 +54,7 @@ public partial class UnitSlot : Control
         _interactionEnabled = enabled;
         if (!IsNodeReady()) return;
         _interactionArea.Disabled = !enabled || (Unit == null && Side == "enemy");
-        _interactionArea.MouseFilter = enabled ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
+        _interactionArea.MouseFilter = enabled ? MouseFilterEnum.Stop : MouseFilterEnum.Ignore;
         if (!enabled) _contextSkillButton.Visible = false;
     }
     public void SetUnit(UnitState? value) { Unit = value; _preview = ""; Refresh(); }
@@ -85,7 +84,7 @@ public partial class UnitSlot : Control
         _status.Visible = !empty;
         _targetHighlight.Visible = !string.IsNullOrEmpty(_preview);
         _interactionArea.Disabled = !_interactionEnabled || (empty && Side == "enemy");
-        _interactionArea.MouseFilter = _interactionEnabled ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
+        _interactionArea.MouseFilter = _interactionEnabled ? MouseFilterEnum.Stop : MouseFilterEnum.Ignore;
         _interactionArea.TooltipText = empty ? (Side == "ally" ? "选择英雄牌后点击这里部署" : "") : Unit!.Definition.description;
 
         if (empty)
@@ -108,7 +107,7 @@ public partial class UnitSlot : Control
         _info.Text = unit.Alive
             ? (string.IsNullOrEmpty(_preview) ? "" : $"预计：{_preview}")
             : $"{unit.Name}　已击破\n{(Side == "ally" ? "可重新部署" : "等待AI部署")}";
-        _interactionArea.TooltipText = $"{unit.Name} · {unit.Type}\nHP {unit.Hp}/{unit.MaxHp}　ATK {unit.Attack}　EXP {unit.Exp}/{unit.ExpToStar}\n右键查看详情";
+        _interactionArea.TooltipText = $"{unit.Name} · {unit.Type}\nHP {unit.Hp}/{unit.MaxHp}　ATK {unit.Attack}　EXP {unit.Exp}/{unit.ExpToStar}\n左键选择并查看详情";
         _status.Text = StatusSummary(unit);
         Modulate = unit.Alive ? Colors.White : Color.FromHtml("727986");
     }
@@ -126,13 +125,6 @@ public partial class UnitSlot : Control
         var visibleCount = Math.Min(4, values.Count);
         var result = string.Join(" · ", values.GetRange(0, visibleCount));
         return values.Count > 4 ? $"{result} +{values.Count - 4}" : result;
-    }
-
-    private void OnInteractionInput(InputEvent input)
-    {
-        if (!_interactionEnabled || input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } || Unit == null) return;
-        _interactionArea.AcceptEvent();
-        DetailRequested?.Invoke(this);
     }
 
     public override bool _CanDropData(Vector2 atPosition, Variant data)

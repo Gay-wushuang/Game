@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -58,30 +59,41 @@ public partial class BattleUiSmoke : Node
         var enemies = arena.GetNode<HBoxContainer>("%EnemyRow").GetChildren().OfType<UnitSlot>().ToArray();
         Check(allies.Length == 5 && enemies.Length == 5, "BattleSlot 未保持5v5复用");
         for (var index = 0; index < 5; index++) Check(Mathf.IsEqualApprox(allies[index].GlobalPosition.X, enemies[index].GlobalPosition.X), $"第{index + 1}列敌我槽未对齐");
+        Check(arena.RequiresHeroDeployment(), "首回合有英雄牌且有空位时未强制部署");
+        arena.GetNode<Button>("%EndTurnButton").EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(arena.GetNode<Label>("%Title").Text.Contains("第 1 回合") && arena.GetNode<Label>("%Status").Text.Contains("必须先部署"), "未部署英雄仍可结束回合");
+        var heroBag = (List<HeroCardInstance>)GetPrivate(arena, "_heroBag")!;
+        heroBag.Clear(); Check(!arena.RequiresHeroDeployment(), "英雄牌为空时没有豁免强制部署");
+        arena.ResetTraining(); await Frame();
+        for (var index = 0; index < allies.Length; index++) allies[index].SetUnit(new HeroCardInstance(arena.content.heroes[index % arena.content.heroes.Count]).Deploy());
+        Check(!arena.RequiresHeroDeployment(), "我方场地占满时没有豁免强制部署");
+        arena.ResetTraining(); await Frame();
 
         var rightPanel = arena.GetNode<BattleRightSidebar>("%ContentHost");
         var detailText = arena.GetNode<RichTextLabel>("%DetailText");
         var rightClick = new InputEventMouseButton { ButtonIndex = MouseButton.Right, Pressed = true };
         var firstCard = arena.GetNode<HandFan>("%Hand").GetChildren().OfType<CardTile>().First();
         firstCard.EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CardDetail, "卡牌详情未进入固定右栏");
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "右键仍会打开卡牌详情");
+        firstCard.EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CardDetail, "左键选中卡牌未同步固定右栏详情");
         viewport.PushInput(new InputEventKey { Keycode = Key.Escape, Pressed = true }, true); await Frame();
         Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "取消选择未恢复指挥官总览");
 
         enemies[0].SetUnit(new HeroCardInstance(arena.content.heroes[1], "ai").Deploy());
-        enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.EnemyDetail, "敌人右键详情未进入固定右栏");
+        enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.EnemyDetail, "左键选中敌人未同步固定右栏详情");
         var enemyDefinition = arena.content.heroes[1];
         Check(!detailText.Text.Contains(enemyDefinition.skill_1_text) && !detailText.Text.Contains(enemyDefinition.passive_text) && !detailText.Text.Contains(enemyDefinition.leader_bonus_text), "EnemyDetail 泄露了敌方完整技能、被动或队长能力");
         allies[0].SetUnit(new HeroCardInstance(arena.content.heroes[0]).Deploy());
-        allies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.HeroDetail, "我方英雄右键详情未进入固定右栏");
+        allies[0].GetNode<Button>("%InteractionArea").EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.HeroDetail, "左键选中我方英雄未同步固定右栏详情");
         Check(detailText.Text.Contains(arena.content.heroes[0].skill_1_text), "HeroDetail 没有显示我方已知技能");
         allies[0].Activate(); await Frame();
         var contextSkill = allies[0].GetNode<Button>("%ContextSkillButton");
         Check(contextSkill.Visible, "选择我方英雄后技能上下文动作没有出现");
-        battlefield.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { Position = battlefield.GlobalPosition + battlefield.Size / 2f, ButtonIndex = MouseButton.Right, Pressed = true }); await Frame();
-        Check(!contextSkill.Visible, "右键空白没有取消英雄选择或隐藏技能上下文动作");
+        battlefield.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { Position = battlefield.GlobalPosition + battlefield.Size / 2f, ButtonIndex = MouseButton.Left, Pressed = true }); await Frame();
+        Check(!contextSkill.Visible && rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "左键空白没有取消英雄选择、预览或右栏详情");
         Check(!allies[0].DisplayText.Contains("等待部署") && !enemies[1].DisplayText.Contains("等待敌方部署"), "空战位仍显示重复等待说明");
 
         var turnControl = arena.GetNode<TurnControl>("%TurnControl");
@@ -112,7 +124,7 @@ public partial class BattleUiSmoke : Node
         enemies[0].SetInteractionEnabled(false);
         var modeBeforeDisabledClick = rightPanel.Mode;
         enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == modeBeforeDisabledClick, "禁用战斗交互后敌方战位仍响应右键");
+        Check(rightPanel.Mode == modeBeforeDisabledClick, "禁用战斗交互后敌方战位仍响应输入");
         Check(!enemies[0]._CanDropData(Vector2.Zero, dragData), "禁用战斗交互后敌方战位仍接收拖放");
         dragTile.GetViewport().GuiCancelDrag();
         dragTile.QueueFree();
