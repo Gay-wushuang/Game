@@ -29,6 +29,7 @@ public partial class TrainingArenaSmoke : Node
         Check(arena.content.cards.Count == 30 && arena.content.cards.Select(c => c.id.ToString()).Distinct().Count() == 30, "规范化后的30张锦囊未完整加载");
         Check(arena.content.cards.Count(c => c.card_kind == CardDefinition.CardKind.Active) == 15 && arena.content.cards.Count(c => c.card_kind == CardDefinition.CardKind.Passive) == 15, "主动/被动锦囊分类错误");
 		var initialDeck = arena.CaptureSave(); Check(initialDeck.SelectedDeckIds.Count == 15 && initialDeck.PlayerDeck.Draw.Count + initialDeck.PlayerDeck.Hand.Count == 15, "对局没有使用备战选择的15张锦囊"); Check(JsonSerializer.Deserialize<BattleSave>(JsonSerializer.Serialize(initialDeck))?.Turn == 1, "对局存档无法完成JSON往返");
+		Check(arena.GetNode<Button>("%CatalogButton").Text.Contains("15") && arena.GetNode<Button>("%CatalogButton").TooltipText.Contains("本场锦囊总览 · 15"), "战斗HUD把30张主卡池错误显示为本场锦囊总数");
         Check(arena.content.cards.All(c => c.logic_mode == "LUA") && arena.content.cards.Select(c => c.lua_script).Distinct().Count() == 30, "30张卡没有全部使用独立Lua入口");
         CardSemanticValidator.Validate(arena.content.cards);
         using (var resolver = new CardResolver()) { Check(resolver.LuaAvailable, "Lua GDExtension未加载"); Check(resolver.ValidateSandboxIsolation(out var isolationError), "Lua沙盒隔离失败：" + isolationError); }
