@@ -38,7 +38,8 @@ public partial class BattleUiSmoke : Node
         Check(Mathf.IsEqualApprox(center.Size.X, 1328), "CenterColumn 不是1328px");
         Check(Mathf.IsEqualApprox(right.Size.X, 304), "RightSidebar 不是304px");
         Check(Mathf.IsEqualApprox(battlefield.Size.Y, 700), $"Battlefield 不是700px，实际 {battlefield.Size.Y}");
-        Check(Mathf.IsEqualApprox(handArea.Size.Y, 268), $"HandArea 不是268px，实际 {handArea.Size.Y}");
+        Check(Mathf.IsEqualApprox(handArea.Size.Y, 276), $"HandArea 不是276px，实际 {handArea.Size.Y}");
+        Check(!arena.GetNode<Label>("Margin/Root/MainRow/CenterColumn/HandArea/HandSection/HandHeader").Visible, "重复的手牌标题仍在占用卡面高度");
         Check(faction.Size.Y is >= 120 and <= 132, $"FactionPanel 未压缩到120~132px，实际 {faction.Size.Y}");
         Check(resourceDock.Columns == 2 && resourceDock.GetChildCount() == 4, "左侧资源区不是2×2 Dock");
         Check(resourceDock.Size.X <= 170 && resourceDock.GetChildren().OfType<Button>().All(button => button.CustomMinimumSize == new Vector2(78, 56) && !button.SizeFlagsVertical.HasFlag(Control.SizeFlags.Expand)), "资源Dock未限制在170px内，或按钮未使用78×56紧凑规格");
@@ -125,13 +126,14 @@ public partial class BattleUiSmoke : Node
             await Frame(); fan.ArrangeCards(); await Frame();
             var cards = fan.GetChildren().OfType<Control>().ToArray();
             Check(cards.Length == count, $"{count}张手牌布局数量错误");
-            Check(cards.All(card => card.Size.IsEqualApprox(HandFan.NormalCardSize)), $"{count}张手牌未保持168×224正式显示尺寸");
-            Check(cards.All(card => Mathf.IsEqualApprox(card.Size.X / card.Size.Y, .75f)), $"{count}张手牌未保持3:4");
+            Check(cards.All(card => card.Size.IsEqualApprox(HandFan.NormalCardSize)), $"{count}张手牌未保持192×244正式显示尺寸");
+            var expectedRatio = CardVisual.NativeSize.X / CardVisual.NativeSize.Y;
+            Check(cards.All(card => Mathf.IsEqualApprox(card.Size.X / card.Size.Y, expectedRatio)), $"{count}张手牌未保持192:244");
             Check(cards.All(card => card.Position.X >= 0 && card.Position.X + card.Size.X <= fan.Size.X + .5f), $"{count}张手牌越出HandArea");
             if (count > 1) Check(cards.First().Rotation < cards.Last().Rotation, $"{count}张手牌没有形成扇形旋转");
         }
         var hoverCard = fan.GetChild<Control>(3); hoverCard.EmitSignal(Control.SignalName.MouseEntered); await Delay(.2);
-        Check(Mathf.IsEqualApprox(hoverCard.Rotation, 0, .01f) && Mathf.IsEqualApprox(hoverCard.Scale.X, HandFan.HoverScale, .01f), "Hover未回正并放大到约180×240");
+        Check(Mathf.IsEqualApprox(hoverCard.Rotation, 0, .01f) && Mathf.IsEqualApprox(hoverCard.Scale.X, HandFan.HoverScale, .01f), "Hover未回正并放大到约202×256");
         hoverCard.EmitSignal(Control.SignalName.MouseExited); await Delay(.2);
         Check(Mathf.IsEqualApprox(hoverCard.Scale.X, 1, .01f), "Hover结束后卡牌未平滑回位");
 

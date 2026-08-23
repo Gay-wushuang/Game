@@ -1,0 +1,14 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/components/card_visual.tscn" id="1_base"]
+[ext_resource type="Texture2D" path="res://assets/art/cards/miracle_heal/illustration.png" id="2_illustration"]
+[ext_resource type="Texture2D" path="res://assets/art/cards/miracle_heal/frame.png" id="3_frame"]
+[ext_resource type="Texture2D" path="res://assets/art/cards/miracle_heal/star_unit.png" id="4_star"]
+
+[node name="MiracleHeal" instance=ExtResource("1_base")]
+illustration_texture = ExtResource("2_illustration")
+frame_texture = ExtResource("3_frame")
+star_texture = ExtResource("4_star")
+preview_card_name = "妙手回春"
+preview_action_point_cost = 1
+preview_stars = 1

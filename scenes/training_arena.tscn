@@ -227,7 +227,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HandArea" type="PanelContainer" parent="Margin/Root/MainRow/CenterColumn" unique_id=674868823]
-custom_minimum_size = Vector2(0, 268)
+custom_minimum_size = Vector2(0, 276)
 layout_mode = 2
 
 [node name="HandSection" type="VBoxContainer" parent="Margin/Root/MainRow/CenterColumn/HandArea" unique_id=1741632269]
@@ -235,6 +235,7 @@ clip_contents = true
 layout_mode = 2
 
 [node name="HandHeader" type="Label" parent="Margin/Root/MainRow/CenterColumn/HandArea/HandSection" unique_id=1783398747]
+visible = false
 layout_mode = 2
 text = "手牌"
 

@@ -57,7 +57,7 @@
     "cost_mode": "FIXED",
     "base_cost": 1,
     "target_key": "SELECTED_ALLY",
-    "rarity": 3,
+    "rarity": 1,
     "keywords": [
       "回复",
       "净化"
