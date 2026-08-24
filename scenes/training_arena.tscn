@@ -66,6 +66,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Margin/Root/TopBar/TopContent" unique_id=448661552]
+theme_type_variation = &"DisplayLabel"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(500, 48)
 layout_mode = 2
@@ -75,6 +76,7 @@ text = "训练场 · 第 1 回合"
 vertical_alignment = 1
 
 [node name="Status" type="Label" parent="Margin/Root/TopBar/TopContent" unique_id=902017268]
+theme_type_variation = &"BodyLabel"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(600, 48)
 layout_mode = 2

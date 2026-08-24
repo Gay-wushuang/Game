@@ -45,7 +45,7 @@ public partial class SettingsUi : Control
         _audioPanel.AnchorBottom = .72f;
         _audioPanel.OffsetLeft = 300;
         _audioPanel.OffsetRight = -300;
-        var heading = new Label { Text = "音频设置", HorizontalAlignment = HorizontalAlignment.Center };
+        var heading = new Label { Text = "音频设置", ThemeTypeVariation = "DisplayLabel", HorizontalAlignment = HorizontalAlignment.Center };
         heading.AddThemeFontSizeOverride("font_size", 32);
         _audioPanel.AddChild(heading);
         AddVolumeSlider("主音量", "MasterVolume", AudioManager.MasterBus);

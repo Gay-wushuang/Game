@@ -29,7 +29,7 @@ public partial class PrepareUi : Control
         {
             foreach (var definition in _heroes)
             {
-                var hero = new HeroCardInstance(definition); var tile = new Button { CustomMinimumSize = new Vector2(255, 340), Text = $"{definition.character_number} · {definition.display_name}\n{definition.TypeName()}\n\nHP {hero.State.MaxHp}\nATK {hero.State.Attack}\n★{hero.State.Star}", TooltipText = definition.description, MouseDefaultCursorShape = CursorShape.PointingHand };
+                var hero = new HeroCardInstance(definition); var tile = new Button { ThemeTypeVariation = "DenseButton", CustomMinimumSize = new Vector2(255, 340), Text = $"{definition.character_number} · {definition.display_name}\n{definition.TypeName()}\n\nHP {hero.State.MaxHp}\nATK {hero.State.Attack}\n★{hero.State.Star}", TooltipText = definition.description, MouseDefaultCursorShape = CursorShape.PointingHand };
                 _grid.AddChild(tile);
             }
         }

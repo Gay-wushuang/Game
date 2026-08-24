@@ -45,7 +45,7 @@ enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
 
 [gui]
 
-theme/default_font_multichannel_signed_distance_field=true
+theme/custom="res://assets/themes/global_theme.tres"
 
 [physics]
 

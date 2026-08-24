@@ -1,0 +1,50 @@
+[gd_resource type="Theme" load_steps=3 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/chill_bitmap_16px.ttf" id="1_body"]
+[ext_resource type="FontFile" path="res://assets/fonts/chill_bitmap_7px.ttf" id="2_display"]
+
+[resource]
+default_font = ExtResource("1_body")
+default_font_size = 16
+Button/fonts/font = ExtResource("2_display")
+Button/font_sizes/font_size = 21
+CheckButton/fonts/font = ExtResource("1_body")
+CheckButton/font_sizes/font_size = 16
+Label/fonts/font = ExtResource("1_body")
+Label/font_sizes/font_size = 16
+LineEdit/fonts/font = ExtResource("1_body")
+LineEdit/font_sizes/font_size = 16
+OptionButton/fonts/font = ExtResource("1_body")
+OptionButton/font_sizes/font_size = 16
+RichTextLabel/fonts/normal_font = ExtResource("1_body")
+RichTextLabel/fonts/bold_font = ExtResource("1_body")
+RichTextLabel/fonts/italics_font = ExtResource("1_body")
+RichTextLabel/fonts/bold_italics_font = ExtResource("1_body")
+RichTextLabel/fonts/mono_font = ExtResource("1_body")
+RichTextLabel/font_sizes/normal_font_size = 16
+RichTextLabel/font_sizes/bold_font_size = 16
+RichTextLabel/font_sizes/italics_font_size = 16
+RichTextLabel/font_sizes/bold_italics_font_size = 16
+RichTextLabel/font_sizes/mono_font_size = 16
+TextEdit/fonts/font = ExtResource("1_body")
+TextEdit/font_sizes/font_size = 16
+TooltipLabel/fonts/font = ExtResource("1_body")
+TooltipLabel/font_sizes/font_size = 16
+DisplayLabel/base_type = &"Label"
+DisplayLabel/fonts/font = ExtResource("2_display")
+DisplayLabel/font_sizes/font_size = 28
+DisplayButton/base_type = &"Button"
+DisplayButton/fonts/font = ExtResource("2_display")
+DisplayButton/font_sizes/font_size = 28
+DenseButton/base_type = &"Button"
+DenseButton/fonts/font = ExtResource("1_body")
+DenseButton/font_sizes/font_size = 16
+TitleLabel/base_type = &"Label"
+TitleLabel/fonts/font = ExtResource("2_display")
+TitleLabel/font_sizes/font_size = 42
+BodyLabel/base_type = &"Label"
+BodyLabel/fonts/font = ExtResource("1_body")
+BodyLabel/font_sizes/font_size = 16
+DenseLabel/base_type = &"Label"
+DenseLabel/fonts/font = ExtResource("1_body")
+DenseLabel/font_sizes/font_size = 16

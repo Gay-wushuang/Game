@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/CardTile.cs" id="1"]
 
 [node name="CardTile" type="Button"]
+theme_type_variation = &"DenseButton"
 size_flags_horizontal = 3
 size_flags_vertical = 3
 text = "锦囊牌"

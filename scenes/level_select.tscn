@@ -104,6 +104,7 @@ offset_right = 660.0
 offset_bottom = 669.0
 
 [node name="Save1" type="Button" parent="."]
+theme_type_variation = &"DenseButton"
 offset_left = 120.0
 offset_top = 705.0
 offset_right = 510.0
@@ -135,6 +136,7 @@ theme_override_styles/pressed = SubResource("ActionPressed")
 theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save2" type="Button" parent="."]
+theme_type_variation = &"DenseButton"
 offset_left = 559.0
 offset_top = 705.0
 offset_right = 949.0
@@ -166,6 +168,7 @@ theme_override_styles/pressed = SubResource("ActionPressed")
 theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save3" type="Button" parent="."]
+theme_type_variation = &"DenseButton"
 offset_left = 998.0
 offset_top = 705.0
 offset_right = 1388.0
@@ -197,6 +200,7 @@ theme_override_styles/pressed = SubResource("ActionPressed")
 theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save4" type="Button" parent="."]
+theme_type_variation = &"DenseButton"
 offset_left = 1425.0
 offset_top = 705.0
 offset_right = 1815.0
