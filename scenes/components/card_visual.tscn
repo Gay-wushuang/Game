@@ -1,0 +1,82 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/CardVisual.cs" id="1_script"]
+[ext_resource type="FontFile" path="res://assets/fonts/qiu_ye_yuan_ti_16.ttf" id="2_font"]
+
+[node name="CardVisual" type="Control"]
+custom_minimum_size = Vector2(192, 244)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 192.0
+offset_bottom = 244.0
+mouse_filter = 2
+texture_filter = 1
+script = ExtResource("1_script")
+
+[node name="Illustration" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Frame" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Stars" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="APLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 3.0
+offset_right = 34.0
+offset_bottom = 22.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "AP"
+
+[node name="APValue" type="Label" parent="."]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 18.0
+offset_right = 32.0
+offset_bottom = 38.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "2"
+
+[node name="CardName" type="Label" parent="."]
+layout_mode = 0
+offset_left = 33.0
+offset_top = 202.0
+offset_right = 159.0
+offset_bottom = 230.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 24
+text = "卡牌名称"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public sealed class DeckState
 {
+    public const int HandLimit = 8;
     public readonly List<CardInstance> DrawPile = [];
     public readonly List<CardInstance> Hand = [];
     public readonly List<CardInstance> DiscardPile = [];
@@ -25,14 +27,35 @@ public sealed class DeckState
         for (var i = 0; i < amount; i++) {
             if (DrawPile.Count == 0) { if (DiscardPile.Count == 0) break; DrawPile.AddRange(DiscardPile); DiscardPile.Clear(); Shuffle(DrawPile); }
             var card = DrawPile[^1]; DrawPile.RemoveAt(DrawPile.Count - 1); card.Zone = CardInstance.ZoneKind.Hand;
-            card.FaceUp = OwnerId == "player"; Hand.Add(card); result.Add(card);
+            card.FaceUp = OwnerId == "player";
+            if (Hand.Count >= HandLimit) { card.Zone = CardInstance.ZoneKind.Discard; DiscardPile.Add(card); continue; }
+            Hand.Add(card); result.Add(card);
         }
         return result;
     }
     public void Discard(CardInstance card) { if (!Hand.Remove(card)) return; card.Zone = CardInstance.ZoneKind.Discard; DiscardPile.Add(card); }
+    public void FinishPlayedCard(CardInstance card)
+    {
+        if (card.IsTemporaryCopy || card.ExileAtTurnEnd) Exile(card);
+        else Discard(card);
+    }
     public bool SetPassive(CardInstance card) { if (!Hand.Remove(card)) return false; card.Zone = CardInstance.ZoneKind.Set; card.FaceUp = false; return true; }
     public void DiscardPlaced(CardInstance card) { card.Zone = CardInstance.ZoneKind.Discard; card.FaceUp = true; DiscardPile.Add(card); }
     public void ReceiveToDiscard(CardInstance card) { card.OwnerId = OwnerId; card.RuntimeCostModifier = 0; card.RuntimeCostOverride = -1; card.ReturnToOriginalOwnerDiscardAtTurnEnd = false; card.Zone = CardInstance.ZoneKind.Discard; card.FaceUp = true; DiscardPile.Add(card); }
     public void Exile(CardInstance card) { Hand.Remove(card); DiscardPile.Remove(card); card.Zone = CardInstance.ZoneKind.Exile; card.FaceUp = true; ExilePile.Add(card); }
+    public int DiscardRemainingHand(bool preventDiscard = false)
+    {
+        var discarded = 0;
+        foreach (var card in Hand.ToList())
+        {
+            if (card.ExileAtTurnEnd) Exile(card);
+            else if (!preventDiscard) { Discard(card); discarded++; }
+        }
+        return discarded;
+    }
+    public void TickCooldowns()
+    {
+        foreach (var card in DrawPile.Concat(Hand).Concat(DiscardPile)) card.CooldownRemaining = Math.Max(0, card.CooldownRemaining - 1);
+    }
     private void Shuffle<T>(IList<T> list) { var rng = GetRandom(); for (var i = list.Count - 1; i > 0; i--) { var j = rng.Next(i + 1); (list[i], list[j]) = (list[j], list[i]); } }
 }

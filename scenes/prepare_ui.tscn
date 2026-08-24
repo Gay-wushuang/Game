@@ -57,6 +57,7 @@ offset_bottom = 906.0
 
 [node name="Card1" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 746.0
 offset_top = 108.0
@@ -65,6 +66,7 @@ offset_bottom = 468.0
 
 [node name="Card2" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 1024.0
 offset_top = 108.0
@@ -73,6 +75,7 @@ offset_bottom = 468.0
 
 [node name="Card3" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 1301.0
 offset_top = 108.0
@@ -81,6 +84,7 @@ offset_bottom = 468.0
 
 [node name="Card4" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 1579.0
 offset_top = 108.0
@@ -89,6 +93,7 @@ offset_bottom = 468.0
 
 [node name="Card5" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 746.0
 offset_top = 498.0
@@ -97,6 +102,7 @@ offset_bottom = 858.0
 
 [node name="Card6" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 1024.0
 offset_top = 498.0
@@ -105,6 +111,7 @@ offset_bottom = 858.0
 
 [node name="Card7" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 1301.0
 offset_top = 498.0
@@ -113,6 +120,7 @@ offset_bottom = 858.0
 
 [node name="Card8" parent="." instance=ExtResource("3_btn")]
 unique_name_in_owner = true
+visible = false
 toggle_mode = true
 offset_left = 1579.0
 offset_top = 498.0
@@ -120,3 +128,45 @@ offset_right = 1834.0
 offset_bottom = 858.0
 
 [node name="PlayerBar" parent="." instance=ExtResource("4_bar")]
+
+[node name="CardPoolBackdrop" type="ColorRect" parent="."]
+offset_left = 746.0
+offset_top = 108.0
+offset_right = 1834.0
+offset_bottom = 858.0
+mouse_filter = 2
+color = Color(0.105, 0.125, 0.145, 1)
+
+[node name="CardScroll" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
+offset_left = 746.0
+offset_top = 108.0
+offset_right = 1834.0
+offset_bottom = 858.0
+horizontal_scroll_mode = 0
+
+[node name="CardGrid" type="GridContainer" parent="CardScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 23
+theme_override_constants/v_separation = 30
+columns = 4
+
+[node name="DeckCount" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 746.0
+offset_top = 65.0
+offset_right = 1834.0
+offset_bottom = 103.0
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+
+[node name="DeckValidation" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 746.0
+offset_top = 865.0
+offset_right = 1834.0
+offset_bottom = 905.0
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1

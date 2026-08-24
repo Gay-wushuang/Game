@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/LevelSelect.cs" id="1"]
 [ext_resource type="Texture2D" path="res://assets/ui/level_select.svg" id="2_bg"]
@@ -6,6 +6,41 @@
 [ext_resource type="PackedScene" path="res://scenes/components/player_bar.tscn" id="4_bar"]
 
 [sub_resource type="StyleBoxEmpty" id="EmptyStyle"]
+
+[sub_resource type="StyleBoxFlat" id="SaveNormal"]
+bg_color = Color(0.145, 0.18, 0.22, 1)
+border_width_top = 4
+border_color = Color(0.82, 0.16, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="SaveHover"]
+bg_color = Color(0.19, 0.23, 0.28, 1)
+border_width_top = 4
+border_color = Color(0.95, 0.22, 0.32, 1)
+
+[sub_resource type="StyleBoxFlat" id="SavePressed"]
+bg_color = Color(0.12, 0.15, 0.19, 1)
+border_width_top = 4
+border_color = Color(1, 0.3, 0.4, 1)
+
+[sub_resource type="StyleBoxFlat" id="ActionNormal"]
+bg_color = Color(0.12, 0.15, 0.18, 1)
+border_width_left = 4
+border_color = Color(0.82, 0.16, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="ActionHover"]
+bg_color = Color(0.18, 0.21, 0.25, 1)
+border_width_left = 4
+border_color = Color(0.95, 0.22, 0.32, 1)
+
+[sub_resource type="StyleBoxFlat" id="ActionPressed"]
+bg_color = Color(0.1, 0.12, 0.15, 1)
+border_width_left = 4
+border_color = Color(1, 0.3, 0.4, 1)
+
+[sub_resource type="StyleBoxFlat" id="ActionDisabled"]
+bg_color = Color(0.12, 0.15, 0.18, 1)
+border_width_left = 4
+border_color = Color(0.55, 0.13, 0.2, 1)
 
 [node name="LevelSelect" type="Control"]
 anchors_preset = 15
@@ -75,19 +110,29 @@ offset_right = 510.0
 offset_bottom = 873.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/normal = SubResource("SaveNormal")
+theme_override_styles/hover = SubResource("SaveHover")
+theme_override_styles/pressed = SubResource("SavePressed")
 
 [node name="Save1Save" parent="." instance=ExtResource("3_btn")]
 offset_left = 120.0
 offset_top = 883.0
 offset_right = 315.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save1Delete" parent="." instance=ExtResource("3_btn")]
 offset_left = 315.0
 offset_top = 883.0
 offset_right = 508.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save2" type="Button" parent="."]
 offset_left = 559.0
@@ -96,19 +141,29 @@ offset_right = 949.0
 offset_bottom = 873.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/normal = SubResource("SaveNormal")
+theme_override_styles/hover = SubResource("SaveHover")
+theme_override_styles/pressed = SubResource("SavePressed")
 
 [node name="Save2Save" parent="." instance=ExtResource("3_btn")]
 offset_left = 559.0
 offset_top = 883.0
 offset_right = 754.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save2Delete" parent="." instance=ExtResource("3_btn")]
 offset_left = 754.0
 offset_top = 883.0
 offset_right = 947.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save3" type="Button" parent="."]
 offset_left = 998.0
@@ -117,19 +172,29 @@ offset_right = 1388.0
 offset_bottom = 873.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/normal = SubResource("SaveNormal")
+theme_override_styles/hover = SubResource("SaveHover")
+theme_override_styles/pressed = SubResource("SavePressed")
 
 [node name="Save3Save" parent="." instance=ExtResource("3_btn")]
 offset_left = 998.0
 offset_top = 883.0
 offset_right = 1193.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save3Delete" parent="." instance=ExtResource("3_btn")]
 offset_left = 1193.0
 offset_top = 883.0
 offset_right = 1386.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save4" type="Button" parent="."]
 offset_left = 1425.0
@@ -138,18 +203,57 @@ offset_right = 1815.0
 offset_bottom = 873.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("EmptyStyle")
+theme_override_styles/normal = SubResource("SaveNormal")
+theme_override_styles/hover = SubResource("SaveHover")
+theme_override_styles/pressed = SubResource("SavePressed")
 
 [node name="Save4Save" parent="." instance=ExtResource("3_btn")]
 offset_left = 1425.0
 offset_top = 883.0
 offset_right = 1620.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="Save4Delete" parent="." instance=ExtResource("3_btn")]
 offset_left = 1620.0
 offset_top = 883.0
 offset_right = 1813.0
 offset_bottom = 949.0
+theme_override_styles/normal = SubResource("ActionNormal")
+theme_override_styles/hover = SubResource("ActionHover")
+theme_override_styles/pressed = SubResource("ActionPressed")
+theme_override_styles/disabled = SubResource("ActionDisabled")
 
 [node name="PlayerBar" parent="." instance=ExtResource("4_bar")]
+
+[node name="SaveHint" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 998.0
+offset_top = 655.0
+offset_right = 1815.0
+offset_bottom = 698.0
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+
+[node name="AbandonButton" parent="." instance=ExtResource("3_btn")]
+unique_name_in_owner = true
+offset_left = 1425.0
+offset_top = 970.0
+offset_right = 1815.0
+offset_bottom = 1034.0
+text = "放弃当前对局"
+
+[node name="DeleteConfirm" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "永久删除存档"
+ok_button_text = "确定删除"
+cancel_button_text = "取消"
+
+[node name="LoadConfirm" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "读取存档"
+ok_button_text = "放弃并读取"
+cancel_button_text = "取消"

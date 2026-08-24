@@ -15,10 +15,16 @@ run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[audio]
+
+default_bus_layout="res://default_bus_layout.tres"
+
 [autoload]
 
 SceneRouter="*res://scripts/ui/SceneRouter.cs"
+AudioManager="*res://scripts/audio/AudioManager.cs"
 SystemNotice="*res://scenes/components/system_notice.tscn"
+GameSaveManager="*res://scripts/save/GameSaveManager.cs"
 
 [display]
 

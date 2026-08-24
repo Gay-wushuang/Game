@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -38,7 +39,8 @@ public partial class BattleUiSmoke : Node
         Check(Mathf.IsEqualApprox(center.Size.X, 1328), "CenterColumn 不是1328px");
         Check(Mathf.IsEqualApprox(right.Size.X, 304), "RightSidebar 不是304px");
         Check(Mathf.IsEqualApprox(battlefield.Size.Y, 700), $"Battlefield 不是700px，实际 {battlefield.Size.Y}");
-        Check(Mathf.IsEqualApprox(handArea.Size.Y, 268), $"HandArea 不是268px，实际 {handArea.Size.Y}");
+        Check(Mathf.IsEqualApprox(handArea.Size.Y, 276), $"HandArea 不是276px，实际 {handArea.Size.Y}");
+        Check(!arena.GetNode<Label>("Margin/Root/MainRow/CenterColumn/HandArea/HandSection/HandHeader").Visible, "重复的手牌标题仍在占用卡面高度");
         Check(faction.Size.Y is >= 120 and <= 132, $"FactionPanel 未压缩到120~132px，实际 {faction.Size.Y}");
         Check(resourceDock.Columns == 2 && resourceDock.GetChildCount() == 4, "左侧资源区不是2×2 Dock");
         Check(resourceDock.Size.X <= 170 && resourceDock.GetChildren().OfType<Button>().All(button => button.CustomMinimumSize == new Vector2(78, 56) && !button.SizeFlagsVertical.HasFlag(Control.SizeFlags.Expand)), "资源Dock未限制在170px内，或按钮未使用78×56紧凑规格");
@@ -57,34 +59,56 @@ public partial class BattleUiSmoke : Node
         var enemies = arena.GetNode<HBoxContainer>("%EnemyRow").GetChildren().OfType<UnitSlot>().ToArray();
         Check(allies.Length == 5 && enemies.Length == 5, "BattleSlot 未保持5v5复用");
         for (var index = 0; index < 5; index++) Check(Mathf.IsEqualApprox(allies[index].GlobalPosition.X, enemies[index].GlobalPosition.X), $"第{index + 1}列敌我槽未对齐");
+        Check(arena.RequiresHeroDeployment(), "首回合有英雄牌且有空位时未强制部署");
+        arena.GetNode<Button>("%EndTurnButton").EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(arena.GetNode<Label>("%Title").Text.Contains("第 1 回合") && arena.GetNode<Label>("%Status").Text.Contains("必须先部署"), "未部署英雄仍可结束回合");
+        var heroBag = (List<HeroCardInstance>)GetPrivate(arena, "_heroBag")!;
+        heroBag.Clear(); Check(!arena.RequiresHeroDeployment(), "英雄牌为空时没有豁免强制部署");
+        arena.ResetTraining(); await Frame();
+        for (var index = 0; index < allies.Length; index++) allies[index].SetUnit(new HeroCardInstance(arena.content.heroes[index % arena.content.heroes.Count]).Deploy());
+        Check(!arena.RequiresHeroDeployment(), "我方场地占满时没有豁免强制部署");
+        arena.ResetTraining(); await Frame();
 
         var rightPanel = arena.GetNode<BattleRightSidebar>("%ContentHost");
         var detailText = arena.GetNode<RichTextLabel>("%DetailText");
         var rightClick = new InputEventMouseButton { ButtonIndex = MouseButton.Right, Pressed = true };
         var firstCard = arena.GetNode<HandFan>("%Hand").GetChildren().OfType<CardTile>().First();
         firstCard.EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CardDetail, "卡牌详情未进入固定右栏");
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "右键仍会打开卡牌详情");
+        firstCard.EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CardDetail, "左键选中卡牌未同步固定右栏详情");
         viewport.PushInput(new InputEventKey { Keycode = Key.Escape, Pressed = true }, true); await Frame();
         Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "取消选择未恢复指挥官总览");
 
         enemies[0].SetUnit(new HeroCardInstance(arena.content.heroes[1], "ai").Deploy());
-        enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.EnemyDetail, "敌人右键详情未进入固定右栏");
+        enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.EnemyDetail, "左键选中敌人未同步固定右栏详情");
         var enemyDefinition = arena.content.heroes[1];
         Check(!detailText.Text.Contains(enemyDefinition.skill_1_text) && !detailText.Text.Contains(enemyDefinition.passive_text) && !detailText.Text.Contains(enemyDefinition.leader_bonus_text), "EnemyDetail 泄露了敌方完整技能、被动或队长能力");
         allies[0].SetUnit(new HeroCardInstance(arena.content.heroes[0]).Deploy());
-        allies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.HeroDetail, "我方英雄右键详情未进入固定右栏");
+        allies[0].GetNode<Button>("%InteractionArea").EmitSignal(Button.SignalName.Pressed); await Frame();
+        Check(rightPanel.Mode == BattleRightSidebar.RightPanelMode.HeroDetail, "左键选中我方英雄未同步固定右栏详情");
         Check(detailText.Text.Contains(arena.content.heroes[0].skill_1_text), "HeroDetail 没有显示我方已知技能");
         allies[0].Activate(); await Frame();
         var contextSkill = allies[0].GetNode<Button>("%ContextSkillButton");
         Check(contextSkill.Visible, "选择我方英雄后技能上下文动作没有出现");
-        battlefield.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { Position = battlefield.GlobalPosition + battlefield.Size / 2f, ButtonIndex = MouseButton.Right, Pressed = true }); await Frame();
-        Check(!contextSkill.Visible, "右键空白没有取消英雄选择或隐藏技能上下文动作");
+        battlefield.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { Position = battlefield.GlobalPosition + battlefield.Size / 2f, ButtonIndex = MouseButton.Left, Pressed = true }); await Frame();
+        Check(!contextSkill.Visible && rightPanel.Mode == BattleRightSidebar.RightPanelMode.CommanderOverview, "左键空白没有取消英雄选择、预览或右栏详情");
         Check(!allies[0].DisplayText.Contains("等待部署") && !enemies[1].DisplayText.Contains("等待敌方部署"), "空战位仍显示重复等待说明");
 
         var turnControl = arena.GetNode<TurnControl>("%TurnControl");
         Check(turnControl.Current == BattleState.DefaultActionPoints && turnControl.Maximum == BattleState.DefaultActionPoints && !turnControl.Suggested, "TurnControl没有显示默认5点AP或错误进入提示态");
+        Check(turnControl.Size == new Vector2(168, 168) && turnControl.LitSegments == 16, "TurnControl尺寸或满AP亮格不正确");
+        turnControl.SetActionPoints(3, 5, false); Check(turnControl.LitSegments == 10 && arena.GetNode<Label>("%ActionPoints").Text == "AP 3/5", "3/5应显示10格及动态文本");
+        turnControl.SetActionPoints(5, 7, false); Check(turnControl.LitSegments == 11 && arena.GetNode<Label>("%ActionPoints").Text == "AP 5/7", "5/7应显示11格及动态上限");
+        turnControl.SetActionPoints(0, 5, true); await Frame();
+        var suggestedOverlay = arena.GetNode<TextureRect>("%SuggestedOverlay");
+        Check(turnControl.LitSegments == 0 && turnControl.Suggested && turnControl.Current == 0 && turnControl.Maximum == 5, "Suggested不应篡改AP且0/5应为0格");
+        Check(suggestedOverlay.Visible, "0 AP Suggested应通过独立低频提示层表达，不能强行点亮AP格");
+        turnControl.SetDisabled(true); await Frame();
+        Check(arena.GetNode<Button>("%EndTurnButton").Disabled && !suggestedOverlay.Visible && turnControl.Modulate.A < 1f, "Disabled应优先于Suggested，并禁用按钮、隐藏提示态及降低整体亮度");
+        turnControl.SetDisabled(false);
+        turnControl.SetActionPoints(BattleState.DefaultActionPoints, BattleState.DefaultActionPoints, false);
         SetPrivate(arena, "_ap", 0); arena.RefreshAll(); await Frame();
         Check(turnControl.Current == 0 && turnControl.Suggested, "AP归零后TurnControl没有进入提示态");
         SetPrivate(arena, "_ap", BattleState.DefaultActionPoints); arena.RefreshAll(); await Frame();
@@ -92,7 +116,7 @@ public partial class BattleUiSmoke : Node
         var allyCard = new CardInstance(arena.content.cards.First(card => card.target_kind == CardDefinition.TargetKind.AllyHero));
         var dragTile = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn").Instantiate<CardTile>(); AddChild(dragTile); dragTile.Setup(allyCard); await Frame();
         var dropped = false; allies[0].CardDropped += (_, card) => dropped = card == allyCard;
-        dragTile.ForceDrag(dragTile.GetInstanceId(), new Button { CustomMinimumSize = new Vector2(144, 192) });
+        dragTile.ForceDrag(dragTile.GetInstanceId(), new Button { CustomMinimumSize = CardTile.NativeSize });
         var dragData = dragTile.GetViewport().GuiGetDragData();
         Check(allies[0]._CanDropData(Vector2.Zero, dragData), "合法锦囊拖拽目标未被识别");
         allies[0]._DropData(Vector2.Zero, dragData); await Frame();
@@ -100,7 +124,7 @@ public partial class BattleUiSmoke : Node
         enemies[0].SetInteractionEnabled(false);
         var modeBeforeDisabledClick = rightPanel.Mode;
         enemies[0].GetNode<Button>("%InteractionArea").EmitSignal(Control.SignalName.GuiInput, rightClick); await Frame();
-        Check(rightPanel.Mode == modeBeforeDisabledClick, "禁用战斗交互后敌方战位仍响应右键");
+        Check(rightPanel.Mode == modeBeforeDisabledClick, "禁用战斗交互后敌方战位仍响应输入");
         Check(!enemies[0]._CanDropData(Vector2.Zero, dragData), "禁用战斗交互后敌方战位仍接收拖放");
         dragTile.GetViewport().GuiCancelDrag();
         dragTile.QueueFree();
@@ -114,16 +138,27 @@ public partial class BattleUiSmoke : Node
             await Frame(); fan.ArrangeCards(); await Frame();
             var cards = fan.GetChildren().OfType<Control>().ToArray();
             Check(cards.Length == count, $"{count}张手牌布局数量错误");
-            Check(cards.All(card => Mathf.IsEqualApprox(card.Size.X / card.Size.Y, .75f)), $"{count}张手牌未保持3:4");
+            Check(cards.All(card => card.Size.IsEqualApprox(HandFan.NormalCardSize)), $"{count}张手牌未保持192×244正式显示尺寸");
+            var expectedRatio = CardVisual.NativeSize.X / CardVisual.NativeSize.Y;
+            Check(cards.All(card => Mathf.IsEqualApprox(card.Size.X / card.Size.Y, expectedRatio)), $"{count}张手牌未保持192:244");
             Check(cards.All(card => card.Position.X >= 0 && card.Position.X + card.Size.X <= fan.Size.X + .5f), $"{count}张手牌越出HandArea");
             if (count > 1) Check(cards.First().Rotation < cards.Last().Rotation, $"{count}张手牌没有形成扇形旋转");
         }
         var hoverCard = fan.GetChild<Control>(3); hoverCard.EmitSignal(Control.SignalName.MouseEntered); await Delay(.2);
-        Check(Mathf.IsEqualApprox(hoverCard.Rotation, 0, .01f) && hoverCard.Scale.X > 1, "Hover未回正并放大卡牌");
+        Check(Mathf.IsEqualApprox(hoverCard.Rotation, 0, .01f) && Mathf.IsEqualApprox(hoverCard.Scale.X, HandFan.HoverScale, .01f), "Hover未回正并放大到约202×256");
         hoverCard.EmitSignal(Control.SignalName.MouseExited); await Delay(.2);
         Check(Mathf.IsEqualApprox(hoverCard.Scale.X, 1, .01f), "Hover结束后卡牌未平滑回位");
 
+        var battle = (BattleState)GetPrivate(arena, "_battle")!;
+        battle.SetReserveHeroCount("player", 0);
+        battle.SetReserveHeroCount("ai", 0);
+        battle.PlayerUnits.Clear();
+        battle.EnemyUnits.Clear();
+        battle.EvaluateOutcome(); await Frame();
+        Check(battle.IsFinished && arena.GetNode<Button>("%EndTurnButton").Disabled && !suggestedOverlay.Visible, "BattleEnded后TurnControl仍接受输入或保留Suggested提示态");
+
         fan.QueueFree(); viewport.QueueFree(); await Frame();
     }
+    private static object? GetPrivate(object target, string name) => target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(target);
     private static void SetPrivate(object target, string name, object value) => target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(target, value);
 }
