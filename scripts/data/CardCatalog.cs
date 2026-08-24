@@ -6,6 +6,7 @@ using System.Text.Json;
 public static class CardCatalog
 {
     public const int V1ExpectedCount = 30;
+    public const int V2ExpectedCount = 30;
 
     public static Godot.Collections.Array<CardDefinition> Load(string path = "res://data/generated/cards.generated.json")
     {
