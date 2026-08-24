@@ -4,7 +4,7 @@ public partial class MainMenu : Control
 {
     public override void _Ready()
     {
-        AudioManager.Instance?.StopMusic();
+        AudioManager.Instance?.PlayMainMenuMusic();
         GetNode<Button>("%StartButton").Pressed += () => SceneRouter.Instance.GoTo(SceneRouter.Scenes.ModeSelect);
         GetNode<Button>("%RecruitButton").Pressed += () => SceneRouter.Instance.GoTo(SceneRouter.Scenes.Shop);
         GetNode<Button>("%LabButton").Pressed += () => SceneRouter.Instance.GoTo(SceneRouter.Scenes.Lab);

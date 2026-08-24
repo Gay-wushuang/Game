@@ -103,6 +103,8 @@ public partial class AudioManager : Node
         PlayIntroAndLoop($"battle_{theme}", intro, loop);
     }
 
+    public void PlayMainMenuMusic() => PlayLoop("main_menu", "res://assets/audio/bgm/main_menu_theme.wav");
+
     public void PlayVictory()
     {
         PlayOutcome("victory", "res://assets/audio/bgm/battle_victory.wav");
@@ -172,7 +174,8 @@ public partial class AudioManager : Node
             "res://assets/audio/bgm/battle_city_intro.wav",
             "res://assets/audio/bgm/battle_city_loop.wav",
             "res://assets/audio/bgm/battle_victory.wav",
-            "res://assets/audio/bgm/battle_defeat.wav"
+            "res://assets/audio/bgm/battle_defeat.wav",
+            "res://assets/audio/bgm/main_menu_theme.wav"
         });
         var missing = required.Where(path => !ResourceLoader.Exists(path)).ToArray();
         error = missing.Length == 0 ? "" : "缺少音频资源：" + string.Join(", ", missing);
@@ -211,6 +214,17 @@ public partial class AudioManager : Node
         _music.Stop();
         _music.Stream = ResourceLoader.Load<AudioStream>(path);
         if (_music.Stream != null) _music.Play();
+    }
+
+    private void PlayLoop(string key, string path)
+    {
+        if (_musicKey == key && _music.Playing) return;
+        _musicKey = key;
+        _pendingLoop = null;
+        _music.Stop();
+        _music.Stream = LoadLoop(path);
+        if (_music.Stream == null) { GD.PushWarning($"无法加载循环音乐：{path}"); return; }
+        _music.Play();
     }
 
     private void PlayVoice(GameSfx sound)
