@@ -234,12 +234,14 @@ public partial class AudioManager : Node
         if (_voice.Stream != null) _voice.Play();
     }
 
-    private static AudioStream? LoadLoop(string path)
+    internal static AudioStream? LoadLoop(string path)
     {
         var loaded = ResourceLoader.Load<AudioStream>(path);
         if (loaded is AudioStreamWav wav)
         {
             var copy = (AudioStreamWav)wav.Duplicate();
+            copy.LoopBegin = 0;
+            copy.LoopEnd = Math.Max(1, Mathf.FloorToInt(copy.GetLength() * copy.MixRate));
             copy.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
             return copy;
         }

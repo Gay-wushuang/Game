@@ -35,6 +35,9 @@ public partial class AudioSmoke : Node
         Check(AudioServer.GetBusIndex(AudioManager.VoiceBus) >= 0, "缺少 Voice Bus");
         Check(AudioManager.ValidateResources(out var error), error);
         Check(audio.GetChildren().OfType<AudioStreamPlayer>().Count(player => player.Bus == AudioManager.SfxBus) == 12, "SFX 并发播放器池不是12路");
+        CheckLoopRegion("res://assets/audio/bgm/main_menu_theme.wav");
+        CheckLoopRegion("res://assets/audio/bgm/battle_danger_loop_a.wav");
+        CheckLoopRegion("res://assets/audio/bgm/battle_city_loop.wav");
 
         var original = audio.GetVolume(AudioManager.SfxBus);
         audio.SetVolume(AudioManager.SfxBus, .37f, false);
@@ -42,6 +45,17 @@ public partial class AudioSmoke : Node
         audio.SetVolume(AudioManager.SfxBus, original, false);
 
         return audio;
+    }
+
+    private static void CheckLoopRegion(string path)
+    {
+        var stream = AudioManager.LoadLoop(path);
+        Check(stream is AudioStreamWav, $"循环音乐不是 WAV：{path}");
+        var wav = (AudioStreamWav)stream!;
+        Check(wav.LoopMode == AudioStreamWav.LoopModeEnum.Forward, $"循环模式错误：{path}");
+        Check(wav.LoopBegin == 0, $"循环起点错误：{path}");
+        Check(wav.LoopEnd > wav.LoopBegin, $"循环区间无效：{path}");
+        Check(wav.LoopEnd <= Mathf.CeilToInt(wav.GetLength() * wav.MixRate), $"循环终点超过音频长度：{path}");
     }
 
     private static void Check(bool condition, string message)
