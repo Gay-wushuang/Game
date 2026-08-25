@@ -41,6 +41,7 @@ mouse_filter = 2
 script = ExtResource("1")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
+visible = false
 layer = 100
 
 [node name="Backdrop" type="Button" parent="CanvasLayer"]

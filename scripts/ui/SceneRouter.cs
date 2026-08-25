@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 public partial class SceneRouter : Node
@@ -20,11 +21,18 @@ public partial class SceneRouter : Node
     }
 
     public static SceneRouter Instance { get; private set; } = null!;
+
+    // 黑幕转场完全结束（黑屏消失）时触发，供场景在视觉切换完成后接续动作（如播放开场音效）
+    public event Action? TransitionCompleted;
+
     private readonly Stack<string> _history = new();
     private ColorRect _fade = null!;
     private bool _fading = false;
     public string CurrentScenePath { get; private set; } = "";
     public string PendingLoad { get; private set; } = "";
+
+    // 是否正在黑幕转场中（场景 _Ready 时判断用，决定"转场后动作"立即执行还是等转场完成）
+    public bool IsTransitioning => _fading;
 
     public override void _Ready()
     {
@@ -56,6 +64,7 @@ public partial class SceneRouter : Node
         t2.TweenProperty(_fade, "color", new Color(0, 0, 0, 0), 0.3f);
         await ToSignal(t2, Tween.SignalName.Finished);
         _fading = false;
+        TransitionCompleted?.Invoke();
     }
 
     public void GoTo(string scenePath)
@@ -83,7 +92,6 @@ public partial class SceneRouter : Node
 
     private void ChangeTo(string scenePath)
     {
-        AudioManager.Instance?.PlaySfx(GameSfx.ComicWhoosh);
         CurrentScenePath = scenePath;
         GetTree().ChangeSceneToFile(scenePath);
     }

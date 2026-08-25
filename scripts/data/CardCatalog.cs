@@ -66,6 +66,7 @@ public static class CardCatalog
         "SELECTED_ENEMY" => CardDefinition.TargetKind.Enemy,
         "ALLY_ENEMY_PAIR" => CardDefinition.TargetKind.AllyEnemyPair,
         "ANY_UNIT" => CardDefinition.TargetKind.AnyUnit,
+        "SET_GATE" => CardDefinition.TargetKind.SetGate,
         "SET_SLOT" => CardDefinition.TargetKind.SetSlot,
         _ => CardDefinition.TargetKind.None,
     };

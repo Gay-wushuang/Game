@@ -18,6 +18,8 @@ public partial class TrainingArena : Control
 	private int _pendingCardTarget = -1, _allyIndex = -1, _enemyIndex = -1, _ap = BattleState.DefaultActionPoints, _turn = 1, _pendingStarCost;
 	private string _leaderId = "", _freeCardId = ""; private int _leaderTurns; private bool _cancelNextEnemyEffect, _playerDeployedThisTurn, _aiDeployedThisTurn;
 	private readonly List<(string Kind, object Target, UnitSlot? Slot)> _testTargets = [];
+	private BattleBgm _bgm = null!;
+	private bool _debugBgmEnabled;
 
 	public override void _Ready()
 	{
@@ -27,13 +29,30 @@ public partial class TrainingArena : Control
 		_slotScene = GD.Load<PackedScene>("res://scenes/components/unit_slot.tscn"); _cardScene = GD.Load<PackedScene>("res://scenes/components/card_tile.tscn");
 		_status = GetNode<Label>("%Status"); _hand = GetNode<HandFan>("%Hand"); _rightSidebar = GetNode<BattleRightSidebar>("%ContentHost"); _turnControl = GetNode<TurnControl>("%TurnControl"); _passiveGate = GetNode<PassiveGate>("%PassiveGate"); _passiveGate.DetailRequested += ShowCardDetail;
 		_battle.Events.Subscribe(BattleEvent.BattleEnded, HandleBattleEnd);
-		ConnectControls(); CreateSlots(); ResetTraining();
+		ConnectControls(); CreateSlots(); ResetTraining(); _bgm = new BattleBgm(); AddChild(_bgm);
 		if (GameSaveManager.Instance.ConsumePendingLoad() is { } pendingSave) RestoreSave(pendingSave);
-		if (DisplayServer.GetName() != "headless") { AudioManager.Instance?.PlayBattleMusic(); AudioManager.Instance?.PlaySfx(GameSfx.Horn); }
+		if (DisplayServer.GetName() != "headless") { AudioManager.Instance?.StopMusic(); AudioManager.Instance?.PlaySfx(GameSfx.Horn); _bgm.Start(); PlayShuffleAfterTransition(); }
 	}
 	public override void _ExitTree() => _cardResolver?.Dispose();
+	private void PlayShuffleAfterTransition()
+	{
+		var router = SceneRouter.Instance;
+		if (router.IsTransitioning)
+		{
+			Action handler = null!;
+			handler = () => { AudioManager.Instance?.PlaySfx(GameSfx.Shuffle); router.TransitionCompleted -= handler; };
+			router.TransitionCompleted += handler;
+		}
+		else AudioManager.Instance?.PlaySfx(GameSfx.Shuffle);
+	}
 	public override void _UnhandledInput(InputEvent input)
 	{
+		if (input is InputEventKey { Pressed: true, Echo: false } key)
+		{
+			if (key.Keycode == Key.F1) { _debugBgmEnabled = !_debugBgmEnabled; GetViewport().SetInputAsHandled(); return; }
+			if (_debugBgmEnabled && key.Keycode == Key.Kp1) { _bgm?.ActivateLayer(); GetViewport().SetInputAsHandled(); return; }
+			if (_debugBgmEnabled && key.Keycode == Key.Kp2) { _bgm?.TriggerClimax(); GetViewport().SetInputAsHandled(); return; }
+		}
 		if (input is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
 		{
 			if (_pendingHero != null || _pendingCard != null || _allyIndex >= 0 || _enemyIndex >= 0) CancelSelection();
@@ -80,7 +99,6 @@ public partial class TrainingArena : Control
 	{
 		_heroBag.Clear(); _aiHeroBag.Clear(); foreach (var h in content.heroes) { _heroBag.Add(new(h)); _aiHeroBag.Add(new(h, "ai")); }
 		_battle.ResetRandom(); _battle.ClearSlotUnits(); var selectedDeck = ResolveSelectedDeck(); _deck.Setup(selectedDeck, "player"); _deck.Draw(4); _aiDeck.Setup(selectedDeck, "ai");
-		AudioManager.Instance?.PlaySfx(GameSfx.Shuffle);
 		_ap = BattleState.DefaultActionPoints; _turn = 1; _battle.Turn = 1; _battle.PlayerActionPoints = BattleState.DefaultActionPoints; _battle.EnemyActionPoints = BattleState.DefaultActionPoints; _battle.PlayerNextTurnBonus = 0; _battle.EnemyNextTurnBonus = 0; _battle.PlayerNextTurnActionPointsOverride = null; _battle.EnemyNextTurnActionPointsOverride = null; _battle.Passives.Clear(); _battle.ResetOutcome();
 		_battle.SetReserveHeroCount("player", _heroBag.Count); _battle.SetReserveHeroCount("ai", _aiHeroBag.Count);
 		_logs.Clear(); _leaderId = _freeCardId = ""; _leaderTurns = 0; _cancelNextEnemyEffect = false; _playerDeployedThisTurn = _aiDeployedThisTurn = false; N<Label>("Title").Text = "训练场 · 第 1 回合";
@@ -473,6 +491,7 @@ public partial class TrainingArena : Control
 		foreach (var s in _enemies)
 			if (s.Unit is { Alive: false, DeathHandled: false }) { s.Unit.DeathHandled = true; newlyDead.Add((s.Unit!, "ai")); }
 		if (newlyDead.Any(item => item.Unit.TriggersHeroDeath)) AudioManager.Instance?.PlaySfx(GameSfx.HeroDies);
+		if (newlyDead.Any(item => item.Unit.Definition is HeroDefinition)) _bgm?.TriggerClimax();
 		
 		foreach (var s in _allies.Concat(_enemies))
 			if (s.Unit is { Alive: false }) s.Refresh();
@@ -504,8 +523,8 @@ public partial class TrainingArena : Control
 			-1 => "失败...我方英雄全部阵亡。",
 			_ => "平局！双方英雄同归于尽。"
 		};
-		if (data.Amount > 0) AudioManager.Instance?.PlayVictory();
-		else if (data.Amount < 0) AudioManager.Instance?.PlayDefeat();
+		if (data.Amount > 0) _bgm?.FadeOutAnd(() => AudioManager.Instance?.PlayVictory());
+		else if (data.Amount < 0) _bgm?.FadeOutAnd(() => AudioManager.Instance?.PlayDefeat());
 		else AudioManager.Instance?.StopMusic();
 		
 		AddLog($"[color=ffcc66]战斗结束[/color] {resultText}");
@@ -563,11 +582,12 @@ public partial class TrainingArena : Control
 		if (id == "hero_role_1") u.TauntTurns = u.Star >= 5 ? 3 : 2; else if (id == "hero_role_2") u.SkillTurns = 2; else if (id == "hero_role_3") { var count = Math.Min(2, _aiDeck.Hand.Count); for (var i = 0; i < count; i++) _aiDeck.Discard(_aiDeck.Hand[0]); _ap = 0; } else if (id == "hero_role_4") { var target = _enemies[_enemyIndex].Unit!; if (skill == 0) { var down = Math.Min(2, target.Attack); target.Attack -= down; target.AttackRestore += down; target.DebuffTurns = 3; } else { u.LinkedEnemy = _enemyIndex; u.LinkTurns = 2; } u.Hp = Math.Min(u.MaxHp, u.Hp + Mathf.RoundToInt(u.Hp * (u.Star >= 5 ? .1f : .05f))); }
 		var d = (HeroDefinition)u.Definition; u.Cooldown = Math.Max(0, d.skill_cooldown - (u.Star >= 2 && id == "hero_role_4" ? 1 : 0) - (_leaderId == "hero_role_4" && _leaderTurns > 0 ? 1 : 0)); AddLog($"[color=99ddff]技能[/color] {u.Name} 使用技能 {skill + 1}。"); N<AcceptDialog>("SkillDialog").Hide(); RefreshAll();
 	}
-	private void ApplyStarChoice(bool attackRoute) { if (_pendingStarSlot?.Unit == null || _pendingCard == null) return; var u = _pendingStarSlot.Unit; var d = (HeroDefinition)u.Definition; u.Star++; var i = u.Star - 1; if (u.Star is 1 or 4) { if (attackRoute) u.Attack += d.star_attack_choices[i]; else { u.MaxHp += d.star_hp_choices[i]; u.Hp += d.star_hp_choices[i]; } } else if (u.Star == 6) { u.Attack += d.star_attack_choices[i]; u.MaxHp += d.star_hp_choices[i]; u.Hp += d.star_hp_choices[i]; u.Type = "无职业"; } if (u.Star == 2 && u.Id == "hero_role_1" && _leaderId == u.Id) _leaderTurns = 999; _deck.Discard(_pendingCard); _ap -= _pendingStarCost; _pendingCard = null; _pendingCardTarget = -1; _pendingStarCost = 0; AudioManager.Instance?.PlaySfx(GameSfx.LevelUp); AddLog($"[color=ffd75a]升星[/color] {u.Name} 达到★{u.Star}，{(attackRoute ? "攻击路线" : "生命路线")}。"); _pendingStarSlot = null; RefreshAll(); }
+	private void ApplyStarChoice(bool attackRoute) { if (_pendingStarSlot?.Unit == null || _pendingCard == null) return; var u = _pendingStarSlot.Unit; var d = (HeroDefinition)u.Definition; u.Star++; if (u.Star == 3) _bgm?.TriggerClimax(); var i = u.Star - 1; if (u.Star is 1 or 4) { if (attackRoute) u.Attack += d.star_attack_choices[i]; else { u.MaxHp += d.star_hp_choices[i]; u.Hp += d.star_hp_choices[i]; } } else if (u.Star == 6) { u.Attack += d.star_attack_choices[i]; u.MaxHp += d.star_hp_choices[i]; u.Hp += d.star_hp_choices[i]; u.Type = "无职业"; } if (u.Star == 2 && u.Id == "hero_role_1" && _leaderId == u.Id) _leaderTurns = 999; _deck.Discard(_pendingCard); _ap -= _pendingStarCost; _pendingCard = null; _pendingCardTarget = -1; _pendingStarCost = 0; AudioManager.Instance?.PlaySfx(GameSfx.LevelUp); AddLog($"[color=ffd75a]升星[/color] {u.Name} 达到★{u.Star}，{(attackRoute ? "攻击路线" : "生命路线")}。"); _pendingStarSlot = null; RefreshAll(); }
 	private static void TickGrudge(IEnumerable<UnitSlot> slots) { foreach (var unit in slots.Where(slot => slot.Unit != null).Select(slot => slot.Unit!)) { if (unit.GrudgeStacks <= 0) continue; unit.GrudgeStacks--; unit.Attack += unit.GrudgeAttackPenaltyPerStack; if (unit.GrudgeStacks == 0) unit.GrudgeAttackPenaltyPerStack = 0; } }
 	private void TickStatuses() { if (_leaderTurns > 0) _leaderTurns--; foreach (var s in _allies.Where(s => s.Unit != null)) { var u = s.Unit!; u.Cooldown = Math.Max(0, u.Cooldown - 1); u.SkillTurns = Math.Max(0, u.SkillTurns - 1); u.TauntTurns = Math.Max(0, u.TauntTurns - 1); u.CeasefireTurns = Math.Max(0, u.CeasefireTurns - 1); if (u.LinkTurns > 0) { if (u.LinkedEnemy >= 0 && _enemies[u.LinkedEnemy].Unit != null) { u.Attack = Math.Max(0, u.Attack - 1); _enemies[u.LinkedEnemy].Unit!.Attack = Math.Max(0, _enemies[u.LinkedEnemy].Unit!.Attack - 1); } u.LinkTurns--; } } foreach (var s in _enemies.Where(s => s.Unit != null)) { var u = s.Unit!; u.CeasefireTurns = Math.Max(0, u.CeasefireTurns - 1); if (u.DebuffTurns > 0 && --u.DebuffTurns == 0) { u.Attack += u.AttackRestore; u.AttackRestore = 0; } } }
 	public void RefreshAll()
 	{
+		if (_allies.Count(s => s.Unit is { Alive: true }) + _enemies.Count(s => s.Unit is { Alive: true }) >= 10) _bgm?.ActivateLayer();
 		var matchDeckCount = ResolveSelectedDeck().Count; _turnControl.SetActionPoints(_ap, BattleState.DefaultActionPoints, _ap <= 0 || !HasObviousLegalAction()); N<Button>("HeroBag").Text = $"♛　{_heroBag.Count}"; N<Button>("HeroBag").TooltipText = $"♛ 英雄牌库 · 剩余{_heroBag.Count}"; N<Button>("DrawPile").Text = $"▣　{_deck.DrawPile.Count}"; N<Button>("DrawPile").TooltipText = $"▣ 抽牌堆 · {_deck.DrawPile.Count}"; N<Button>("DiscardPile").Text = $"▨　{_deck.DiscardPile.Count}"; N<Button>("DiscardPile").TooltipText = $"▨ 弃牌堆 · {_deck.DiscardPile.Count}"; N<Button>("CatalogButton").Text = $"◇　{matchDeckCount}"; N<Button>("CatalogButton").TooltipText = $"◇ 本场锦囊总览 · {matchDeckCount}";
 		N<Button>("EndTurnButton").TooltipText = RequiresHeroDeployment() ? "本回合必须先部署一名英雄" : "结束当前回合";
 		_passiveGate.SetCards(_battle.Passives);
