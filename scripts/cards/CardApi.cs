@@ -1,8 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 public sealed class CardApi(CardExecutionContext context)
 {
+    private static readonly HashSet<string> SupportedHandlers = new(StringComparer.Ordinal)
+    {
+        "STEAL_TEMPORARY", "STAR_UP", "HEAL_PERCENT", "CANCEL_NEXT_ACTIVE", "DEAL_DAMAGE",
+        "APPLY_SHIELD", "DISCARD_DRAW_AP", "CONSUME_AP_REFUND_NEXT", "APPLY_DAMAGE_ATTACK_BUFF",
+        "EXTRA_ATTACK_BUFF", "CONSUME_AP_DRAW_REFUND", "APPLY_GRUDGE", "SELECT_FROM_PILES", "SILENCE",
+        "TRUE_DAMAGE", "CANCEL_DAMAGE", "ONGOING_SHIELD", "COUNTER_PASSIVE_SET", "REVIVE_WITH_PENALTY",
+        "HARD_CHOICE", "INCREASE_NEXT_COST", "EMERGENCY_DRAW", "CANCEL_DRAW", "REDIRECT_ATTACK",
+        "SKIP_ENEMY_BATTLE_PHASE", "PREVENT_DISCARD", "DRAW_ON_PLACE_AND_NEXT", "GAMBLE_AP",
+        "COPY_AND_EXPIRE", "SUMMON_DELAYED_RABBIT"
+    };
+
+    public static bool SupportsHandler(string handler) => SupportedHandlers.Contains(handler);
+
     public CardExecutionContext Context { get; } = context;
     private System.Collections.Generic.List<UnitState> FriendlyUnits => Context.OwnerDeck.OwnerId == "player" ? Context.State.PlayerUnits : Context.State.EnemyUnits;
     private System.Collections.Generic.List<UnitState> OpposingUnits => Context.OwnerDeck.OwnerId == "player" ? Context.State.EnemyUnits : Context.State.PlayerUnits;
@@ -224,7 +238,17 @@ public sealed class CardApi(CardExecutionContext context)
                 else { var x = Context.State.EnemyActionPoints; Context.State.EnemyActionPoints = x + Param(card, "current_ap_gain_offset", 3); Context.State.EnemyNextTurnBonus += Param(card, "next_turn_ap_delta", -2); Draw(Math.Max(0, x + Param(card, "draw_offset", -1))); }
                 break;
             case "SELECT_FROM_PILES":
-                foreach (var selected in Context.OwnerDeck.DrawPile.Take(Param(card, "count", 2)).ToList()) { Context.OwnerDeck.DrawPile.Remove(selected); selected.Zone = CardInstance.ZoneKind.Hand; Context.OwnerDeck.Hand.Add(selected); }
+                var available = Context.OwnerDeck.DrawPile.Concat(Context.OwnerDeck.DiscardPile)
+                    .GroupBy(candidate => candidate.Definition.id.ToString(), StringComparer.Ordinal)
+                    .Select(group => group.First())
+                    .Take(Math.Min(Param(card, "count", 2), DeckState.HandLimit - Context.OwnerDeck.Hand.Count))
+                    .ToList();
+                foreach (var selected in available) {
+                    Context.OwnerDeck.DrawPile.Remove(selected);
+                    Context.OwnerDeck.DiscardPile.Remove(selected);
+                    selected.Zone = CardInstance.ZoneKind.Hand;
+                    Context.OwnerDeck.Hand.Add(selected);
+                }
                 break;
             case "SILENCE": if (Context.Target != null) Context.Target.CeasefireTurns = Param(card, "rounds", 2) + 1; break;
             case "TRUE_DAMAGE": if (Context.Target != null) { var amount = (int)MathF.Round(Context.Target.MaxHp * ParamFloat(card, "max_hp_ratio", .4f)); Context.Target.Hp = Math.Max(0, Context.Target.Hp - amount); } break;
@@ -235,10 +259,13 @@ public sealed class CardApi(CardExecutionContext context)
             case "HARD_CHOICE": if (Context.OpponentDeck.Hand.Count > 0 && !Context.State.PreventsDiscard(Context.OpponentDeck.OwnerId)) DiscardOpponentHand(1); else { var target = OpposingUnits.Where(unit => unit.Alive).OrderBy(_ => Context.State.Random.Next()).FirstOrDefault(); if (target != null) target.Attack = Math.Max(0, target.Attack - (int)MathF.Round(target.Attack * ParamFloat(card, "attack_ratio", .1f))); } break;
             case "INCREASE_NEXT_COST": foreach (var held in Context.OpponentDeck.Hand) held.RuntimeCostModifier += Param(card, "cost_increase", 1); break;
             case "GAMBLE_AP": SetRandomActionPointsV2(); break;
+            case "EMERGENCY_DRAW": RefillHand(Param(card, "draw", 5)); break;
+            case "REDIRECT_ATTACK": RedirectToAdjacent(); break;
+            case "COPY_AND_EXPIRE": CopyResolvedCard(); break;
             case "HEAL_CLEANSE": HealTarget(Param(card, "heal", 20)); break;
             case "CANCEL_PENDING_EFFECT": case "CANCEL_DAMAGE": case "CANCEL_DRAW": case "SKIP_ENEMY_BATTLE_PHASE": Cancel(); break;
             case "DAMAGE_STAR_ALL": DamageTarget(Param(card, "damage", 15)); break;
-            case "APPLY_SHIELD": if (Context.Target != null) { Context.Target.ShieldRatio = Context.Target.Star >= Param(card, "star_required", 4) ? .5f : .2f; Context.Target.ShieldTurns = 1; } break;
+            case "APPLY_SHIELD": if (Context.Target != null) Context.Target.ShieldPoints += (int)MathF.Round(Context.Target.MaxHp * ParamFloat(card, "max_hp_ratio", .2f)); break;
             case "LINK_RESONANCE": if (Context.Source != null && Context.Target != null) { Context.Source.LinkTurns = 1; Context.Target.LinkTurns = 1; } break;
             case "ZERO_HAND_COSTS": ZeroOtherHandCosts(); break;
             case "APPLY_DAMAGE_HEAL_AMPLIFY": if (Context.Target != null) Context.Target.DamageTakenMultiplier = 1.1f; break;
@@ -260,6 +287,7 @@ public sealed class CardApi(CardExecutionContext context)
             case "GAMBLE_ACTION_POINTS": SetRandomActionPoints(); break;
             case "COPY_RESOLVED_CARD": CopyResolvedCard(); break;
             case "SUMMON_DELAYED_RABBIT": SummonDelayedRabbit(); break;
+            default: throw new InvalidOperationException($"未注册的卡牌处理器：{handler}");
         }
     }
 

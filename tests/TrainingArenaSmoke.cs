@@ -32,6 +32,7 @@ public partial class TrainingArenaSmoke : Node
 		Check(arena.GetNode<Button>("%CatalogButton").Text.Contains("15") && arena.GetNode<Button>("%CatalogButton").TooltipText.Contains("本场锦囊总览 · 15"), "战斗HUD把30张主卡池错误显示为本场锦囊总数");
         Check(arena.content.cards.All(c => c.logic_mode == "LUA") && arena.content.cards.Select(c => c.lua_script).Distinct().Count() == 30, "30张卡没有全部使用独立Lua入口");
         CardSemanticValidator.Validate(arena.content.cards);
+        CardDefectRegressionTest.Run(arena.content.cards);
         using (var resolver = new CardResolver()) { Check(resolver.LuaAvailable, "Lua GDExtension未加载"); Check(resolver.ValidateSandboxIsolation(out var isolationError), "Lua沙盒隔离失败：" + isolationError); }
         var variableDefinition = arena.content.cards.First(c => c.id.ToString() == "card_exhaustive_scheme"); var sampleDefinition = arena.content.cards.First(c => c != variableDefinition);
         Check(variableDefinition.cost_mode == "VARIABLE_AP" && new CardInstance(variableDefinition).CurrentCost(4, 5) == 4, "V2变量费用没有固定取当前全部AP");
