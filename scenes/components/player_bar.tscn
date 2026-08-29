@@ -1,36 +1,173 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/PlayerBar.cs" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/PlayerBar.cs" id="1_script"]
 
-[sub_resource type="StyleBoxEmpty" id="EmptyStyle"]
+[sub_resource type="StyleBoxFlat" id="HudStyle"]
+bg_color = Color(0.035, 0.09, 0.17, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.68, 0.55, 0.34, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="HoverStyle"]
-bg_color = Color(1, 1, 1, 0.08)
+[sub_resource type="StyleBoxFlat" id="PlaceholderStyle"]
+bg_color = Color(0.12, 0.18, 0.26, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.45, 0.56, 0.7, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="PressedStyle"]
-bg_color = Color(1, 1, 1, 0.12)
+[sub_resource type="StyleBoxFlat" id="SettingsNormal"]
+bg_color = Color(0.08, 0.19, 0.34, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.74, 0.63, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="SettingsHover"]
+bg_color = Color(0.15, 0.34, 0.55, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.77, 0.48, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="PlayerBar" type="Control"]
-custom_minimum_size = Vector2(1920, 120)
-anchor_left = 0.0
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -120.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("1")
+script = ExtResource("1_script")
 
-[node name="SettingsButton" type="Button" parent="."]
-unique_name_in_owner = true
-offset_left = 1803.0
-offset_top = 3.0
-offset_right = 1920.0
-offset_bottom = 120.0
+[node name="HudFrame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.009375
+anchor_top = 0.790741
+anchor_right = 0.990625
+anchor_bottom = 0.983333
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+theme_override_styles/panel = SubResource("HudStyle")
+
+[node name="HudMargin" type="MarginContainer" parent="HudFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="HudRow" type="HBoxContainer" parent="HudFrame/HudMargin"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="AvatarPlaceholder" type="PanelContainer" parent="HudFrame/HudMargin/HudRow"]
+custom_minimum_size = Vector2(148, 148)
+layout_mode = 2
+theme_override_styles/panel = SubResource("PlaceholderStyle")
+[node name="Label" type="Label" parent="HudFrame/HudMargin/HudRow/AvatarPlaceholder"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+text = "头像\n148 × 148\n占位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerInfo" type="VBoxContainer" parent="HudFrame/HudMargin/HudRow"]
+custom_minimum_size = Vector2(300, 148)
+layout_mode = 2
+theme_override_constants/separation = 5
+[node name="Name" type="Label" parent="HudFrame/HudMargin/HudRow/PlayerInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "玩家名称"
+[node name="Level" type="Label" parent="HudFrame/HudMargin/HudRow/PlayerInfo"]
+layout_mode = 2
+text = "Lv. 1"
+[node name="Exp" type="ProgressBar" parent="HudFrame/HudMargin/HudRow/PlayerInfo"]
+custom_minimum_size = Vector2(280, 22)
+layout_mode = 2
+value = 32.0
+show_percentage = false
+[node name="ExpText" type="Label" parent="HudFrame/HudMargin/HudRow/PlayerInfo"]
+layout_mode = 2
+text = "经验 320 / 1000"
+[node name="PlayerId" type="Label" parent="HudFrame/HudMargin/HudRow/PlayerInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.74, 0.82, 1)
+text = "学员编号：占位"
+
+[node name="Stats" type="VBoxContainer" parent="HudFrame/HudMargin/HudRow"]
+custom_minimum_size = Vector2(170, 148)
+layout_mode = 2
+theme_override_constants/separation = 10
+[node name="LevelButton" type="Button" parent="HudFrame/HudMargin/HudRow/Stats"]
+custom_minimum_size = Vector2(170, 64)
+layout_mode = 2
 focus_mode = 0
-theme_override_styles/normal = SubResource("EmptyStyle")
-theme_override_styles/hover = SubResource("HoverStyle")
-theme_override_styles/pressed = SubResource("PressedStyle")
-theme_override_styles/disabled = SubResource("EmptyStyle")
-theme_override_styles/focus = SubResource("EmptyStyle")
+text = "等级\n占位"
+[node name="ExperienceButton" type="Button" parent="HudFrame/HudMargin/HudRow/Stats"]
+custom_minimum_size = Vector2(170, 64)
+layout_mode = 2
+focus_mode = 0
+text = "经验\n占位"
+
+[node name="CurrencySpacer" type="Control" parent="HudFrame/HudMargin/HudRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Currencies" type="HBoxContainer" parent="HudFrame/HudMargin/HudRow"]
+custom_minimum_size = Vector2(620, 148)
+layout_mode = 2
+theme_override_constants/separation = 32
+alignment = 1
+[node name="Currency1" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies"]
+custom_minimum_size = Vector2(175, 80)
+layout_mode = 2
+text = "◇ 货币 XXX\n图标占位"
+horizontal_alignment = 1
+vertical_alignment = 1
+[node name="Currency2" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies"]
+custom_minimum_size = Vector2(175, 80)
+layout_mode = 2
+text = "◉ 货币 XXX\n图标占位"
+horizontal_alignment = 1
+vertical_alignment = 1
+[node name="Currency3" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies"]
+custom_minimum_size = Vector2(175, 80)
+layout_mode = 2
+text = "◆ 货币 XXX\n图标占位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SettingsButton" type="Button" parent="HudFrame/HudMargin/HudRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 148)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("SettingsNormal")
+theme_override_styles/hover = SubResource("SettingsHover")
+theme_override_styles/pressed = SubResource("SettingsHover")
+text = "⚙\n设置\n占位"

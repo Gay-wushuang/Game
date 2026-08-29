@@ -98,6 +98,10 @@ public sealed class BattleSave
     public DeckSave PlayerDeck { get; set; } = new();
     public DeckSave EnemyDeck { get; set; } = new();
     public List<PassiveSave> Passives { get; set; } = [];
+    public CardSelectionTransaction? PendingCardSelection { get; set; }
+    public Dictionary<string, int> RuntimeInts { get; set; } = [];
+    public Dictionary<string, string> RuntimeStrings { get; set; } = [];
+    public HashSet<string> RuntimeFlags { get; set; } = [];
 }
 
 public sealed class DeckSave
@@ -110,6 +114,7 @@ public sealed class DeckSave
 
 public sealed class CardSave
 {
+    public string InstanceId { get; set; } = "";
     public string Id { get; set; } = "";
     public string OwnerId { get; set; } = "player";
     public string OriginalOwnerId { get; set; } = "player";
@@ -120,6 +125,9 @@ public sealed class CardSave
     public bool ExileAtTurnEnd { get; set; }
     public bool ReturnToOriginalOwnerDiscardAtTurnEnd { get; set; }
     public bool EmergencyUsed { get; set; }
+    public Dictionary<string, int> RuntimeInts { get; set; } = [];
+    public Dictionary<string, string> RuntimeStrings { get; set; } = [];
+    public HashSet<string> RuntimeFlags { get; set; } = [];
 }
 
 public sealed class UnitSave
@@ -149,6 +157,9 @@ public sealed class UnitSave
     public bool DeathHandled { get; set; }
     public int ExtraAttacksRemaining { get; set; }
     public int ShieldPoints { get; set; }
+    public Dictionary<string, int> RuntimeInts { get; set; } = [];
+    public Dictionary<string, string> RuntimeStrings { get; set; } = [];
+    public HashSet<string> RuntimeFlags { get; set; } = [];
 }
 
 public sealed class PassiveSave

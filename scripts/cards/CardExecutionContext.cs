@@ -8,6 +8,8 @@ public sealed class CardExecutionContext
     public required DeckState OpponentDeck { get; init; }
     public UnitState? Source { get; init; }
     public UnitState? Target { get; init; }
+    public CardSelectionTransaction? Selection { get; init; }
+    public Func<int, bool>? DeployReserveHero { get; init; }
     public required Action<string> Log { get; init; }
     public bool Cancelled { get; set; }
 }

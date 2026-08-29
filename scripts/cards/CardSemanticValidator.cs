@@ -15,10 +15,20 @@ public static class CardSemanticValidator
             "V2 handler_key 不能为空");
         Check(cards.All(card => !string.IsNullOrWhiteSpace(card.target_key)),
             "V2 target_key 不能为空");
-        Check(cards.Count(card => card.card_kind == CardDefinition.CardKind.Active) == 15,
-            "V2 主动锦囊必须为 15 张");
-        Check(cards.Count(card => card.card_kind == CardDefinition.CardKind.Passive) == 15,
-            "V2 被动锦囊必须为 15 张");
+        Check(cards.All(card => card.components.IsExplicit),
+            "V2 运行时快照必须显式声明 components");
+        Check(cards.All(card => card.handler_key == card.components.Effect.HandlerKey
+                && card.target_key == card.components.Target.Key
+                && card.cost_mode == card.components.Cost.Mode
+                && card.action_cost == card.components.Cost.BaseCost
+                && card.cooldown_turns == card.components.Limits.CooldownTurns),
+            "组件投影与兼容字段不一致");
+        Check(cards.All(card => card.components.Lifecycle.OnResolve is CardLifecycleComponent.Discard or CardLifecycleComponent.Exile),
+            "卡牌 lifecycle.on_resolve 只能为 DISCARD 或 EXILE");
+        Check(cards.Count(card => card.card_kind == CardDefinition.CardKind.Active) == CardCatalog.ExpectedActiveCount,
+            $"主动锦囊必须为 {CardCatalog.ExpectedActiveCount} 张");
+        Check(cards.Count(card => card.card_kind == CardDefinition.CardKind.Passive) == CardCatalog.ExpectedPassiveCount,
+            $"被动锦囊必须为 {CardCatalog.ExpectedPassiveCount} 张");
         Check(cards.Where(card => card.card_kind == CardDefinition.CardKind.Passive)
                 .All(card => card.target_kind == CardDefinition.TargetKind.SetGate),
             "V2 被动锦囊必须统一映射到独立战门");

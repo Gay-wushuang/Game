@@ -21,5 +21,8 @@ public sealed class BattleEventData(BattleEvent eventType)
     public UnitState? Target { get; init; }
     public CardInstance? Card { get; init; }
     public int Amount { get; set; }
+    public int FinalHpDamage { get; set; }
+    public string DamageTag { get; init; } = "NORMAL";
+    public bool SuppressRecursiveResponses { get; init; }
     public bool Cancelled { get; set; }
 }

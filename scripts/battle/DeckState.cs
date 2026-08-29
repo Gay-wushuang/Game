@@ -22,10 +22,10 @@ public sealed class DeckState
     }
     public List<CardInstance> Draw(int amount = 1)
     {
-        var rng = GetRandom();
+        PrepareDrawPile(amount);
         List<CardInstance> result = [];
         for (var i = 0; i < amount; i++) {
-            if (DrawPile.Count == 0) { if (DiscardPile.Count == 0) break; DrawPile.AddRange(DiscardPile); DiscardPile.Clear(); Shuffle(DrawPile); }
+            if (DrawPile.Count == 0) break;
             var card = DrawPile[^1]; DrawPile.RemoveAt(DrawPile.Count - 1); card.Zone = CardInstance.ZoneKind.Hand;
             card.FaceUp = OwnerId == "player";
             if (Hand.Count >= HandLimit) { card.Zone = CardInstance.ZoneKind.Discard; DiscardPile.Add(card); continue; }
@@ -33,10 +33,22 @@ public sealed class DeckState
         }
         return result;
     }
+
+    /// <summary>在 BEFORE_DRAW 前完成弃牌堆回洗，使触发器看到确定且可复现的牌堆顶。</summary>
+    public void PrepareDrawPile(int requestedAmount = 1)
+    {
+        if (requestedAmount <= 0 || DrawPile.Count > 0 || DiscardPile.Count == 0) return;
+        DrawPile.AddRange(DiscardPile);
+        DiscardPile.Clear();
+        Shuffle(DrawPile);
+    }
+
+    public CardInstance? PeekPreparedTop() => DrawPile.Count == 0 ? null : DrawPile[^1];
     public void Discard(CardInstance card) { if (!Hand.Remove(card)) return; card.Zone = CardInstance.ZoneKind.Discard; DiscardPile.Add(card); }
     public void FinishPlayedCard(CardInstance card)
     {
         if (card.IsTemporaryCopy || card.ExileAtTurnEnd) Exile(card);
+        else if (card.Definition.components.Lifecycle.OnResolve == CardLifecycleComponent.Exile) Exile(card);
         else Discard(card);
     }
     public bool SetPassive(CardInstance card) { if (!Hand.Remove(card)) return false; card.Zone = CardInstance.ZoneKind.Set; card.FaceUp = false; return true; }

@@ -4,9 +4,6 @@
     "card_id": "card_appropriation",
     "name": "拿来主义",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "NONE",
     "rules_text": "从敌方手牌随机选择1张：敌方原牌进入敌方弃牌堆；我方生成1张费用为0的临时复制。临时复制使用后立即进入放逐区；若本回合未使用，回合结束时进入放逐区。",
     "keywords": [
       "抽牌",
@@ -15,18 +12,36 @@
       "回收"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "复制而非转移；复制牌不进入任何弃牌堆。",
-    "handler_key": "STEAL_TEMPORARY",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/appropriation.lua",
-    "trigger_keys": [],
-    "params": {
-      "count": 1,
-      "cost": 0,
-      "enemy_original_zone": "DISCARD",
-      "copy_expire": "ON_PLAY_OR_TURN_END",
-      "copy_post_zone": "EXILE"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "NONE"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "STEAL_TEMPORARY",
+        "params": {
+          "count": 1,
+          "cost": 0,
+          "enemy_original_zone": "DISCARD",
+          "copy_expire": "ON_PLAY_OR_TURN_END",
+          "copy_post_zone": "EXILE"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -34,22 +49,37 @@
     "card_id": "card_star_up",
     "name": "升星",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SELECTED_ALLY",
     "rules_text": "选择1名我方英雄，使其立即提升1星。",
     "keywords": [
       "升星"
     ],
     "rarity": 4,
-    "cooldown": 0,
     "designer_notes": "0费；仍受英雄最高星级限制。",
-    "handler_key": "STAR_UP",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/star_up.lua",
-    "trigger_keys": [],
-    "params": {
-      "stars": 1
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "STAR_UP",
+        "params": {
+          "stars": 1
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -57,23 +87,38 @@
     "card_id": "card_miracle_heal",
     "name": "妙手回春",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SELECTED_ALLY",
     "rules_text": "选择1名我方英雄，回复其结算时生命上限（MaxHp）的15%，结果四舍五入。",
     "keywords": [
       "回复"
     ],
     "rarity": 1,
-    "cooldown": 0,
     "designer_notes": "“生命上限”统一指结算时MaxHp。",
-    "handler_key": "HEAL_PERCENT",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/miracle_heal.lua",
-    "trigger_keys": [],
-    "params": {
-      "max_hp_ratio": 0.15,
-      "rounding": "ROUND"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "HEAL_PERCENT",
+        "params": {
+          "max_hp_ratio": 0.15,
+          "rounding": "ROUND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -81,26 +126,41 @@
     "card_id": "card_reject_effect",
     "name": "拒绝生效",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "NONE",
     "rules_text": "打出后持续等待：使敌方下一张主动锦囊失效，然后本效果消失。",
     "keywords": [
       "反制",
       "无效"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "没有回合期限；只反制主动锦囊；不可反制标记优先。",
-    "handler_key": "CANCEL_NEXT_ACTIVE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/reject_effect.lua",
-    "trigger_keys": [],
-    "params": {
-      "target": "enemy",
-      "card_type": "ACTIVE",
-      "occurrence": 1,
-      "duration": "UNTIL_TRIGGERED"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "NONE"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "CANCEL_NEXT_ACTIVE",
+        "params": {
+          "target": "enemy",
+          "card_type": "ACTIVE",
+          "occurrence": 1,
+          "duration": "UNTIL_TRIGGERED"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -108,23 +168,38 @@
     "card_id": "card_violent_means",
     "name": "暴力手段",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SELECTED_ENEMY",
     "rules_text": "选择1名敌方英雄，造成25点普通伤害。",
     "keywords": [
       "伤害"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "按普通伤害流程，可被护盾、格挡和伤害反制影响。",
-    "handler_key": "DEAL_DAMAGE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/violent_means.lua",
-    "trigger_keys": [],
-    "params": {
-      "damage": 25,
-      "damage_type": "NORMAL"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ENEMY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "DEAL_DAMAGE",
+        "params": {
+          "damage": 25,
+          "damage_type": "NORMAL"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -132,24 +207,39 @@
     "card_id": "card_heavy_armor",
     "name": "重甲",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SELECTED_ALLY",
     "rules_text": "选择1名我方英雄，获得其结算时生命上限（MaxHp）20%的护盾，结果四舍五入；护盾持续到被消耗。",
     "keywords": [
       "护盾"
     ],
     "rarity": 1,
-    "cooldown": 0,
     "designer_notes": "护盾没有回合期限。",
-    "handler_key": "APPLY_SHIELD",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/heavy_armor.lua",
-    "trigger_keys": [],
-    "params": {
-      "max_hp_ratio": 0.2,
-      "rounding": "ROUND",
-      "duration": "UNTIL_DEPLETED"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "APPLY_SHIELD",
+        "params": {
+          "max_hp_ratio": 0.2,
+          "rounding": "ROUND",
+          "duration": "UNTIL_DEPLETED"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -157,28 +247,43 @@
     "card_id": "card_resonant_guidance",
     "name": "迷蒙指引",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SELECT_CARDS",
     "rules_text": "从本牌之外的手牌中选择并弃置至多3张牌：有3张或以上时弃3张，不足3张时全部弃置；然后抽2张牌，最后获得2点行动点。",
     "keywords": [
       "抽牌",
       "弃牌"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "结算顺序：弃置min(3,其他手牌数)→抽2→AP+2；抽牌受8张手牌上限限制。",
-    "handler_key": "DISCARD_DRAW_AP",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/resonant_guidance.lua",
-    "trigger_keys": [],
-    "params": {
-      "discard_up_to": 3,
-      "exclude_self": true,
-      "discard_all_if_fewer": true,
-      "draw": 2,
-      "ap_gain": 2,
-      "requires_exact_discard": false
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SELECT_CARDS"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "DISCARD_DRAW_AP",
+        "params": {
+          "discard_up_to": 3,
+          "exclude_self": true,
+          "discard_all_if_fewer": true,
+          "draw": 2,
+          "ap_gain": 2,
+          "requires_exact_discard": false
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -186,24 +291,39 @@
     "card_id": "card_exhaustive_scheme",
     "name": "机关算尽",
     "card_kind": "ACTIVE",
-    "cost_mode": "VARIABLE_AP",
-    "base_cost": 0,
-    "target_key": "NONE",
     "rules_text": "支付打出时剩余的全部行动点X（X至少为1）；下回合的正常初始行动点直接设置为X+1。",
     "keywords": [
       "预付"
     ],
     "rarity": 1,
-    "cooldown": 0,
     "designer_notes": "VARIABLE_AP固定取当前全部AP，不弹出选择；X+1是下回合总初始AP，不是额外加成。",
-    "handler_key": "CONSUME_AP_REFUND_NEXT",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/exhaustive_scheme.lua",
-    "trigger_keys": [],
-    "params": {
-      "minimum_x": 1,
-      "consume": "ALL_CURRENT",
-      "next_turn_set_offset": 1
+    "components": {
+      "cost": {
+        "mode": "VARIABLE_AP",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "NONE"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "CONSUME_AP_REFUND_NEXT",
+        "params": {
+          "minimum_x": 1,
+          "consume": "ALL_CURRENT",
+          "next_turn_set_offset": 1
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -211,28 +331,43 @@
     "card_id": "card_shared_fate",
     "name": "同甘共苦",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SELECTED_ALLY",
     "rules_text": "选择1名我方英雄：本回合其受到的伤害提高20%，当前攻击力提高25%（四舍五入）。同名效果不叠加，只刷新持续时间。",
     "keywords": [
       "易伤",
       "攻击增幅"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "易伤在护盾、格挡等减伤后乘算；持续到本方回合结束。",
-    "handler_key": "APPLY_DAMAGE_ATTACK_BUFF",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/shared_fate.lua",
-    "trigger_keys": [],
-    "params": {
-      "damage_taken_increase": 0.2,
-      "attack_increase": 0.25,
-      "attack_basis": "CURRENT",
-      "rounding": "ROUND",
-      "duration": "OWN_TURN",
-      "stacking": "REFRESH"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "APPLY_DAMAGE_ATTACK_BUFF",
+        "params": {
+          "damage_taken_increase": 0.2,
+          "attack_increase": 0.25,
+          "attack_basis": "CURRENT",
+          "rounding": "ROUND",
+          "duration": "OWN_TURN",
+          "stacking": "REFRESH"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -240,27 +375,42 @@
     "card_id": "card_village_sword",
     "name": "村好剑",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 2,
-    "target_key": "SELECTED_ALLY",
     "rules_text": "选择1名我方英雄：本回合当前攻击力提高10%（四舍五入），且本回合攻击次数上限+1。",
     "keywords": [
       "额外攻击"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "未攻击时最多攻击2次；已攻击时仍可再攻击1次；多张可叠加。",
-    "handler_key": "EXTRA_ATTACK_BUFF",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/village_sword.lua",
-    "trigger_keys": [],
-    "params": {
-      "attack_increase": 0.1,
-      "attack_basis": "CURRENT",
-      "rounding": "ROUND",
-      "extra_attacks": 1,
-      "duration": "OWN_TURN",
-      "stacking": "ADD"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "EXTRA_ATTACK_BUFF",
+        "params": {
+          "attack_increase": 0.1,
+          "attack_basis": "CURRENT",
+          "rounding": "ROUND",
+          "extra_attacks": 1,
+          "duration": "OWN_TURN",
+          "stacking": "ADD"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -268,27 +418,42 @@
     "card_id": "card_manipulate_world",
     "name": "操纵世界",
     "card_kind": "ACTIVE",
-    "cost_mode": "VARIABLE_AP",
-    "base_cost": 0,
-    "target_key": "NONE",
     "rules_text": "支付打出时剩余的全部行动点X（X至少为1）；抽max(0,X-1)张牌，然后获得X+3点行动点；下回合正常初始行动点减少2（最低0）。",
     "keywords": [
       "预付"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "VARIABLE_AP固定取当前全部AP；本回合净获得3AP。",
-    "handler_key": "CONSUME_AP_DRAW_REFUND",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/manipulate_world.lua",
-    "trigger_keys": [],
-    "params": {
-      "minimum_x": 1,
-      "consume": "ALL_CURRENT",
-      "draw_offset": -1,
-      "current_ap_gain_offset": 3,
-      "next_turn_ap_delta": -2,
-      "next_turn_minimum": 0
+    "components": {
+      "cost": {
+        "mode": "VARIABLE_AP",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "NONE"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "CONSUME_AP_DRAW_REFUND",
+        "params": {
+          "minimum_x": 1,
+          "consume": "ALL_CURRENT",
+          "draw_offset": -1,
+          "current_ap_gain_offset": 3,
+          "next_turn_ap_delta": -2,
+          "next_turn_minimum": 0
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -296,28 +461,43 @@
     "card_id": "card_grudge",
     "name": "怨恨",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "ALL_ENEMIES",
     "rules_text": "敌方所有存活英雄获得3层怨恨。每层按施加时基础攻击力降低5%（四舍五入），攻击力最低为0；该英雄每个自身回合结束时移除1层。",
     "keywords": [
       "怨恨",
       "削弱"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "层数可叠加；基础攻击力指未受临时增减前的攻击。",
-    "handler_key": "APPLY_GRUDGE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/grudge.lua",
-    "trigger_keys": [],
-    "params": {
-      "stacks": 3,
-      "attack_reduction_per_stack": 0.05,
-      "attack_basis": "BASE",
-      "rounding": "ROUND",
-      "remove_on_own_turn_end": 1,
-      "minimum_attack": 0
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "ALL_ENEMIES"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "APPLY_GRUDGE",
+        "params": {
+          "stacks": 3,
+          "attack_reduction_per_stack": 0.05,
+          "attack_basis": "BASE",
+          "rounding": "ROUND",
+          "remove_on_own_turn_end": 1,
+          "minimum_attack": 0
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -325,29 +505,44 @@
     "card_id": "card_scout",
     "name": "侦查",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SELECT_CARDS",
     "rules_text": "从我方抽牌堆和弃牌堆公开选择合计最多2张不同卡加入手牌；牌不足时全部获得，受手牌上限限制。",
     "keywords": [
       "抽牌"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "从抽牌堆选择不触发普通抽牌事件。",
-    "handler_key": "SELECT_FROM_PILES",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/scout.lua",
-    "trigger_keys": [],
-    "params": {
-      "count": 2,
-      "sources": [
-        "DRAW",
-        "DISCARD"
-      ],
-      "distinct": true,
-      "respect_hand_limit": true,
-      "trigger_draw_event": false
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECT_CARDS"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "SELECT_FROM_PILES",
+        "params": {
+          "count": 2,
+          "sources": [
+            "DRAW",
+            "DISCARD"
+          ],
+          "distinct": true,
+          "respect_hand_limit": true,
+          "trigger_draw_event": false
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -355,27 +550,42 @@
     "card_id": "card_ceasefire",
     "name": "止戈",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SELECTED_ENEMY",
     "rules_text": "选择1名敌方英雄，立即沉默；结算所在的不完整轮次不计，经过随后2个完整敌我轮次后解除。每个完整轮次包含我方与敌方各1个行动回合。",
     "keywords": [
       "沉默"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "仅禁止英雄技能，不禁止攻击、被动触发或使用锦囊。",
-    "handler_key": "SILENCE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/ceasefire.lua",
-    "trigger_keys": [],
-    "params": {
-      "rounds": 2,
-      "count_partial_round": false,
-      "round_definition": "BOTH_SIDES_TURN",
-      "blocks": [
-        "HERO_SKILL"
-      ]
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ENEMY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "SILENCE",
+        "params": {
+          "rounds": 2,
+          "count_partial_round": false,
+          "round_definition": "BOTH_SIDES_TURN",
+          "blocks": [
+            "HERO_SKILL"
+          ]
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -383,26 +593,41 @@
     "card_id": "card_arrogance",
     "name": "目中无人",
     "card_kind": "ACTIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 3,
-    "target_key": "SELECTED_ENEMY",
     "rules_text": "选择1名敌方英雄，造成其结算时生命上限（MaxHp）40%的真伤，结果四舍五入；不可被格挡，且本牌不可被反制。",
     "keywords": [
       "真伤"
     ],
     "rarity": 4,
-    "cooldown": 0,
     "designer_notes": "真伤仍不能超过正常生命结算边界。",
-    "handler_key": "TRUE_DAMAGE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/active/arrogance.lua",
-    "trigger_keys": [],
-    "params": {
-      "max_hp_ratio": 0.4,
-      "rounding": "ROUND",
-      "damage_type": "TRUE",
-      "ignore_block": true,
-      "cannot_be_countered": true
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 3
+      },
+      "target": {
+        "key": "SELECTED_ENEMY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "TRUE_DAMAGE",
+        "params": {
+          "max_hp_ratio": 0.4,
+          "rounding": "ROUND",
+          "damage_type": "TRUE",
+          "ignore_block": true,
+          "cannot_be_countered": true
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -410,54 +635,84 @@
     "card_id": "card_objection",
     "name": "异议",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "当我方英雄即将受到伤害时触发：阻止此次伤害，然后本牌进入弃牌堆。",
     "keywords": [
       "反击",
       "阻止伤害"
     ],
     "rarity": 1,
-    "cooldown": 0,
     "designer_notes": "只响应我方英雄的伤害事件。",
-    "handler_key": "CANCEL_DAMAGE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/objection.lua",
-    "trigger_keys": [
-      "BEFORE_DAMAGE"
-    ],
-    "params": {}
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_DAMAGE"
+        ]
+      },
+      "effect": {
+        "handler_key": "CANCEL_DAMAGE",
+        "params": {}
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
   },
   {
     "design_code": "TP-002",
     "card_id": "card_artifact_1",
     "name": "神器1",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "放置时立即触发一次；之后每个我方回合开始时，使我方所有存活英雄获得各自生命上限5%的护盾（四舍五入），护盾可叠加。本牌持续留在战门；被揭穿或离开战门后进入弃牌堆并获得1回合冷却。",
     "keywords": [
       "护盾",
       "延迟"
     ],
     "rarity": 3,
-    "cooldown": 1,
     "designer_notes": "冷却不使用独立区域；冷却中的实例可以被抽到，但不能打出。",
-    "handler_key": "ONGOING_SHIELD",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/artifact_1.lua",
-    "trigger_keys": [
-      "ON_PLACED",
-      "ALLY_TURN_STARTED"
-    ],
-    "params": {
-      "shield_ratio": 0.05,
-      "target": "ALL_LIVING_ALLIES",
-      "rounding": "ROUND",
-      "stacking": "ADD",
-      "cooldown_on_leave": 1
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ON_PLACED",
+          "ALLY_TURN_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "ONGOING_SHIELD",
+        "params": {
+          "shield_ratio": 0.05,
+          "target": "ALL_LIVING_ALLIES",
+          "rounding": "ROUND",
+          "stacking": "ADD",
+          "cooldown_on_leave": 1
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 1
+      }
     }
   },
   {
@@ -465,9 +720,6 @@
     "card_id": "card_expose",
     "name": "揭穿",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "本牌在手牌或战门中均可触发。敌方设置被动锦囊时：使其刚设置的牌失效并进入弃牌堆，然后本牌进入弃牌堆。优先消耗战门中最早设置的揭穿，再检查手牌。",
     "keywords": [
       "反制",
@@ -475,22 +727,40 @@
       "被动锦囊"
     ],
     "rarity": 4,
-    "cooldown": 0,
     "designer_notes": "手牌触发不支付AP，但会公开；一次事件最多消耗1张揭穿。",
-    "handler_key": "COUNTER_PASSIVE_SET",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/expose.lua",
-    "trigger_keys": [
-      "PASSIVE_SET"
-    ],
-    "params": {
-      "active_zones": [
-        "SET",
-        "HAND"
-      ],
-      "priority": "OLDEST_SET_THEN_HAND",
-      "max_per_event": 1,
-      "hand_trigger_cost": 0
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "PASSIVE_SET"
+        ]
+      },
+      "effect": {
+        "handler_key": "COUNTER_PASSIVE_SET",
+        "params": {
+          "active_zones": [
+            "SET",
+            "HAND"
+          ],
+          "priority": "OLDEST_SET_THEN_HAND",
+          "max_per_event": 1,
+          "hand_trigger_cost": 0
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -498,29 +768,44 @@
     "card_id": "card_return_from_underworld",
     "name": "杀出冥界",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SET_GATE",
     "rules_text": "我方英雄死亡时触发：目标以结算时生命上限40%的生命复活（四舍五入），随后降低1星；星级最低为0。触发后本牌进入放逐区。",
     "keywords": [
       "复活",
       "销毁"
     ],
     "rarity": 4,
-    "cooldown": 0,
     "designer_notes": "只复活该死亡事件的目标。",
-    "handler_key": "REVIVE_WITH_PENALTY",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/return_from_underworld.lua",
-    "trigger_keys": [
-      "HERO_DIED"
-    ],
-    "params": {
-      "hp_ratio": 0.4,
-      "rounding": "ROUND",
-      "star_reduction": 1,
-      "minimum_star": 0,
-      "post_zone": "EXILE"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "HERO_DIED"
+        ]
+      },
+      "effect": {
+        "handler_key": "REVIVE_WITH_PENALTY",
+        "params": {
+          "hp_ratio": 0.4,
+          "rounding": "ROUND",
+          "star_reduction": 1,
+          "minimum_star": 0,
+          "post_zone": "EXILE"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -528,9 +813,6 @@
     "card_id": "card_nonviolent_noncooperation",
     "name": "非暴力不合作",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "我方英雄成为敌方锦囊目标时触发。敌方选择：弃置1张手牌使锦囊继续生效；或使敌方随机1名存活英雄当前攻击力降低10%（四舍五入），持续到该敌方回合结束。敌方无手牌时只能选择后者。结算后本牌进入弃牌堆。",
     "keywords": [
       "指定目标",
@@ -538,21 +820,39 @@
       "削弱"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "攻击降低目标属于敌方阵营。",
-    "handler_key": "HARD_CHOICE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/nonviolent_noncooperation.lua",
-    "trigger_keys": [
-      "CARD_TARGETED"
-    ],
-    "params": {
-      "choice1": "DISCARD_ONE",
-      "choice2": "RANDOM_ENEMY_ATTACK_DOWN",
-      "attack_ratio": 0.1,
-      "attack_basis": "CURRENT",
-      "rounding": "ROUND",
-      "duration": "ENEMY_TURN"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "CARD_TARGETED"
+        ]
+      },
+      "effect": {
+        "handler_key": "HARD_CHOICE",
+        "params": {
+          "choice1": "DISCARD_ONE",
+          "choice2": "RANDOM_ENEMY_ATTACK_DOWN",
+          "attack_ratio": 0.1,
+          "attack_basis": "CURRENT",
+          "rounding": "ROUND",
+          "duration": "ENEMY_TURN"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -560,29 +860,44 @@
     "card_id": "card_storm",
     "name": "风暴",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "我方回合结束时触发：敌方下一张主动锦囊费用增加1；若该敌方回合没有打出主动锦囊，效果持续到首次打出。结算后本牌进入弃牌堆。",
     "keywords": [
       "费用增加",
       "回合结束"
     ],
     "rarity": 2,
-    "cooldown": 0,
     "designer_notes": "多张效果可叠加。",
-    "handler_key": "INCREASE_NEXT_COST",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/storm.lua",
-    "trigger_keys": [
-      "ALLY_TURN_ENDED"
-    ],
-    "params": {
-      "cost_increase": 1,
-      "count": 1,
-      "card_type": "ACTIVE",
-      "duration": "UNTIL_TRIGGERED",
-      "stacking": "ADD"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ALLY_TURN_ENDED"
+        ]
+      },
+      "effect": {
+        "handler_key": "INCREASE_NEXT_COST",
+        "params": {
+          "cost_increase": 1,
+          "count": 1,
+          "card_type": "ACTIVE",
+          "duration": "UNTIL_TRIGGERED",
+          "stacking": "ADD"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -590,9 +905,6 @@
     "card_id": "card_holy_descent",
     "name": "神圣的降临",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "我方手牌为0时触发：立即抽5张牌，按全局8张手牌上限截断，然后进入弃牌堆。急救每局限一次：本牌位于我方抽牌堆、手牌或弃牌堆时均可自动触发；触发急救后获得3回合冷却。正常伏牌触发不消耗急救次数。",
     "keywords": [
       "补牌",
@@ -600,25 +912,43 @@
       "每局一次"
     ],
     "rarity": 2,
-    "cooldown": 3,
     "designer_notes": "冷却期内可以抽到但不能打出。",
-    "handler_key": "EMERGENCY_DRAW",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/holy_descent.lua",
-    "trigger_keys": [
-      "HAND_EMPTY"
-    ],
-    "params": {
-      "draw": 5,
-      "hand_limit": 8,
-      "respect_hand_limit": true,
-      "emergency_once": true,
-      "emergency_zones": [
-        "DRAW",
-        "HAND",
-        "DISCARD"
-      ],
-      "emergency_cooldown": 3
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "HAND_EMPTY"
+        ]
+      },
+      "effect": {
+        "handler_key": "EMERGENCY_DRAW",
+        "params": {
+          "draw": 5,
+          "hand_limit": 8,
+          "respect_hand_limit": true,
+          "emergency_once": true,
+          "emergency_zones": [
+            "DRAW",
+            "HAND",
+            "DISCARD"
+          ],
+          "emergency_cooldown": 3
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 3
+      }
     }
   },
   {
@@ -626,26 +956,41 @@
     "card_id": "card_too_many_is_bad",
     "name": "多就是坏",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "敌方即将执行一次抽牌动作时触发：阻止该次动作中的全部抽牌，然后本牌进入弃牌堆。",
     "keywords": [
       "阻止抽牌",
       "反制"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "只阻止敌方；一次多张抽牌视为一次动作。",
-    "handler_key": "CANCEL_DRAW",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/too_many_is_bad.lua",
-    "trigger_keys": [
-      "BEFORE_DRAW"
-    ],
-    "params": {
-      "subject_owner": "ENEMY",
-      "cancel_whole_draw_action": true
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_DRAW"
+        ]
+      },
+      "effect": {
+        "handler_key": "CANCEL_DRAW",
+        "params": {
+          "subject_owner": "ENEMY",
+          "cancel_whole_draw_action": true
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -653,27 +998,42 @@
     "card_id": "card_backstab",
     "name": "背刺",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "敌方英雄声明攻击目标时触发：由我方选择任意1名其他存活友方英雄，将本次攻击目标改为该英雄。没有其他合法目标时不触发、不消耗。触发后本牌进入弃牌堆。",
     "keywords": [
       "改变索敌",
       "任意友方"
     ],
     "rarity": 1,
-    "cooldown": 0,
     "designer_notes": "目标不受相邻槽限制；由被攻击方选择。",
-    "handler_key": "REDIRECT_ATTACK",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/backstab.lua",
-    "trigger_keys": [
-      "BEFORE_ATTACK"
-    ],
-    "params": {
-      "target": "ANY_OTHER_LIVING_ALLY",
-      "choice": "OWNER",
-      "consume_if_no_target": false
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_ATTACK"
+        ]
+      },
+      "effect": {
+        "handler_key": "REDIRECT_ATTACK",
+        "params": {
+          "target": "ANY_OTHER_LIVING_ALLY",
+          "choice": "OWNER",
+          "consume_if_no_target": false
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -681,56 +1041,86 @@
     "card_id": "card_cage",
     "name": "囚笼",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 1,
-    "target_key": "SET_GATE",
     "rules_text": "敌方下一次战斗阶段开始时触发：跳过该次敌方战斗阶段，敌方仍可执行非战斗阶段行为。结算后本牌进入弃牌堆。",
     "keywords": [
       "跳过战斗阶段"
     ],
     "rarity": 4,
-    "cooldown": 0,
     "designer_notes": "采用“跳过战斗阶段”解释，不是全回合伤害免疫。",
-    "handler_key": "SKIP_ENEMY_BATTLE_PHASE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/cage.lua",
-    "trigger_keys": [
-      "ENEMY_BATTLE_PHASE_STARTED"
-    ],
-    "params": {}
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ENEMY_BATTLE_PHASE_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "SKIP_ENEMY_BATTLE_PHASE",
+        "params": {}
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
   },
   {
     "design_code": "TP-011",
     "card_id": "card_artifact_2",
     "name": "神器2",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "放置时生效：只要本牌留在战门，我方手牌不会因任何弃置原因进入弃牌堆，包括敌方效果、随机弃牌、主动弃牌代价和回合结束自动弃牌；正常打出卡牌不属于弃置。被揭穿或离开战门后进入弃牌堆并获得2回合冷却。",
     "keywords": [
       "弃牌",
       "延迟"
     ],
     "rarity": 3,
-    "cooldown": 2,
     "designer_notes": "神器2是“回合结束清空未使用手牌”规则的明确例外；冷却期内可以抽到但不能打出。",
-    "handler_key": "PREVENT_DISCARD",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/artifact_2.lua",
-    "trigger_keys": [
-      "ON_PLACED"
-    ],
-    "params": {
-      "protect_owner": "ALLY",
-      "blocked_discard_reasons": [
-        "ENEMY_EFFECT",
-        "RANDOM",
-        "COST",
-        "TURN_END_CLEANUP"
-      ],
-      "allow_play": true,
-      "cooldown_on_leave": 2
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ON_PLACED"
+        ]
+      },
+      "effect": {
+        "handler_key": "PREVENT_DISCARD",
+        "params": {
+          "protect_owner": "ALLY",
+          "blocked_discard_reasons": [
+            "ENEMY_EFFECT",
+            "RANDOM",
+            "COST",
+            "TURN_END_CLEANUP"
+          ],
+          "allow_play": true,
+          "cooldown_on_leave": 2
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 2
+      }
     }
   },
   {
@@ -738,31 +1128,46 @@
     "card_id": "card_artifact_3",
     "name": "神器3",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "放置时立即抽2张牌；下一个我方回合开始时额外抽1张牌，然后本牌进入弃牌堆。两次抽牌均受8张手牌上限限制。本牌被揭穿或从战门离开时固定获得2回合冷却。",
     "keywords": [
       "抽牌",
       "延迟"
     ],
     "rarity": 3,
-    "cooldown": 2,
     "designer_notes": "第二段效果只结算一次；冷却中的牌可以抽到但不能打出。",
-    "handler_key": "DRAW_ON_PLACE_AND_NEXT",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/artifact_3.lua",
-    "trigger_keys": [
-      "ON_PLACED",
-      "NEXT_ALLY_TURN_STARTED"
-    ],
-    "params": {
-      "immediate_draw": 2,
-      "next_turn_draw": 1,
-      "hand_limit": 8,
-      "respect_hand_limit": true,
-      "consume_after_next": true,
-      "cooldown_on_leave": 2
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ON_PLACED",
+          "NEXT_ALLY_TURN_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "DRAW_ON_PLACE_AND_NEXT",
+        "params": {
+          "immediate_draw": 2,
+          "next_turn_draw": 1,
+          "hand_limit": 8,
+          "respect_hand_limit": true,
+          "consume_after_next": true,
+          "cooldown_on_leave": 2
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 2
+      }
     }
   },
   {
@@ -770,9 +1175,6 @@
     "card_id": "card_gamble",
     "name": "赌",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "我方行动力降为0时触发：50%立即恢复至本回合动态行动力上限；50%使下回合正常初始行动力减少3（最低0）。结算后本牌进入弃牌堆。",
     "keywords": [
       "行动力",
@@ -780,19 +1182,37 @@
       "延迟惩罚"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "使用权威战斗随机数。",
-    "handler_key": "GAMBLE_AP",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/gamble.lua",
-    "trigger_keys": [
-      "ACTION_POINTS_ZERO"
-    ],
-    "params": {
-      "success_chance": 0.5,
-      "success_restore": "CURRENT_MAXIMUM",
-      "failure_next_turn_delta": -3,
-      "failure_minimum": 0
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ACTION_POINTS_ZERO"
+        ]
+      },
+      "effect": {
+        "handler_key": "GAMBLE_AP",
+        "params": {
+          "success_chance": 0.5,
+          "success_restore": "CURRENT_MAXIMUM",
+          "failure_next_turn_delta": -3,
+          "failure_minimum": 0
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -800,9 +1220,6 @@
     "card_id": "card_hasty_generalization",
     "name": "以偏概全",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "敌方主动锦囊效果结算后触发：生成1张效果相同、费用为0的临时复制加入我方手牌；临时复制使用后立即进入放逐区，若本回合未使用则在回合结束时进入放逐区。若手牌已满，复制直接进入放逐区。结算后本牌进入弃牌堆。",
     "keywords": [
       "复制",
@@ -811,22 +1228,40 @@
       "销毁"
     ],
     "rarity": 3,
-    "cooldown": 0,
     "designer_notes": "不复制被动锦囊，也不复制其他临时复制。",
-    "handler_key": "COPY_AND_EXPIRE",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/hasty_generalization.lua",
-    "trigger_keys": [
-      "AFTER_CARD_RESOLVE"
-    ],
-    "params": {
-      "card_type": "ACTIVE",
-      "exclude_temporary": true,
-      "cost": 0,
-      "expire_on_play": true,
-      "expire_at_turn_end": true,
-      "post_zone": "EXILE",
-      "full_hand_post_zone": "EXILE"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "AFTER_CARD_RESOLVE"
+        ]
+      },
+      "effect": {
+        "handler_key": "COPY_AND_EXPIRE",
+        "params": {
+          "card_type": "ACTIVE",
+          "exclude_temporary": true,
+          "cost": 0,
+          "expire_on_play": true,
+          "expire_at_turn_end": true,
+          "post_zone": "EXILE",
+          "full_hand_post_zone": "EXILE"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   },
   {
@@ -834,9 +1269,6 @@
     "card_id": "card_wait_for_rabbit",
     "name": "守株待兔",
     "card_kind": "PASSIVE",
-    "cost_mode": "FIXED",
-    "base_cost": 0,
-    "target_key": "SET_GATE",
     "rules_text": "敌方战场存在空英雄槽时立即触发，在最左空位生成1只兔子，然后本牌进入弃牌堆。兔子HP30、攻击0、无职业；不能攻击、反击或被锦囊指定，但可被敌方角色普通攻击。兔子占位但不计英雄胜负，也不触发英雄死亡被动。经过3个完整轮次后自爆，对兔子所在阵营全部英雄各造成25点伤害。",
     "keywords": [
       "召唤",
@@ -844,31 +1276,1324 @@
       "全体伤害"
     ],
     "rarity": 4,
-    "cooldown": 0,
     "designer_notes": "每张牌只触发一次；开局空位也能触发。",
-    "handler_key": "SUMMON_DELAYED_RABBIT",
     "logic_mode": "LUA",
     "lua_script": "res://cards/lua/passive/wait_for_rabbit.lua",
-    "trigger_keys": [
-      "ENEMY_SLOT_EMPTY"
+    "components": {
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ENEMY_SLOT_EMPTY"
+        ]
+      },
+      "effect": {
+        "handler_key": "SUMMON_DELAYED_RABBIT",
+        "params": {
+          "slot": "LEFTMOST",
+          "trigger_immediately": true,
+          "hp": 30,
+          "attack": 0,
+          "type": "NONE",
+          "can_attack": false,
+          "can_retaliate": false,
+          "card_targetable": false,
+          "attack_targetable": true,
+          "counts_for_outcome": false,
+          "triggers_hero_death": false,
+          "delay_rounds": 3,
+          "damage": 25,
+          "damage_side": "SUMMON_SIDE",
+          "max_uses": 1,
+          "post_zone": "DISCARD"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-016",
+    "card_id": "card_desperate_gambit",
+    "name": "破釜沉舟",
+    "card_kind": "ACTIVE",
+    "rules_text": "选择我方英雄消耗当前生命值20%，对敌方英雄造成消耗值2倍普通伤害。",
+    "keywords": [
+      "扩展包v2"
     ],
-    "params": {
-      "slot": "LEFTMOST",
-      "trigger_immediately": true,
-      "hp": 30,
-      "attack": 0,
-      "type": "NONE",
-      "can_attack": false,
-      "can_retaliate": false,
-      "card_targetable": false,
-      "attack_targetable": true,
-      "counts_for_outcome": false,
-      "triggers_hero_death": false,
-      "delay_rounds": 3,
-      "damage": 25,
-      "damage_side": "SUMMON_SIDE",
-      "max_uses": 1,
-      "post_zone": "DISCARD"
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/desperate_gambit.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "ALLY_ENEMY_PAIR"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "DESPERATE_GAMBIT",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-017",
+    "card_id": "card_chain_scheme",
+    "name": "连环计",
+    "card_kind": "ACTIVE",
+    "rules_text": "本回合下一张主动锦囊费用降低1；若原费用为0则结算后抽1张。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/chain_scheme.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "CHAIN_SCHEME",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-018",
+    "card_id": "card_gathering_force",
+    "name": "蓄势待发",
+    "card_kind": "ACTIVE",
+    "rules_text": "目标获得2层蓄力与当前攻击力20%增幅；归零时额外普通攻击。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/gathering_force.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "GATHERING_FORCE",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-019",
+    "card_id": "card_graft_buff",
+    "name": "移花接木",
+    "card_kind": "ACTIVE",
+    "rules_text": "从目标敌方英雄转移1个可转移正面状态给使用者英雄。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/graft_buff.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "ALLY_ENEMY_PAIR"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "GRAFT_BUFF",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-020",
+    "card_id": "card_burn_the_books",
+    "name": "焚书坑儒",
+    "card_kind": "ACTIVE",
+    "rules_text": "放逐己方弃牌堆1至3张牌，每张对所选敌方目标造成5点普通伤害。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/burn_the_books.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECT_CARDS_AND_ENEMIES"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "BURN_BOOKS",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-021",
+    "card_id": "card_cicada_escape",
+    "name": "金蝉脱壳",
+    "card_kind": "ACTIVE",
+    "rules_text": "目标下次受到致命伤害时免疫并回复15%生命上限，持续2个完整轮次。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/cicada_escape.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "CICADA_ESCAPE",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-022",
+    "card_id": "card_flame_mark",
+    "name": "烈焰印记",
+    "card_kind": "ACTIVE",
+    "rules_text": "对敌方目标施加3层烈焰印记。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/flame_mark.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "ALLY_ENEMY_PAIR"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "FLAME_MARK",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-023",
+    "card_id": "card_mend_broken_mirror",
+    "name": "破镜重圆",
+    "card_kind": "ACTIVE",
+    "rules_text": "解除场上全部双方绑定；相关英雄各受到8点状态伤害。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 2,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/mend_broken_mirror.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "MEND_BROKEN_MIRROR",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-024",
+    "card_id": "card_heavenly_reinforcement",
+    "name": "天降神兵",
+    "card_kind": "ACTIVE",
+    "rules_text": "随机部署一名剩余英雄到最左空位，经过2个完整轮次后移出游戏。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 5,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/heavenly_reinforcement.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 3
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "HEAVENLY_REINFORCEMENT",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-025",
+    "card_id": "card_backlash_curse",
+    "name": "反噬之咒",
+    "card_kind": "ACTIVE",
+    "rules_text": "敌方全体受到15点普通伤害，己方全体受到8点普通伤害。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/backlash_curse.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "BACKLASH_CURSE",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-026",
+    "card_id": "card_steal_daylight",
+    "name": "偷天换日",
+    "card_kind": "ACTIVE",
+    "rules_text": "查看敌方弃牌堆顶3张，选择1张生成0费临时复制。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/steal_daylight.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SELECT_OPPONENT_DISCARD"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "STEAL_DAYLIGHT",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-027",
+    "card_id": "card_recuperate",
+    "name": "休养生息",
+    "card_kind": "ACTIVE",
+    "rules_text": "己方全体回复10%生命上限，本回合无法普通攻击。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 2,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/recuperate.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "RECUPERATE",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-028",
+    "card_id": "card_covert_passage",
+    "name": "暗度陈仓",
+    "card_kind": "ACTIVE",
+    "rules_text": "目标本回合获得潜行并增加30%当前攻击力。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/covert_passage.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "COVERT_PASSAGE",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-029",
+    "card_id": "card_breaker",
+    "name": "破局者",
+    "card_kind": "ACTIVE",
+    "rules_text": "仅在己方存活英雄较少时可用；己方全体当前攻击力翻倍至回合结束。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 5,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/breaker.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 3
+      },
+      "target": {
+        "key": "SELECTED_ALLY"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "BREAKER",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TA-030",
+    "card_id": "card_undermine",
+    "name": "釜底抽薪",
+    "card_kind": "ACTIVE",
+    "rules_text": "查看敌方手牌并选择1张弃置。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/主动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/active/undermine.lua",
+    "components": {
+      "source": {
+        "selector": "SELECTED_ALLY"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SELECT_OPPONENT_HAND"
+      },
+      "triggers": {
+        "keys": []
+      },
+      "effect": {
+        "handler_key": "UNDERMINE",
+        "params": {
+          "expansion": "V2_SECOND"
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-016",
+    "card_id": "card_chain_reaction",
+    "name": "连锁反应",
+    "card_kind": "PASSIVE",
+    "rules_text": "为最早设置的另一张可连锁被动添加连锁强化。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/chain_reaction.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "AFTER_CARD_RESOLVE"
+        ]
+      },
+      "effect": {
+        "handler_key": "CHAIN_REACTION",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-017",
+    "card_id": "card_delayed_fuse",
+    "name": "延时引信",
+    "card_kind": "PASSIVE",
+    "rules_text": "潜伏2个自身回合后对敌方全体造成15点普通伤害。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/delayed_fuse.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ALLY_TURN_ENDED"
+        ]
+      },
+      "effect": {
+        "handler_key": "DELAYED_FUSE",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-018",
+    "card_id": "card_mirror_illusion",
+    "name": "镜花水月",
+    "card_kind": "PASSIVE",
+    "rules_text": "记录一张镜像安全的敌方被动并在其触发后复制原子效果。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/mirror_illusion.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "PASSIVE_SET"
+        ]
+      },
+      "effect": {
+        "handler_key": "MIRROR_ILLUSION",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-019",
+    "card_id": "card_blood_sacrifice",
+    "name": "血祭",
+    "card_kind": "PASSIVE",
+    "rules_text": "献祭另一张己方被动，复活死亡英雄至50%生命上限。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 5,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/blood_sacrifice.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "HERO_DIED"
+        ]
+      },
+      "effect": {
+        "handler_key": "BLOOD_SACRIFICE",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-020",
+    "card_id": "card_dying_wish",
+    "name": "死不瞑目",
+    "card_kind": "PASSIVE",
+    "rules_text": "因敌方效果离开战门时为己方全体回复15点生命。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/dying_wish.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "REMOVED_FROM_GATE"
+        ]
+      },
+      "effect": {
+        "handler_key": "DYING_WISH",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-021",
+    "card_id": "card_overload_turret",
+    "name": "过载炮台",
+    "card_kind": "PASSIVE",
+    "rules_text": "随机敌方英雄受到25点伤害，己方下回合AP奖励-2。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/overload_turret.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 0
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ENEMY_BATTLE_PHASE_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "OVERLOAD_TURRET",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-022",
+    "card_id": "card_corrosive_fog",
+    "name": "侵蚀毒雾",
+    "card_kind": "PASSIVE",
+    "rules_text": "三个自身回合依次对敌方全体造成3、5、7点伤害。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/corrosive_fog.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ALLY_TURN_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "CORROSIVE_FOG",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-023",
+    "card_id": "card_soul_contract",
+    "name": "灵魂契约",
+    "card_kind": "PASSIVE",
+    "rules_text": "攻击方取消攻击或支付当前攻击力50%的生命。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/soul_contract.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_ATTACK"
+        ]
+      },
+      "effect": {
+        "handler_key": "SOUL_CONTRACT",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-024",
+    "card_id": "card_mutual_destruction",
+    "name": "同归于尽",
+    "card_kind": "PASSIVE",
+    "rules_text": "阻止致命伤害并向来源返回等量最终HP伤害。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/mutual_destruction.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 3
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_DAMAGE"
+        ]
+      },
+      "effect": {
+        "handler_key": "MUTUAL_DESTRUCTION",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-025",
+    "card_id": "card_substitution",
+    "name": "替身术",
+    "card_kind": "PASSIVE",
+    "rules_text": "每名玩家每局一次，取消一次伤害事件。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/substitution.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_DAMAGE"
+        ]
+      },
+      "effect": {
+        "handler_key": "SUBSTITUTION",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-026",
+    "card_id": "card_rewind_time",
+    "name": "时光倒流",
+    "card_kind": "PASSIVE",
+    "rules_text": "抽牌前取回己方弃牌堆顶一张其他锦囊。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 2,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/rewind_time.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "NEXT_ALLY_TURN_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "REWIND_TIME",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-027",
+    "card_id": "card_opportunistic_theft",
+    "name": "顺手牵羊",
+    "card_kind": "PASSIVE",
+    "rules_text": "复制敌方准备抽取的牌堆顶牌为0费临时牌。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 3,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/opportunistic_theft.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_DRAW"
+        ]
+      },
+      "effect": {
+        "handler_key": "OPPORTUNISTIC_THEFT",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-028",
+    "card_id": "card_final_defense",
+    "name": "最终防线",
+    "card_kind": "PASSIVE",
+    "rules_text": "仅剩一名英雄时回满生命并获得两回合攻击增幅和反伤免疫。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 5,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/final_defense.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 3
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "HERO_DIED"
+        ]
+      },
+      "effect": {
+        "handler_key": "FINAL_DEFENSE",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "EXILE"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-029",
+    "card_id": "card_energy_siphon",
+    "name": "能量虹吸",
+    "card_kind": "PASSIVE",
+    "rules_text": "敌方当前AP-1，己方下回合AP奖励+1。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 2,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/energy_siphon.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 1
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "ENEMY_TURN_STARTED"
+        ]
+      },
+      "effect": {
+        "handler_key": "ENERGY_SIPHON",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
+    }
+  },
+  {
+    "design_code": "TP-030",
+    "card_id": "card_dragnet",
+    "name": "天罗地网",
+    "card_kind": "PASSIVE",
+    "rules_text": "敌方有手牌时阻止攻击并随机弃置其一张手牌。",
+    "keywords": [
+      "扩展包v2"
+    ],
+    "rarity": 4,
+    "designer_notes": "完整语义见docs/卡牌类型/扩展包v2/被动锦囊牌.md",
+    "logic_mode": "LUA",
+    "lua_script": "res://cards/lua/passive/dragnet.lua",
+    "components": {
+      "source": {
+        "selector": "NONE"
+      },
+      "cost": {
+        "mode": "FIXED",
+        "base_cost": 2
+      },
+      "target": {
+        "key": "SET_GATE"
+      },
+      "triggers": {
+        "keys": [
+          "BEFORE_ATTACK"
+        ]
+      },
+      "effect": {
+        "handler_key": "DRAGNET",
+        "params": {
+          "expansion": "V2_SECOND",
+          "mirror_safe": null
+        }
+      },
+      "lifecycle": {
+        "on_resolve": "DISCARD"
+      },
+      "limits": {
+        "cooldown_turns": 0
+      }
     }
   }
 ]

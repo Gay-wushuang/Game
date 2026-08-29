@@ -2,6 +2,7 @@ public sealed class CardInstance
 {
     public enum ZoneKind { Deck, Hand, Set, Discard, Exile, HeroBag }
     public CardDefinition Definition { get; }
+    public string InstanceId { get; }
     public string OwnerId { get; set; }
     public string OriginalOwnerId { get; }
     public ZoneKind Zone { get; set; }
@@ -13,7 +14,16 @@ public sealed class CardInstance
     public bool IsTemporaryCopy { get; set; }
     public int CooldownRemaining { get; set; }
     public bool EmergencyUsed { get; set; }
-    public CardInstance(CardDefinition definition, string owner = "player", string? originalOwner = null) { Definition = definition; OwnerId = owner; OriginalOwnerId = originalOwner ?? owner; }
+    public System.Collections.Generic.Dictionary<string, int> RuntimeInts { get; } = new(System.StringComparer.Ordinal);
+    public System.Collections.Generic.Dictionary<string, string> RuntimeStrings { get; } = new(System.StringComparer.Ordinal);
+    public System.Collections.Generic.HashSet<string> RuntimeFlags { get; } = new(System.StringComparer.Ordinal);
+    public CardInstance(CardDefinition definition, string owner = "player", string? originalOwner = null, string? instanceId = null)
+    {
+        Definition = definition;
+        OwnerId = owner;
+        OriginalOwnerId = originalOwner ?? owner;
+        InstanceId = string.IsNullOrWhiteSpace(instanceId) ? System.Guid.NewGuid().ToString("N") : instanceId;
+    }
     public int CurrentCost(int currentAp = 3, int maxAp = 3)
     {
         var baseCost = Definition.cost_mode switch { "ALL_CURRENT" or "VARIABLE_AP" => currentAp, "MAX_AP" => maxAp, _ => Definition.action_cost };

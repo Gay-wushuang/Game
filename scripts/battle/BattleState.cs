@@ -31,6 +31,9 @@ public sealed class BattleState
     public PassiveEventContext? CurrentPassiveEvent { get; set; }
     public List<(string OwnerId, int SlotIndex, CardInstance Card)> InvalidatedPassives { get; } = [];
     public List<(string OwnerId, int SlotIndex, UnitState Unit)> PendingSummons { get; } = [];
+    public Dictionary<string, int> RuntimeInts { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, string> RuntimeStrings { get; } = new(StringComparer.Ordinal);
+    public HashSet<string> RuntimeFlags { get; } = new(StringComparer.Ordinal);
     public BattleOutcome Outcome { get; private set; } = BattleOutcome.Playing;
     public bool IsFinished => Outcome != BattleOutcome.Playing;
     private readonly UnitState?[] _playerSlotUnits = new UnitState?[5];

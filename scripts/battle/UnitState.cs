@@ -40,4 +40,7 @@ public sealed class UnitState
     // 临时效果原始值跟踪：首次临时修改时记录，恢复时使用，避免嵌套后恢复到中间状态。
     public string? OriginalType { get; set; }
     public int? OriginalAttack { get; set; }
+    public System.Collections.Generic.Dictionary<string, int> RuntimeInts { get; } = new(System.StringComparer.Ordinal);
+    public System.Collections.Generic.Dictionary<string, string> RuntimeStrings { get; } = new(System.StringComparer.Ordinal);
+    public System.Collections.Generic.HashSet<string> RuntimeFlags { get; } = new(System.StringComparer.Ordinal);
 }

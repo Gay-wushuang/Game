@@ -15,7 +15,7 @@ public sealed class CardApi(CardExecutionContext context)
         "COPY_AND_EXPIRE", "SUMMON_DELAYED_RABBIT"
     };
 
-    public static bool SupportsHandler(string handler) => SupportedHandlers.Contains(handler);
+    public static bool SupportsHandler(string handler) => SupportedHandlers.Contains(handler) || ExpansionActiveEffects.Handlers.Contains(handler) || ExpansionPassiveEffects.Handlers.Contains(handler);
 
     public CardExecutionContext Context { get; } = context;
     private System.Collections.Generic.List<UnitState> FriendlyUnits => Context.OwnerDeck.OwnerId == "player" ? Context.State.PlayerUnits : Context.State.EnemyUnits;
@@ -26,10 +26,10 @@ public sealed class CardApi(CardExecutionContext context)
         var target = Context.Target; if (target?.Alive != true) return 0;
         var before = new BattleEventData(BattleEvent.BeforeDamage) { Source = Context.Source, Target = target, Card = Context.Card, Amount = Math.Max(0, amount) };
         Context.State.Events.Publish(before); if (before.Cancelled) return 0;
-        var incoming = Math.Max(0, before.Amount);
-        var absorbed = Math.Min(target.ShieldPoints, incoming); target.ShieldPoints -= absorbed; incoming -= absorbed;
-        var applied = Math.Min(target.Hp, incoming); target.Hp -= applied;
-        Context.State.Events.Publish(new(BattleEvent.AfterDamage) { Source = Context.Source, Target = target, Card = Context.Card, Amount = applied });
+        var result = DamageResolution.Apply(new(Context.Source, target, Context.Card, amount), before.Amount);
+        var applied = result.FinalHpDamage;
+        before.FinalHpDamage = applied;
+        Context.State.Events.Publish(new(BattleEvent.AfterDamage) { Source = Context.Source, Target = target, Card = Context.Card, Amount = applied, FinalHpDamage = applied });
         if (!target.Alive) Context.State.Events.Publish(new(BattleEvent.HeroDefeated) { Source = Context.Source, Target = target, Card = Context.Card });
         return applied;
     }
@@ -287,7 +287,7 @@ public sealed class CardApi(CardExecutionContext context)
             case "GAMBLE_ACTION_POINTS": SetRandomActionPoints(); break;
             case "COPY_RESOLVED_CARD": CopyResolvedCard(); break;
             case "SUMMON_DELAYED_RABBIT": SummonDelayedRabbit(); break;
-            default: throw new InvalidOperationException($"未注册的卡牌处理器：{handler}");
+            default: if (!ExpansionActiveEffects.Resolve(Context, handler) && !ExpansionPassiveEffects.Resolve(Context, handler)) throw new InvalidOperationException($"未注册的卡牌处理器：{handler}"); break;
         }
     }
 

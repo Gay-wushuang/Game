@@ -4,7 +4,7 @@ using Godot;
 public partial class CardDefinition : ContentDefinition
 {
     public enum CardKind { Active, Passive }
-    public enum TargetKind { SelfHero, AllyHero, Enemy, AnyUnit, AllyEnemyPair, AllEnemies, SelectCards, SetGate, SetSlot, None }
+    public enum TargetKind { SelfHero, AllyHero, Enemy, AnyUnit, AllyEnemyPair, AllEnemies, SelectCards, SelectCardsAndEnemies, SelectOpponentDiscard, SelectOpponentHand, SetGate, SetSlot, None }
     public enum BuiltinEffect { Heal, AddAttack, AddExp, Damage, Custom, StarUp, StealCard, CancelEnemyDraw }
     [ExportCategory("卡牌规则")]
     [Export] public CardKind card_kind { get; set; }
@@ -24,4 +24,5 @@ public partial class CardDefinition : ContentDefinition
     [Export(PropertyHint.File, "*.lua")] public string lua_script { get; set; } = "";
     [Export] public string[] trigger_keys { get; set; } = [];
     [Export] public Godot.Collections.Dictionary effect_params { get; set; } = new();
+    public CardComponentSet components { get; set; } = new();
 }
