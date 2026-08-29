@@ -9,10 +9,6 @@ public partial class SettingsUi : Control
     {
         _content = GetNode<Label>("%Content");
         GetNode<Button>("%BackButton").Pressed += () => SceneRouter.Instance.Back();
-        var bar = GetNode<PlayerBar>("%PlayerBar");
-        var settingsButton = bar.GetNode<Button>("%SettingsButton");
-        settingsButton.Disabled = true;
-        settingsButton.MouseDefaultCursorShape = Control.CursorShape.Arrow;
         for (var i = 1; i <= 5; i++)
         {
             var index = i;

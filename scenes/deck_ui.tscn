@@ -1,10 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/DeckEdit.cs" id="1"]
 [ext_resource type="Texture2D" path="res://assets/ui/deck_ui.svg" id="2_bg"]
 [ext_resource type="PackedScene" path="res://scenes/components/hot_button.tscn" id="3_btn"]
-[ext_resource type="PackedScene" path="res://scenes/components/player_bar.tscn" id="4_bar"]
-
 [sub_resource type="StyleBoxFlat" id="SelectedStyle"]
 bg_color = Color(1, 1, 1, 0.12)
 
@@ -148,5 +146,3 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.6)
 theme_override_font_sizes/font_size = 22
 vertical_alignment = 1
-
-[node name="PlayerBar" parent="." instance=ExtResource("4_bar")]

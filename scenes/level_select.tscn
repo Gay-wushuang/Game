@@ -1,10 +1,8 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/LevelSelect.cs" id="1"]
 [ext_resource type="Texture2D" path="res://assets/ui/level_select.svg" id="2_bg"]
 [ext_resource type="PackedScene" path="res://scenes/components/hot_button.tscn" id="3_btn"]
-[ext_resource type="PackedScene" path="res://scenes/components/player_bar.tscn" id="4_bar"]
-
 [sub_resource type="StyleBoxEmpty" id="EmptyStyle"]
 
 [sub_resource type="StyleBoxFlat" id="SaveNormal"]
@@ -231,7 +229,6 @@ theme_override_styles/hover = SubResource("ActionHover")
 theme_override_styles/pressed = SubResource("ActionPressed")
 theme_override_styles/disabled = SubResource("ActionDisabled")
 
-[node name="PlayerBar" parent="." instance=ExtResource("4_bar")]
 
 [node name="SaveHint" type="Label" parent="."]
 unique_name_in_owner = true
