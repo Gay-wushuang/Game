@@ -1,6 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/PlayerBar.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/common/currency_blue_64.png" id="2_currency_blue"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/common/currency_gold_64.png" id="3_currency_gold"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/common/currency_pink_64.png" id="4_currency_pink"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/common/settings_button_80.png" id="5_settings"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/common/level_150.png" id="6_level"]
+[ext_resource type="Texture2D" path="res://assets/art/ui/common/experience_150.png" id="7_experience"]
 
 [sub_resource type="StyleBoxFlat" id="HudStyle"]
 bg_color = Color(0.035, 0.09, 0.17, 0.94)
@@ -26,17 +32,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="SettingsNormal"]
-bg_color = Color(0.08, 0.19, 0.34, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.74, 0.63, 0.4, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxEmpty" id="SettingsNormal"]
 
 [sub_resource type="StyleBoxFlat" id="SettingsHover"]
 bg_color = Color(0.15, 0.34, 0.55, 1)
@@ -58,6 +54,16 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_top = 0.790741
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.025, 0.064, 0.12, 1)
 
 [node name="HudFrame" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -125,12 +131,18 @@ theme_override_constants/separation = 10
 custom_minimum_size = Vector2(170, 64)
 layout_mode = 2
 focus_mode = 0
-text = "等级\n占位"
+icon = ExtResource("6_level")
+expand_icon = true
+icon_max_width = 52
+text = "等级"
 [node name="ExperienceButton" type="Button" parent="HudFrame/HudMargin/HudRow/Stats"]
 custom_minimum_size = Vector2(170, 64)
 layout_mode = 2
 focus_mode = 0
-text = "经验\n占位"
+icon = ExtResource("7_experience")
+expand_icon = true
+icon_max_width = 52
+text = "经验"
 
 [node name="CurrencySpacer" type="Control" parent="HudFrame/HudMargin/HudRow"]
 layout_mode = 2
@@ -141,23 +153,55 @@ custom_minimum_size = Vector2(620, 148)
 layout_mode = 2
 theme_override_constants/separation = 32
 alignment = 1
-[node name="Currency1" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies"]
+[node name="Currency1" type="HBoxContainer" parent="HudFrame/HudMargin/HudRow/Currencies"]
 custom_minimum_size = Vector2(175, 80)
 layout_mode = 2
-text = "◇ 货币 XXX\n图标占位"
-horizontal_alignment = 1
+theme_override_constants/separation = 10
+alignment = 1
+[node name="Icon" type="TextureRect" parent="HudFrame/HudMargin/HudRow/Currencies/Currency1"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("2_currency_blue")
+expand_mode = 3
+stretch_mode = 5
+[node name="Value" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies/Currency1"]
+layout_mode = 2
+text = "货币 XXX"
 vertical_alignment = 1
-[node name="Currency2" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies"]
+
+[node name="Currency2" type="HBoxContainer" parent="HudFrame/HudMargin/HudRow/Currencies"]
 custom_minimum_size = Vector2(175, 80)
 layout_mode = 2
-text = "◉ 货币 XXX\n图标占位"
-horizontal_alignment = 1
+theme_override_constants/separation = 10
+alignment = 1
+[node name="Icon" type="TextureRect" parent="HudFrame/HudMargin/HudRow/Currencies/Currency2"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("3_currency_gold")
+expand_mode = 3
+stretch_mode = 5
+[node name="Value" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies/Currency2"]
+layout_mode = 2
+text = "货币 XXX"
 vertical_alignment = 1
-[node name="Currency3" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies"]
+
+[node name="Currency3" type="HBoxContainer" parent="HudFrame/HudMargin/HudRow/Currencies"]
 custom_minimum_size = Vector2(175, 80)
 layout_mode = 2
-text = "◆ 货币 XXX\n图标占位"
-horizontal_alignment = 1
+theme_override_constants/separation = 10
+alignment = 1
+[node name="Icon" type="TextureRect" parent="HudFrame/HudMargin/HudRow/Currencies/Currency3"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("4_currency_pink")
+expand_mode = 3
+stretch_mode = 5
+[node name="Value" type="Label" parent="HudFrame/HudMargin/HudRow/Currencies/Currency3"]
+layout_mode = 2
+text = "货币 XXX"
 vertical_alignment = 1
 
 [node name="SettingsButton" type="Button" parent="HudFrame/HudMargin/HudRow"]
@@ -170,4 +214,21 @@ theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("SettingsNormal")
 theme_override_styles/hover = SubResource("SettingsHover")
 theme_override_styles/pressed = SubResource("SettingsHover")
-text = "⚙\n设置\n占位"
+theme_override_styles/focus = SubResource("SettingsNormal")
+tooltip_text = "设置"
+
+[node name="Icon" type="TextureRect" parent="HudFrame/HudMargin/HudRow/SettingsButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 14.0
+offset_right = -15.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_settings")
+expand_mode = 1
+stretch_mode = 5
