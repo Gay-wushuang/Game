@@ -4,6 +4,13 @@ using Godot;
 public partial class HeroDefinition : ContentDefinition
 {
     public enum HeroType { Vanguard, Assassin, Scout, Lawknoer }
+    [ExportCategory("英雄战斗表现")]
+    [Export] public Texture2D? idle_artwork { get; set; }
+    [Export] public Texture2D? attack_artwork { get; set; }
+    [Export] public Texture2D? skill_artwork { get; set; }
+    [Export] public Texture2D? hit_artwork { get; set; }
+    [Export] public Texture2D? defeated_artwork { get; set; }
+
     [ExportCategory("英雄战斗数据")]
     [Export(PropertyHint.Range, "1,999,1")] public int character_number { get; set; } = 1;
     [Export] public HeroType hero_type { get; set; }

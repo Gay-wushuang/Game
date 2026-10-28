@@ -1,13 +1,24 @@
-[gd_resource type="Resource" script_class="HeroDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=7 format=3]
 [ext_resource type="Script" path="res://scripts/data/HeroDefinition.cs" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/heroes/hero_role_1/hero_role_1_idle.png" id="2_idle"]
+[ext_resource type="Texture2D" path="res://assets/art/heroes/hero_role_1/hero_role_1_attack.png" id="3_attack"]
+[ext_resource type="Texture2D" path="res://assets/art/heroes/hero_role_1/hero_role_1_skill.png" id="4_skill"]
+[ext_resource type="Texture2D" path="res://assets/art/heroes/hero_role_1/hero_role_1_hit.png" id="5_hit"]
+[ext_resource type="Texture2D" path="res://assets/art/heroes/hero_role_1/hero_role_1_defeated.png" id="6_defeated"]
 [resource]
 script = ExtResource("1")
 id = &"hero_role_1"
-display_name = "铁卫"
-description = "分段减伤并替队友承担伤害的先锋。"
+display_name = "荆铁"
+description = "以分段减伤坚守前线，并用嘲讽替全体友方承受伤害的先锋。"
 tags = PackedStringArray("先锋", "坦克", "嘲讽")
-designer_notes = "依据 docs/角色1.md"
+artwork = ExtResource("2_idle")
+designer_notes = "依据 docs/角色人设/角色人设_01_先锋_荆铁_美少女版.md 与 docs/英雄类型/角色1.md"
 custom_fields = {"taunt_duration": 2, "leader_hp": 50, "leader_duration": 6}
+idle_artwork = ExtResource("2_idle")
+attack_artwork = ExtResource("3_attack")
+skill_artwork = ExtResource("4_skill")
+hit_artwork = ExtResource("5_hit")
+defeated_artwork = ExtResource("6_defeated")
 character_number = 1
 hero_type = 0
 initial_star = 0
@@ -15,8 +26,8 @@ max_hp = 150
 attack = 10
 innate_ability = &"segmented_guard"
 skill_ids = PackedStringArray("team_taunt")
-passive_text = "生命处于80%-60%/60%-40%/40%以下时，减伤50%/75%/90%。"
-skill_1_text = "嘲讽：替友方承担伤害2回合，冷却5回合。"
+passive_text = "生命为60%～80%时减伤50%，40%～60%时减伤75%，不高于40%时减伤90%。"
+skill_1_text = "嘲讽：持续2回合；期间全体友方受到的生命伤害改由荆铁承受。冷却5回合。"
 leader_bonus_text = "友方生命上限+50，持续6回合。"
 star_attack_choices = PackedInt32Array(10, 0, 0, 15, 0, 40)
 star_hp_choices = PackedInt32Array(50, 0, 0, 50, 0, 100)

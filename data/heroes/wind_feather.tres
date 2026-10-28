@@ -1,7 +1,10 @@
-[gd_resource type="Resource" script_class="HeroDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=3 format=3]
 [ext_resource type="Script" path="res://scripts/data/HeroDefinition.cs" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/heroes/hero_role_X/hero_placeholder_idle.png" id="2_placeholder"]
 [resource]
 script = ExtResource("1")
+artwork = ExtResource("2_placeholder")
+idle_artwork = ExtResource("2_placeholder")
 id = &"hero_role_3"
 display_name = "风羽"
 description = "操纵行动点和双方手牌的斥候。"

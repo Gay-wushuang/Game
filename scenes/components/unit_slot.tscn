@@ -55,7 +55,7 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="UnitSlot" type="Control"]
-custom_minimum_size = Vector2(224, 228)
+custom_minimum_size = Vector2(224, 280)
 size_flags_horizontal = 0
 size_flags_vertical = 0
 mouse_filter = 1
@@ -79,26 +79,26 @@ anchor_bottom = 1.0
 offset_left = 16.0
 offset_top = 8.0
 offset_right = -16.0
-offset_bottom = -58.0
+offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
 [node name="CharacterCanvas" type="Control" parent="CharacterAnchor"]
-custom_minimum_size = Vector2(128, 160)
+custom_minimum_size = Vector2(192, 240)
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -64.0
-offset_top = -160.0
-offset_right = 64.0
+offset_left = -96.0
+offset_top = -240.0
+offset_right = 96.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
-pivot_offset = Vector2(64, 160)
+pivot_offset = Vector2(96, 240)
 
 [node name="CharacterSprite" type="TextureRect" parent="CharacterAnchor/CharacterCanvas"]
 unique_name_in_owner = true
@@ -109,6 +109,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+texture_filter = 1
 expand_mode = 1
 stretch_mode = 5
 
@@ -144,10 +145,10 @@ layout_mode = 1
 anchors_preset = 12
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = -50.0
-offset_right = -12.0
-offset_bottom = -32.0
+offset_left = 42.0
+offset_top = -26.0
+offset_right = -42.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -162,9 +163,9 @@ anchors_preset = 12
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 12.0
-offset_top = -51.0
+offset_top = -20.0
 offset_right = -12.0
-offset_bottom = -31.0
+offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
